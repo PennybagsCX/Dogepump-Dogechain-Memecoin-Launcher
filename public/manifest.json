@@ -1,0 +1,50 @@
+{
+  "name": "DogePump - Dogechain Memecoin Launchpad",
+  "short_name": "DogePump",
+  "description": "Launch fair-launch memecoins on Dogechain. Discover, trade, and create memecoins with the most advanced launchpad platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020202",
+  "theme_color": "#FFD93D",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Launch Token",
+      "short_name": "Launch",
+      "description": "Create a new memecoin",
+      "url": "/launch",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Trade",
+      "short_name": "Trade",
+      "description": "Trade memecoins",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Leaderboard",
+      "short_name": "Ranks",
+      "description": "View top traders and tokens",
+      "url": "/leaderboard",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}

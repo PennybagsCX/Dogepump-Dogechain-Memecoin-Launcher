@@ -1,0 +1,33 @@
+uid=7_0 RootWebArea "$0.000045 | RDOG2 - DogePump" url="http://localhost:3000/#/"
+  uid=7_1 ignored
+    uid=7_2 ignored
+      uid=7_3 generic
+        uid=7_4 ignored
+          uid=7_5 generic
+            uid=7_6 generic
+            uid=7_7 ignored
+            uid=7_8 heading "Something went wrong" level="1"
+              uid=7_9 StaticText "Something went wrong"
+                uid=7_10 InlineTextBox
+            uid=7_11 paragraph
+              uid=7_12 StaticText "The application encountered an unexpected error. This might be due to a data mismatch or a temporary glitch."
+                uid=7_13 InlineTextBox
+                uid=7_14 InlineTextBox
+            uid=7_15 generic
+              uid=7_16 code
+                uid=7_17 StaticText "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
+                  uid=7_18 InlineTextBox
+                  uid=7_19 InlineTextBox
+                  uid=7_20 InlineTextBox
+                  uid=7_21 InlineTextBox
+                  uid=7_22 InlineTextBox
+            uid=7_23 button "Reset Application"
+              uid=7_24 StaticText "Reset Application"
+                uid=7_25 InlineTextBox
+            uid=7_26 paragraph
+              uid=7_27 StaticText "Warning: This will clear your local demo data."
+                uid=7_28 InlineTextBox
+      uid=7_29 generic
+        uid=7_30 ignored
+          uid=7_31 ignored
+          uid=7_32 ignored

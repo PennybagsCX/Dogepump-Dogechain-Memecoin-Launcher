@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Notifications - DogePump</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0A0A0A;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: #050505;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 32px;
+        }
+        h1 { color: #F4C430; margin-top: 0; }
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        .success { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; }
+        .info { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; }
+        button {
+            background: #F4C430;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin: 8px 0;
+        }
+        button:hover { background: #D4AF37; }
+        .step {
+            background: rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .step h3 { margin-top: 0; }
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Notification Debug Tool</h1>
+
+        <div class="status success">
+            <strong>✅ Current Status:</strong><br>
+            Wallet: <code id="wallet">Checking...</code><br>
+            Is Admin: <code id="isAdmin">Checking...</code>
+        </div>
+
+        <button onclick="clearNotifications()">🗑️ Clear All Notifications</button>
+        <button onclick="createTestNotification()">🧪 Create Test Notification</button>
+        <button onclick="goToApp()">🚀 Go to App</button>
+
+        <div id="output" class="status info" style="display:none;"></div>
+
+        <div class="step">
+            <h3>📋 Testing Steps:</h3>
+            <ol>
+                <li>Click "Clear All Notifications" above</li>
+                <li>Click "Go to App" (or go to /launch manually)</li>
+                <li>Launch a new token or report an existing one</li>
+                <li>Open wallet menu → Click notification bell</li>
+                <li>Click the new notification</li>
+                <li>Check if it navigates correctly!</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🔍 What to Check:</h3>
+            <ul>
+                <li>Open browser console (F12)</li>
+                <li>Look for: <code>[reportToken] Is admin? true</code></li>
+                <li>Look for: <code>Notification link: /admin#token-reports</code></li>
+                <li>When clicking: <code>[Notification Click] Navigating to: /admin#token-reports</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_WALLET = '0x22f4194f6706e70abaa14ab352d0baa6c7ced24a';
+
+        function checkStatus() {
+            const wallet = localStorage.getItem('dogepump_address');
+            const isAdmin = wallet && wallet.toLowerCase() === ADMIN_WALLET.toLowerCase();
+
+            document.getElementById('wallet').textContent = wallet || 'Not connected';
+            document.getElementById('isAdmin').textContent = isAdmin ? '✅ YES' : '❌ NO';
+        }
+
+        function showOutput(message, isError = false) {
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            output.className = 'status ' + (isError ? 'success' : 'info');
+            output.innerHTML = message;
+        }
+
+        function clearNotifications() {
+            localStorage.removeItem('dogepump_notifications');
+            showOutput('✅ Notifications cleared!<br>Now go to the app and create a new report.');
+            checkStatus();
+        }
+
+        function createTestNotification() {
+            const wallet = localStorage.getItem('dogepump_address');
+            const isAdmin = wallet && wallet.toLowerCase() === ADMIN_WALLET.toLowerCase();
+
+            if (!isAdmin) {
+                showOutput('❌ Please connect the admin wallet first!<br>Admin: ' + ADMIN_WALLET, true);
+                return;
+            }
+
+            const testNotification = {
+                id: Date.now().toString(),
+                type: 'success',
+                title: '🧪 Test Admin Notification',
+                message: 'This should navigate to the admin dashboard',
+                timestamp: Date.now(),
+                read: false,
+                link: '/admin#token-reports'
+            };
+
+            const existing = JSON.parse(localStorage.getItem('dogepump_notifications') || '[]');
+            localStorage.setItem('dogepump_notifications', JSON.stringify([testNotification, ...existing]));
+
+            showOutput('✅ Test notification created!<br>1. Refresh the app<br>2. Click the notification bell<br>3. Click "Test Admin Notification"<br>4. Should navigate to /admin#token-reports');
+        }
+
+        function goToApp() {
+            window.location.href = '/launch';
+        }
+
+        // Check status on load
+        checkStatus();
+    </script>
+</body>
+</html>

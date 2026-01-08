@@ -1,0 +1,26 @@
+# robots.txt for DogePump - Dogechain Memecoin Launchpad
+
+User-agent: *
+Allow: /
+Allow: /launch
+Allow: /leaderboard
+Allow: /earn
+Allow: /tv
+Allow: /sniper
+
+# Disallow admin and profile pages
+Disallow: /admin
+Disallow: /profile
+
+# Disallow API endpoints
+Disallow: /api/
+
+# Disallow development files
+Disallow: /*.map$
+Disallow: /*.json$
+
+# Sitemap location
+Sitemap: https://dogepump.com/sitemap.xml
+
+# Crawl delay (optional, be respectful)
+Crawl-delay: 1

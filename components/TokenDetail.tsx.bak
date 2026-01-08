@@ -1,0 +1,1061 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import {
+  ArrowLeft, Copy, TrendingUp, Users, Check,
+  History, BarChart3, Heart, Share2, Crown, SearchX, Star, Globe, Send, MessageCircle, List, PieChart, Bell, Flame, Flag, SmilePlus, Rocket, Settings2, Maximize2, Minimize2, Radio, Video, ExternalLink, Wallet, Ghost, Sprout, Droplets, DollarSign, Activity
+} from 'lucide-react';
+import { Button } from '../components/Button';
+import { XIcon } from '../components/XIcon';
+import { TOKENS, GRADUATION_MARKETCAP_USD, EXPLORER_URL } from '../constants';
+import { formatNumber as formatNumberWeb3, formatCurrency, formatAddress } from '../services/web3Service';
+import { useToast } from '../components/Toast';
+import { Confetti } from '../components/Confetti';
+import { playSound } from '../services/audio';
+import { useStore } from '../contexts/StoreContext';
+import { useAuth } from '../contexts/AuthContext';
+import { timeAgo, compressImage, formatNumber } from '../utils';
+import { AnimatedNumber } from '../components/AnimatedNumber';
+import { GraduationOverlay } from '../components/GraduationOverlay';
+import { BubbleMap } from '../components/BubbleMap';
+import { TradeForm } from '../components/TradeForm';
+import { DogeSwap } from '../components/DogeSwap';
+import { useDex } from '../contexts/DexContext';
+import { DexPool } from '../types';
+import { DogeGuard } from '../components/DogeGuard';
+import { MobileTradeBar } from '../components/MobileTradeBar';
+import { AuthModal } from '../components/AuthModal';
+import { UploadProgress } from '../components/UploadProgress';
+import { Trade } from '../types';
+import { CandleChart } from '../components/CandleChart';
+import { generateCandles, generateCandlesFromTrades, calculateEMA, calculateBollinger, calculateRSI, calculateMACD, calculateStochRSI } from '../utils/chartUtils';
+import { Skeleton } from '../components/Skeleton';
+import { CreatorAdmin } from '../components/CreatorAdmin';
+import { ExplorerModal } from '../components/ExplorerModal';
+import { Badge } from '../components/Badge';
+import { AlertModal } from '../components/AlertModal';
+import { BoostModal } from '../components/BoostModal';
+import { SentimentVote } from '../components/SentimentVote';
+import { ReportModal } from '../components/ReportModal';
+import { StickerPicker } from '../components/StickerPicker';
+import { FlashNumber } from '../components/FlashNumber';
+import { FarmBadge } from '../components/FarmBadge';
+import { FarmStakingModal } from '../components/FarmStakingModal';
+import { CreateFarmModal } from '../components/CreateFarmModal';
+import backendService from '../services/backendService';
+
+const FormattedText: React.FC<{ text: string }> = ({ text }) => {
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-1 text-sm text-gray-300 leading-relaxed">
+      {lines.map((line, i) => <p key={i}>{line}</p>)}
+    </div>
+  );
+};
+
+interface FloatingHeart {
+  id: string;
+  x: number;
+  y: number;
+  rotation: number;
+}
+
+const TokenDetail: React.FC = () => {
+  const { id } = useParams();
+  const location = useLocation();
+  const { addToast } = useToast();
+  const { tokens, addComment, likeComment, getTradesForToken, getCommentsForToken, myHoldings, priceHistory, watchlist, toggleWatchlist, openLightbox, activeOrders, cancelOrder, priceAlerts, resolveUsername, tokenOwnerFarms } = useStore();
+  const { isAuthenticated, user } = useAuth();
+
+  // Moved useMemo here to avoid React Error #310
+  const token = tokens.find(t => t.id === id);
+
+  // Redirect or show warning if token is delisted
+  if (token?.delisted) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] text-white">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center">
+            <Ghost size={64} className="mx-auto mb-4 text-red-400" />
+            <h1 className="text-3xl font-bold text-red-400 mb-4">Token Delisted</h1>
+            <p className="text-gray-300 mb-2">
+              This token (<strong>{token.name}</strong> / ${token.ticker}) has been delisted by platform administrators.
+            </p>
+            {token.delistedReason && (
+              <p className="text-gray-400 mb-4">
+                <strong>Reason:</strong> {token.delistedReason}
+              </p>
+            )}
+            <p className="text-gray-500 text-sm mb-6">
+              If you believe this is an error, please contact support.
+            </p>
+            <Link to="/" className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors">
+              <ArrowLeft size={20} />
+              Return to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const userTokenBalance = myHoldings.find(h => h.tokenId === id)?.balance || 0;
+
+  const holdersList = useMemo(() => {
+      if (!token) return [];
+      
+      const isGraduated = token.progress >= 100;
+      const bondingCurvePercentage = isGraduated ? 0 : Math.max(0, 100 - (token.progress * 0.8));
+      const ammPercentage = isGraduated ? 80 : 0;
+      const userPercentage = token.supply > 0 ? (userTokenBalance / token.supply) * 100 : 0;
+
+      return [
+          ...(isGraduated ? [{ address: 'DogePump Liquidity', percentage: ammPercentage, isContract: true, color: '#ec4899', value: ammPercentage * token.supply * token.price / 100 }] : [{ address: 'Bonding Curve', percentage: bondingCurvePercentage, isContract: true, color: '#D4AF37', value: bondingCurvePercentage * token.supply * token.price / 100 }]),
+          ...(userTokenBalance > 0 ? [{ address: 'You', percentage: userPercentage, isYou: true, color: '#00E054', value: userTokenBalance * token.price }] : []),
+          { address: '0x71C...9A23', percentage: 4.2, color: '#60A5FA', value: 4.2 * token.supply * token.price / 100 },
+          { address: '0x3a2...1B9f', percentage: 2.1, color: '#A78BFA', value: 2.1 * token.supply * token.price / 100 },
+          { address: 'Others', percentage: Math.max(0, 100 - bondingCurvePercentage - ammPercentage - userPercentage - 6.3), color: '#4B5563', value: 0 },
+      ];
+  }, [token, userTokenBalance]);
+
+  const trades = getTradesForToken(id || '');
+  const comments = getCommentsForToken(id || '');
+  const history = id ? (priceHistory[id] || []) : [];
+  const tokenOrders = activeOrders.filter(o => o.tokenId === id);
+  const tokenAlerts = priceAlerts.filter(a => a.tokenId === id);
+  
+  const isWatched = id ? watchlist.includes(id) : false;
+  const isCreator = token?.creator === 'You';
+
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const creatorAdminRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Check for action param to auto-scroll to creator tools
+  const searchParams = new URLSearchParams(location.search);
+  const actionParam = searchParams.get('action');
+
+  useEffect(() => {
+    if (actionParam === 'stream' && isCreator && creatorAdminRef.current) {
+        setTimeout(() => {
+            creatorAdminRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
+  }, [actionParam, isCreator]);
+
+  // Sync fullscreen state with browser events
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
+  }, []);
+
+  const userAverageBuyPrice = useMemo(() => {
+    if (!token) return 0;
+    const userBuys = trades.filter(t => t.tokenId === token.id && t.user === 'You' && t.type === 'buy');
+    const totalCost = userBuys.reduce((acc, t) => acc + t.amountDC, 0);
+    const totalTokens = userBuys.reduce((acc, t) => acc + t.amountToken, 0);
+    return totalTokens > 0 ? totalCost / totalTokens : 0;
+  }, [trades, token]);
+
+  // Chart Controls
+  const [timeframe, setTimeframe] = useState<'5m' | '15m' | '1H' | '4H' | '1D'>('1H');
+  const [indicators, setIndicators] = useState({
+     ema20: false,
+     ema50: false,
+     ema200: false,
+     bb: false,
+     macd: false,
+     rsi: false,
+     stoch: false
+  });
+  const [showIndicatorsMenu, setShowIndicatorsMenu] = useState(false);
+  const [candles, setCandles] = useState<any[]>([]);
+
+  const chartData = useMemo(() => {
+    // Use trades data if available for more accurate candles with sufficient data points
+    if (trades.length > 0) {
+      let data = generateCandlesFromTrades(trades, timeframe);
+      if (indicators.ema20) data = calculateEMA(data, 20);
+      if (indicators.ema50) data = calculateEMA(data, 50);
+      if (indicators.ema200) data = calculateEMA(data, 200);
+      if (indicators.bb) data = calculateBollinger(data, 20, 2);
+      if (indicators.rsi) data = calculateRSI(data, 14);
+      if (indicators.macd) data = calculateMACD(data);
+      if (indicators.stoch) data = calculateStochRSI(data);
+      return data;
+    }
+    // Fallback to history data
+    else if (history.length > 0) {
+      let data = generateCandles(history, timeframe);
+      if (indicators.ema20) data = calculateEMA(data, 20);
+      if (indicators.ema50) data = calculateEMA(data, 50);
+      if (indicators.ema200) data = calculateEMA(data, 200);
+      if (indicators.bb) data = calculateBollinger(data, 20, 2);
+      if (indicators.rsi) data = calculateRSI(data, 14);
+      if (indicators.macd) data = calculateMACD(data);
+      if (indicators.stoch) data = calculateStochRSI(data);
+      return data;
+    }
+    return [];
+  }, [trades, history, timeframe, indicators]);
+
+  useEffect(() => {
+     setCandles(chartData);
+  }, [chartData]);
+
+  const toggleIndicator = (key: keyof typeof indicators) => {
+     setIndicators(prev => ({ ...prev, [key]: !prev[key] }));
+     playSound('click');
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      chartContainerRef.current?.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const [copiedContract, setCopiedContract] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showGraduation, setShowGraduation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
+  const [copyTradeAmount, setCopyTradeAmount] = useState<string>('');
+
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [isBoostModalOpen, setIsBoostModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportedComment, setReportedComment] = useState<{ commentId: string, tokenId: string, commentUser: string } | null>(null);
+
+  const [hearts, setHearts] = useState<FloatingHeart[]>([]);
+
+  useEffect(() => {
+    if (token) setTimeout(() => setIsLoading(false), 500);
+  }, [token]);
+
+  const [tradeFilter, setTradeFilter] = useState<'all' | 'buy' | 'sell'>('all');
+  const [activeTab, setActiveTab] = useState<'thread' | 'holders' | 'farms'>('thread');
+  const [holdersView, setHoldersView] = useState<'map' | 'list'>('map');
+  const [isFarmStakingModalOpen, setIsFarmStakingModalOpen] = useState(false);
+  const [selectedFarm, setSelectedFarm] = useState<any>(null);
+  const [isCreateFarmModalOpen, setIsCreateFarmModalOpen] = useState(false);
+
+  const [holders, setHolders] = useState(1204);
+  const [newComment, setNewComment] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && ['thread', 'holders', 'farms'].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [location.search]);
+
+  const handleFarmStake = (farm: any) => {
+    setSelectedFarm(farm);
+    setIsFarmStakingModalOpen(true);
+    playSound('click');
+  };
+
+  const handleCreateFarm = () => {
+    if (!isAuthenticated) {
+      addToast('error', 'Please connect your wallet first');
+      return;
+    }
+    setIsCreateFarmModalOpen(true);
+    playSound('click');
+  };
+
+  // Simulate Holders change
+  useEffect(() => {
+     if(token) {
+        const interval = setInterval(() => {
+           if(Math.random() > 0.7) {
+              setHolders(prev => prev + (Math.random() > 0.3 ? 1 : -1));
+           }
+        }, 5000);
+        return () => clearInterval(interval);
+     }
+  }, [token]);
+
+  const handleQuickCopyTrade = (amount: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCopyTradeAmount(amount.toString());
+    addToast('success', `Copied Buy for ${formatNumber(amount)} DC`, 'Settings Updated');
+    playSound('click');
+  };
+
+  const handleCopyContract = () => {
+    playSound('click');
+    navigator.clipboard.writeText(token.contractAddress || '0x0000000000000000000000000000000000000000');
+    setCopiedContract(true);
+    addToast('success', 'Contract address copied');
+    setTimeout(() => setCopiedContract(false), 2000);
+  };
+
+  const handleShare = () => {
+    if (!token) return;
+    playSound('click');
+    const text = `Just found $${token.ticker} on DogePump!\n\nMarket Cap: ${formatCurrency(token.marketCap)}\nProgress: ${token.progress.toFixed(2)}%\n\nThe next moonshot?\n\n#DogeChain #FairLaunch #DogePump\n`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`;
+    window.open(twitterUrl, '_blank');
+    addToast('success', 'Opening Twitter...');
+  };
+
+  const handleShareComment = (comment: any) => {
+    if (!token || !comment) return;
+    playSound('click');
+
+    // Create shareable text for the comment
+    const commentText = comment.text.length > 200 ? comment.text.substring(0, 200) + '...' : comment.text;
+    let shareText = `${resolveUsername(comment.user)} on $${token.ticker}:\n\n"${commentText}"`;
+
+    // Include image information if present
+    if (comment.imageUrl) {
+      shareText += '\n\n[Image attached - visit page to view]';
+    }
+
+    shareText += `\n\nCheck out ${token.name} on DogePump!\n\n#DogeChain #Memecoin #DogePump\n`;
+
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(window.location.href + '?tab=thread')}`;
+    window.open(twitterUrl, '_blank');
+    addToast('success', 'Opening Twitter to share comment...');
+  };
+
+  const handleReportComment = (comment: any) => {
+    if (!token) return;
+    playSound('click');
+    setReportedComment({
+      commentId: comment.id,
+      tokenId: token.id,
+      commentUser: resolveUsername(comment.user)
+    });
+    setIsReportModalOpen(true);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check authentication
+      if (!isAuthenticated) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        addToast('error', 'File too large', 'Please select an image under 5MB');
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        addToast('error', 'Invalid file type', 'Please select a valid image file (JPEG, PNG, GIF, WebP)');
+        return;
+      }
+
+      // Read and compress image
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+         const base64 = reader.result as string;
+         try {
+           const compressed = await compressImage(base64, 500, 0.8);
+           setSelectedImage(compressed);
+           playSound('click');
+         } catch (err) {
+           console.warn("Compression failed");
+           addToast('error', 'Image processing failed', 'Could not process the image');
+         }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleStickerSelect = (url: string, type: 'emoji' | 'sticker') => {
+     if (type === 'emoji') {
+       // Insert emoji into the text area
+       setNewComment(prev => prev + url);
+       playSound('success');
+     } else {
+       // Handle sticker image
+       setSelectedImage(url);
+       playSound('success');
+     }
+     setShowStickerPicker(false);
+  };
+
+  const handlePostComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    if (!newComment.trim() && !selectedImage) return;
+    
+    // Check authentication
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    playSound('click');
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      let imageUrl: string | undefined = undefined;
+
+      // Upload image to backend if present
+      if (selectedImage) {
+        // Convert base64 to File
+        const response = await fetch(selectedImage);
+        const blob = await response.blob();
+        const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+
+        // Upload to backend with progress tracking
+        const uploadResponse = await backendService.uploadImage(file, (progress) => {
+          setUploadProgress(progress);
+        });
+
+        if (uploadResponse.success) {
+          imageUrl = uploadResponse.image.url;
+          setUploadedImageId(uploadResponse.image.id);
+        } else {
+          throw new Error('Image upload failed');
+        }
+      }
+
+      // Create comment with image URL
+      addComment(token.id, newComment, imageUrl);
+      setNewComment('');
+      setSelectedImage(null);
+      setUploadedImageId(null);
+      setUploadProgress(0);
+      addToast('success', 'Comment posted to thread');
+    } catch (error) {
+      console.error('Failed to post comment:', error);
+      addToast('error', 'Failed to post comment', error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handlePet = (e: React.MouseEvent<HTMLImageElement>) => {
+     e.stopPropagation();
+     const rect = e.currentTarget.getBoundingClientRect();
+     const x = e.clientX - rect.left;
+     const y = e.clientY - rect.top;
+     const id = Math.random().toString(36);
+     setHearts(prev => [...prev, { id, x, y, rotation: (Math.random() - 0.5) * 45 }]);
+     setTimeout(() => { setHearts(prev => prev.filter(h => h.id !== id)); }, 1000);
+     playSound('success');
+  };
+
+  // Conditional Rendering Logic
+  if (isLoading || !token) {
+     if (!token && !isLoading) {
+         return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-6 animate-fade-in">
+                <div className="w-32 h-32 bg-white/5 rounded-full flex items-center justify-center shadow-2xl border border-white/5">
+                <SearchX size={64} className="text-gray-600" />
+                </div>
+                <div className="space-y-2">
+                <h1 className="text-4xl font-comic font-bold text-white">Token Not Found</h1>
+                <p className="text-gray-500 max-w-md mx-auto">The requested token could not be found on the blockchain.</p>
+                </div>
+                <Link to="/">
+                <Button className="rounded-full px-8">Return to Board</Button>
+                </Link>
+            </div>
+         );
+     }
+     return (
+        <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
+           <Skeleton className="h-8 w-32 mb-4 rounded-full"/>
+           <div className="grid lg:grid-cols-12 gap-8">
+               <div className="lg:col-span-8 space-y-6">
+                   <Skeleton className="h-48 w-full rounded-3xl" />
+                   <Skeleton className="h-[500px] w-full rounded-3xl" />
+               </div>
+               <div className="lg:col-span-4 space-y-6">
+                   <Skeleton className="h-[400px] w-full rounded-3xl" />
+               </div>
+           </div>
+        </div>
+     );
+  }
+
+  const isGraduated = token.progress >= 100;
+  const currentPrice = token.price;
+  document.title = `$${currentPrice.toFixed(6)} | ${token.ticker} - DogePump`;
+
+  const displayedTrades = trades.filter(t => {
+    if (tradeFilter === 'all') return true;
+    return t.type === tradeFilter;
+  });
+
+  return (
+    <div className="space-y-8 animate-fade-in relative">
+      <AlertModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} token={token} />
+      <BoostModal isOpen={isBoostModalOpen} onClose={() => setIsBoostModalOpen(false)} token={token} />
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setReportedComment(null);
+        }}
+        tokenName={token.name}
+        commentId={reportedComment?.commentId}
+        tokenId={reportedComment ? reportedComment.tokenId : token.id}
+        commentUser={reportedComment?.commentUser}
+        reportType={reportedComment ? 'comment' : 'token'}
+      />
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultMode="login"
+      />
+      <ExplorerModal 
+        trade={selectedTrade} 
+        token={token} 
+        onClose={() => setSelectedTrade(null)} 
+        onCopyTrade={(amount) => setCopyTradeAmount(amount.toString())}
+      />
+      {showConfetti && <Confetti />}
+      <GraduationOverlay isOpen={showGraduation} onClose={() => setShowGraduation(false)} tokenName={token.name} ticker={token.ticker} imageUrl={token.imageUrl} />
+      <MobileTradeBar token={token} initialAmount={copyTradeAmount} />
+      
+      <Link to="/" onClick={() => playSound('click')} className="inline-flex items-center text-gray-500 hover:text-white transition-colors font-bold text-sm group mb-4">
+        <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Board
+      </Link>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-8 space-y-6 lg:order-1 order-2">
+          
+          {/* Header Card */}
+          <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-8 flex flex-col md:flex-row gap-8 shadow-xl relative overflow-hidden">
+             {isGraduated && (
+               <div className="absolute inset-0 z-0">
+                  <div className="absolute inset-0 bg-gradient-to-r from-doge/10 to-transparent animate-pulse-slow"></div>
+                  <div className="absolute -top-20 -right-20 w-64 h-64 bg-doge/20 blur-[60px]"></div>
+               </div>
+             )}
+             <div className="relative group/image shrink-0 cursor-pointer select-none">
+                 <img 
+                   src={token.imageUrl} 
+                   alt={token.name} 
+                   onClick={(e) => { handlePet(e); openLightbox(token.imageUrl); }}
+                   className="w-24 h-24 rounded-3xl bg-gray-800 object-cover shadow-2xl border border-white/5 relative z-10 active:scale-95 transition-transform" 
+                 />
+                 <div className="absolute bottom-0 right-0 z-20 bg-white text-black p-1 rounded-full text-[8px] font-bold opacity-0 group-hover/image:opacity-100 transition-opacity pointer-events-none">PET ME</div>
+                 {hearts.map(heart => (
+                    <div key={heart.id} className="absolute z-50 pointer-events-none animate-float-up text-pink-500" style={{ left: heart.x, top: heart.y, transform: `rotate(${heart.rotation}deg)` }}>
+                       <Heart size={24} fill="#ec4899" />
+                    </div>
+                 ))}
+             </div>
+
+             <div className="flex-1 relative z-10">
+                <div className="flex flex-wrap justify-between items-start gap-4">
+                  <div>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white font-comic flex items-center gap-3 leading-none">
+                      {token.name} <span className="text-gray-600 text-2xl font-sans font-medium tracking-wider">${token.ticker}</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => toggleWatchlist(token.id)} className={`text-2xl transition-all ${isWatched ? 'text-doge scale-110' : 'text-gray-600 hover:text-gray-400'}`}><Star size={24} className={isWatched ? 'fill-doge' : ''} /></button>
+                        <button onClick={() => setIsAlertModalOpen(true)} className={`text-2xl transition-all hover:text-white ${tokenAlerts.length > 0 ? 'text-doge' : 'text-gray-600'}`}><Bell size={24} className={tokenAlerts.length > 0 ? 'fill-doge' : ''} /></button>
+                        <button onClick={() => setIsBoostModalOpen(true)} className="text-2xl text-doge hover:text-white hover:scale-110 transition-all"><Rocket size={24} /></button>
+                      </div>
+                    </h1>
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                       {token.isLive && (
+                           <div className="inline-flex items-center gap-1.5 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/30 animate-pulse">
+                                <Radio size={14} /> LIVE NOW <span className="ml-1 opacity-70 font-mono text-[10px]">{token.streamViewers} Viewers</span>
+                           </div>
+                       )}
+                       {isGraduated && <div className="inline-flex items-center gap-1.5 bg-doge text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-doge/20 animate-bounce-subtle"><Crown size={14} fill="black" /> King of the Hill</div>}
+                       {(token.boosts || 0) > 0 && <div className="inline-flex items-center gap-1.5 bg-doge/20 text-doge border border-doge/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"><Flame size={14} /> {token.boosts} Boosts</div>}
+                       <FarmBadge 
+                         farms={tokenOwnerFarms.filter(f => f.stakingTokenId === token.id)} 
+                         onClick={() => { setActiveTab('farms'); playSound('click'); }}
+                       />
+                    </div>
+                    <div className="flex flex-wrap gap-4 mt-4 text-xs text-gray-400 font-mono uppercase tracking-wider items-center">
+                      <Link to={`/profile/${token.creator}`} className="flex items-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors group/creator">
+                        <Users size={12} className="group-hover/creator:text-doge transition-colors" />
+                        <span className="group-hover/creator:text-white transition-colors">Creator: {resolveUsername(token.creator)}</span>
+                      </Link>
+                      <div className="flex items-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors cursor-pointer select-none active:scale-95" onClick={handleCopyContract}>
+                        <span>CA: {token.contractAddress ? `${token.contractAddress.slice(0, 10)}...${token.contractAddress.slice(-4)}` : '0x0000000000...0000'}</span>
+                        {copiedContract ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                      </div>
+                      <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
+                        {token.website && <a href={token.website} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-white transition-colors"><Globe size={14} /></a>}
+                        {token.twitter && <a href={token.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-400 transition-colors"><XIcon size={14} /></a>}
+                        {token.telegram && <a href={token.telegram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-500 transition-colors"><Send size={14} /></a>}
+                        {token.discord && <a href={token.discord} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-purple-400 transition-colors"><MessageCircle size={14} /></a>}
+                        <button onClick={() => setIsReportModalOpen(true)} className="p-1.5 rounded bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-gray-500 transition-colors"><Flag size={14} /></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-2">
+                    <div className="text-5xl font-mono text-white font-medium tracking-tighter text-glow flex items-center justify-end">$<AnimatedNumber value={currentPrice} /></div>
+                    <div className={`text-sm font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-900/20 text-green-400`}><TrendingUp size={14}/> +42.0%</div>
+                  </div>
+                </div>
+           </div>
+
+          {/* ... (Charts, etc. - No changes) */}
+          <div ref={chartContainerRef} className={`bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col group transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[200] rounded-none border-0' : 'h-[600px]'}`}>
+             {/* ... Chart Header Controls ... */}
+             <div className="absolute top-6 left-6 z-30 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+                  <span className="text-[10px] font-bold text-gray-300 tracking-widest uppercase">Live Feed</span>
+                </div>
+                {/* ... Timeframe buttons ... */}
+                <div className="flex bg-black/60 backdrop-blur-md rounded-full border border-white/10 p-1 gap-1">
+                   {(['5m', '15m', '1H', '4H', '1D', '1W'] as const).map(tf => (
+                      <button key={tf} onClick={() => { setTimeframe(tf); playSound('click'); }} className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${timeframe === tf ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}>{tf}</button>
+                   ))}
+                </div>
+                
+                {/* Advanced Indicators Toggle */}
+                <div className="relative">
+                    <button onClick={() => setShowIndicatorsMenu(!showIndicatorsMenu)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showIndicatorsMenu ? 'bg-doge/20 text-doge border-doge/50' : 'bg-black/60 text-gray-500 border-white/10 hover:text-white'}`}>
+                        <Settings2 size={12} /> Indicators
+                    </button>
+                    {showIndicatorsMenu && (
+                        <div className="absolute top-full left-0 mt-2 bg-[#111] border border-white/10 rounded-xl p-3 shadow-xl z-50 w-40 flex flex-col gap-2 animate-slide-up">
+                            {/* ... Indicator list ... */}
+                            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Overlays</span>
+                            <button onClick={() => toggleIndicator('ema20')} className={`text-left text-xs px-2 py-1 rounded ${indicators.ema20 ? 'text-purple-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 20</button>
+                            <button onClick={() => toggleIndicator('ema50')} className={`text-left text-xs px-2 py-1 rounded ${indicators.ema50 ? 'text-blue-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 50</button>
+                            <button onClick={() => toggleIndicator('ema200')} className={`text-left text-xs px-2 py-1 rounded ${indicators.ema200 ? 'text-yellow-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 200</button>
+                            <button onClick={() => toggleIndicator('bb')} className={`text-left text-xs px-2 py-1 rounded ${indicators.bb ? 'text-orange-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>Bollinger</button>
+                            <div className="h-px bg-white/10 my-1"></div>
+                            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Oscillators</span>
+                            <button onClick={() => toggleIndicator('rsi')} className={`text-left text-xs px-2 py-1 rounded ${indicators.rsi ? 'text-cyan-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>RSI</button>
+                            <button onClick={() => toggleIndicator('macd')} className={`text-left text-xs px-2 py-1 rounded ${indicators.macd ? 'text-pink-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>MACD</button>
+                            <button onClick={() => toggleIndicator('stoch')} className={`text-left text-xs px-2 py-1 rounded ${indicators.stoch ? 'text-lime-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>Stoch RSI</button>
+                        </div>
+                    )}
+                </div>
+             </div>
+
+             {/* Fullscreen Button */}
+             <div className="absolute top-6 right-6 z-30">
+                <button 
+                  onClick={toggleFullscreen} 
+                  className="bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                  title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                >
+                   {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+             </div>
+             
+             <div className="flex-1 w-full pt-16 pb-2 px-2 relative">
+               <CandleChart 
+                  data={candles} 
+                  showEMA20={indicators.ema20}
+                  showEMA50={indicators.ema50}
+                  showEMA200={indicators.ema200}
+                  showBollinger={indicators.bb}
+                  showRSI={indicators.rsi}
+                  showMACD={indicators.macd}
+                  showStochRSI={indicators.stoch}
+                  userAverageBuyPrice={userAverageBuyPrice} 
+                  activeOrders={tokenOrders}
+                  priceAlerts={tokenAlerts}
+               />
+             </div>
+          </div>
+
+          <div className="space-y-6">
+             <div className="grid md:grid-cols-3 gap-6">
+                <div className="md:col-span-2 bg-[#0A0A0A] border border-white/10 rounded-3xl p-8 relative overflow-hidden shadow-lg group">
+                   <div className="relative z-10">
+                      <div className="flex justify-between items-end mb-6">
+                          <div>
+                            <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-gray-500 mb-2 flex items-center gap-2"><BarChart3 size={14}/> Bonding Curve</h3>
+                            {isGraduated ? <div className="text-4xl font-mono text-doge font-bold">100% - COMPLETED</div> : <div className="text-4xl font-mono text-white font-medium">{token.progress.toFixed(2)}%</div>}
+                          </div>
+                          <div className="text-right">
+                             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Graduation Goal</div>
+                             <div className="font-mono text-doge font-bold text-2xl">{formatCurrency(GRADUATION_MARKETCAP_USD)}</div>
+                          </div>
+                      </div>
+                      <div className="w-full bg-black/60 rounded-full h-6 overflow-hidden border border-white/5 p-0.5">
+                          <div className={`h-full rounded-full transition-all duration-1000 relative shadow-[0_0_20px_rgba(212,175,55,0.3)] ${isGraduated ? 'bg-doge w-full' : 'bg-gradient-to-r from-doge-dark to-doge'}`} style={{ width: `${Math.min(100, token.progress)}%` }}>
+                             <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:10px_10px] animate-shimmer"></div>
+                          </div>
+                      </div>
+                   </div>
+                </div>
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 flex flex-col justify-center gap-4 shadow-lg">
+                   <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Holders</span>
+                      <FlashNumber value={holders} className="font-mono text-white font-bold" />
+                   </div>
+                   <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Volume</span>
+                      <FlashNumber value={token.volume} className="font-mono text-white font-bold" />
+                   </div>
+                   <div className="flex justify-between items-center">
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Liquidity</span>
+                      <FlashNumber value={token.virtualLiquidity} className="font-mono text-white font-bold" />
+                   </div>
+                </div>
+             </div>
+             {/* ... DogeGuard and other components ... */}
+             <div className="grid md:grid-cols-3 gap-6">
+                <div className="md:col-span-2"><DogeGuard token={token} /></div>
+                <div className="flex flex-col gap-6">
+                   <SentimentVote token={token} />
+                   {isCreator && (
+                       <div ref={creatorAdminRef}>
+                           <CreatorAdmin token={token} defaultTab={actionParam === 'stream' ? 'stream' : 'security'} />
+                       </div>
+                   )}
+                </div>
+             </div>
+          </div>
+
+          {tokenOrders.length > 0 && (
+             <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-lg animate-fade-in">
+                 <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2"><List size={16} /> Active Orders</h3>
+                 <div className="space-y-2">
+                    {tokenOrders.map(order => (
+                       <div key={order.id} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:bg-white/[0.05] transition-colors">
+                           <div>
+                               <div className="flex items-center gap-2 mb-1">
+                                   <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${order.type === 'buy' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{order.mode} {order.type}</span>
+                                   <span className="text-gray-400 text-xs">{timeAgo(order.timestamp)}</span>
+                               </div>
+                               <div className="text-white font-mono font-bold text-sm">{formatNumber(order.amount)} {order.type === 'buy' ? 'DC' : token.ticker} @ ${formatNumber(order.price.toFixed(6))}</div>
+                           </div>
+                           <Button size="sm" onClick={() => cancelOrder(order.id)} className="bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 border-0">Cancel</Button>
+                       </div>
+                    ))}
+                 </div>
+             </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24 lg:order-2 order-1">
+          <div className="relative hidden lg:block">
+              {isGraduated ? <DogeSwap token={token} /> : (
+                 <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-[0_0_50px_-15px_rgba(0,0,0,0.7)] ring-1 ring-white/5 relative">
+                    <TradeForm token={token} initialAmount={copyTradeAmount} />
+                 </div>
+              )}
+          </div>
+          
+          <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-lg flex flex-col h-[400px]">
+             <div className="flex items-center justify-between mb-4 shrink-0">
+                <div className="flex items-center gap-2 text-gray-400"><History size={14} /><h3 className="font-bold text-xs uppercase tracking-wider">Trades</h3></div>
+                <div className="flex gap-1 bg-black/40 p-0.5 rounded-lg border border-white/5">
+                   {(['all', 'buy', 'sell'] as const).map(type => (
+                      <button key={type} onClick={() => { setTradeFilter(type); playSound('click'); }} className={`text-[9px] uppercase font-bold px-2 py-1 rounded transition-colors ${tradeFilter === type ? 'bg-white/10 text-white' : 'text-gray-600 hover:text-gray-400'}`}>{type}</button>
+                   ))}
+                </div>
+             </div>
+             <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex text-[9px] text-gray-600 uppercase tracking-wider px-2 mb-2 font-bold select-none border-b border-white/5 pb-2">
+                  <div className="w-1/4">Time</div><div className="w-1/4 text-right">Amount</div><div className="w-1/4 text-right">Price</div><div className="w-1/4 text-right">Copy</div>
+                </div>
+                <div className="overflow-y-auto flex-1 pr-1 space-y-0.5 custom-scrollbar">
+                  {displayedTrades.length > 0 ? displayedTrades.map((trade) => (
+                    <div key={trade.id} onClick={() => { setSelectedTrade(trade); playSound('click'); }} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors text-[10px] group font-mono animate-fade-in cursor-pointer">
+                      <div className="w-1/4 text-gray-500 group-hover:text-gray-300 transition-colors">{timeAgo(trade.timestamp)}</div>
+                      <div className={`w-1/4 text-right font-bold ${trade.type === 'buy' ? 'text-green-400' : 'text-red-400'}`}>{formatNumber(trade.amountToken)}</div>
+                      <div className="w-1/4 text-right text-white group-hover:text-doge transition-colors">${formatNumber(trade.price.toFixed(6))}</div>
+                      <div className="w-1/4 flex justify-end">
+                         {trade.type === 'buy' && <button onClick={(e) => handleQuickCopyTrade(trade.amountDC, e)} className="p-1 rounded bg-white/5 hover:bg-doge/20 hover:text-doge text-gray-500 transition-colors opacity-100" title="Copy Trade Amount"><Copy size={10} /></button>}
+                      </div>
+                    </div>
+                  )) : <div className="text-center text-gray-600 text-[10px] py-4">No trades yet</div>}
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-lg">
+          <div className="flex items-center gap-6 mb-6 border-b border-white/5 pb-1 overflow-x-auto">
+            {['thread', 'holders', 'farms'].map(tab => (
+               <button key={tab} onClick={() => setActiveTab(tab as any)} className={`pb-4 text-sm font-bold uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                 {tab === 'farms' ? <Sprout size={14} className="inline mr-1" /> : null}
+                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                 {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-doge shadow-[0_0_10px_#D4AF37]"></div>}
+               </button>
+            ))}
+          </div>
+
+          {/* ... Thread Tab Content ... */}
+          {activeTab === 'thread' && (
+            <div className="animate-fade-in">
+               {/* Upload Progress Display */}
+               {isUploading && (
+                  <div className="mb-6">
+                     <UploadProgress
+                        progress={uploadProgress}
+                        fileName={selectedImage ? 'Image' : 'Comment'}
+                        status="uploading"
+                     />
+                  </div>
+               )}
+               
+               <form onSubmit={handlePostComment} className="flex gap-4 mb-8 relative">
+                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-doge-dark to-doge flex items-center justify-center shrink-0">
+                     <div className="w-9 h-9 bg-black rounded-full flex items-center justify-center"><span className="text-xs font-bold text-doge">YOU</span></div>
+                   </div>
+                   <div className="flex-1">
+                     <textarea
+                       id="token-comment-textarea"
+                       name="token-comment-textarea"
+                       value={newComment}
+                       onChange={(e) => setNewComment(e.target.value)}
+                       placeholder="Type a message or upload a meme..."
+                       className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-doge/50 outline-none transition-all resize-none h-20"
+                       onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) handlePostComment(e); }}
+                     />
+                     <div className="flex justify-between items-center mt-2 px-1">
+                       <div className="flex items-center gap-3 ml-auto">
+                           <div className="relative">
+                               <button type="button" onClick={() => setShowStickerPicker(!showStickerPicker)} className="text-gray-500 hover:text-yellow-400 transition-colors"><SmilePlus size={18} /></button>
+                               <StickerPicker isOpen={showStickerPicker} onClose={() => setShowStickerPicker(false)} onSelect={handleStickerSelect} />
+                           </div>
+                           <input id="token-comment-image" name="token-comment-image" type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileSelect} />
+                           <button type="button" onClick={() => fileInputRef.current?.click()} className="text-gray-500 hover:text-doge transition-colors"><Settings2 size={18} /></button>
+                           <button type="submit" disabled={!newComment.trim() && !selectedImage} className="bg-doge text-black px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-doge-light transition-colors disabled:opacity-50">Post Reply</button>
+                       </div>
+                     </div>
+                   </div>
+               </form>
+               <div className="space-y-6">
+                   {comments.length > 0 ? comments.map((comment) => (
+                     <div key={comment.id} className="flex gap-4 group animate-slide-up">
+                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border bg-white/5 border-white/10`}><span className="text-xs font-bold text-gray-500">{comment.user.slice(0,2)}</span></div>
+                       <div className="flex-1">
+                           <div className="flex items-center gap-2 mb-1">
+                             <span className={`text-sm font-bold transition-colors cursor-pointer text-gray-300 group-hover:text-doge`}>{resolveUsername(comment.user)}</span>
+                             {comment.badges && comment.badges.map(b => <Badge key={b} type={b} size="sm" showTooltip={true} />)}
+                             <span className="text-[10px] text-gray-600 font-mono ml-auto">{timeAgo(comment.timestamp)}</span>
+                           </div>
+                           <div className="text-sm text-gray-300 leading-relaxed bg-white/[0.02] p-3 rounded-tr-xl rounded-b-xl border border-white/5">
+                             {comment.imageUrl && <div className="mb-3 rounded-lg overflow-hidden max-w-xs border border-white/10 cursor-pointer" onClick={() => openLightbox(comment.imageUrl!)}><img src={comment.imageUrl} alt="Attachment" className="w-full h-auto hover:scale-105 transition-transform" /></div>}
+                             <FormattedText text={comment.text} />
+                             {comment.tradeAction && <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-4"><div className="text-xs text-gray-400 font-bold uppercase">Suggestion:</div><div className={`px-4 py-1.5 rounded-lg font-bold text-xs uppercase flex items-center gap-2 ${comment.tradeAction.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{comment.tradeAction.type.toUpperCase()} {formatNumber(comment.tradeAction.amount)}</div></div>}
+                           </div>
+                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 font-bold uppercase tracking-wider">
+                             <button onClick={() => likeComment(comment.id)} className="flex items-center gap-1 hover:text-red-500 transition-colors"><Heart size={12} className={comment.likes > 0 ? 'fill-red-500 text-red-500' : ''} /> {comment.likes}</button>
+                             <button onClick={() => handleShareComment(comment)} className="flex items-center gap-1 hover:text-blue-500 transition-colors"><Share2 size={12} /> Share</button>
+                             <button onClick={() => handleReportComment(comment)} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Report comment"><Flag size={12} /></button>
+                           </div>
+                       </div>
+                     </div>
+                   )) : <div className="text-center text-gray-500 py-10 font-mono text-sm">No comments yet. Be the first!</div>}
+               </div>
+            </div>
+          )}
+          
+          {activeTab === 'holders' && (
+            <div className="animate-fade-in">
+               <div className="flex justify-end mb-4">
+                  <div className="bg-white/5 p-1 rounded-lg flex gap-1">
+                     <button onClick={() => setHoldersView('map')} className={`p-1.5 rounded-md ${holdersView === 'map' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}><PieChart size={16} /></button>
+                     <button onClick={() => setHoldersView('list')} className={`p-1.5 rounded-md ${holdersView === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}><List size={16} /></button>
+                  </div>
+               </div>
+               {holdersView === 'map' ? (
+                  <div className="grid md:grid-cols-2 gap-8 items-start">
+                     <div className="h-[400px] relative rounded-3xl overflow-hidden shadow-2xl"><BubbleMap holders={holdersList} /></div>
+                     <div className="space-y-4">
+                        <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-white text-lg">Distribution</h3><span className="text-gray-500 text-xs uppercase font-bold tracking-wider">{holders.toLocaleString()} Holders</span></div>
+                        <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                           {holdersList.map((holder, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl border border-white/5 hover:border-doge/20 transition-colors group">
+                                 <div className="flex items-center gap-3">
+                                     <div className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ backgroundColor: holder.color }}></div>
+                                     <div className="flex flex-col">
+                                         <span className={`font-mono text-sm ${holder.isYou ? 'text-green-400 font-bold' : holder.isContract ? 'text-doge font-bold' : 'text-gray-300'}`}>
+                                             <Link to={`/profile/${holder.isYou ? '' : holder.address}`} className="hover:underline hover:text-white transition-colors">
+                                                 {resolveUsername(holder.address)}
+                                             </Link>
+                                         </span>
+                                         {!holder.isContract && <span className="text-[9px] text-gray-600 font-mono">{formatAddress(holder.address)}</span>}
+                                     </div>
+                                     {holder.isContract && <Rocket size={10} className="text-doge" />}
+                                 </div>
+                                 <div className="flex flex-col items-end">
+                                     <div className="font-mono font-bold text-white">{holder.percentage.toFixed(2)}%</div>
+                                     {!holder.isContract && (
+                                         <a href={`${EXPLORER_URL}/address/${holder.address}`} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-600 hover:text-blue-400 transition-colors flex items-center gap-1" title="View Explorer">
+                                             <ExternalLink size={10} /> Explorer
+                                         </a>
+                                     )}
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                  </div>
+               ) : (
+                  <div className="overflow-hidden rounded-2xl border border-white/5">
+                     <table className="w-full text-left text-sm">
+                        <thead className="bg-white/[0.03] text-gray-500 text-xs font-bold uppercase tracking-wider"><tr><th className="px-4 py-3">Rank</th><th className="px-4 py-3">User</th><th className="px-4 py-3">Wallet</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3 text-right">% Supply</th><th className="px-4 py-3 text-right">Value</th></tr></thead>
+                        <tbody className="divide-y divide-white/5">
+                           {holdersList.map((holder, idx) => (
+                              <tr key={idx} className="hover:bg-white/[0.02]">
+                                 <td className="px-4 py-3 text-gray-500 font-mono">#{idx + 1}</td>
+                                 <td className={`px-4 py-3 font-mono font-bold ${holder.isContract ? 'text-doge' : holder.isYou ? 'text-green-400' : 'text-gray-300'}`}>
+                                     {holder.isContract ? (
+                                         <span>{resolveUsername(holder.address)} (Contract)</span>
+                                     ) : (
+                                         <Link to={`/profile/${holder.isYou ? '' : holder.address}`} className="hover:underline hover:text-white transition-colors">
+                                             {resolveUsername(holder.address)} {holder.isYou && '(You)'}
+                                         </Link>
+                                     )}
+                                 </td>
+                                 <td className="px-4 py-3 text-gray-500 font-mono text-xs">
+                                     {!holder.isContract ? (
+                                         <div className="flex items-center gap-2">
+                                             <span className="truncate max-w-[100px]">{formatAddress(holder.address)}</span>
+                                             <a href={`${EXPLORER_URL}/address/${holder.address}`} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-400 transition-colors">
+                                                 <ExternalLink size={12} />
+                                             </a>
+                                         </div>
+                                     ) : (
+                                         <span className="opacity-50">-</span>
+                                     )}
+                                 </td>
+                                 <td className="px-4 py-3 text-right text-gray-400 font-mono">{formatNumber((holder.percentage / 100) * token.supply)}</td>
+                                 <td className="px-4 py-3 text-right text-white font-mono">{holder.percentage.toFixed(2)}%</td>
+                                 <td className="px-4 py-3 text-right text-green-400 font-mono">{formatCurrency(holder.value || 0)}</td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  </div>
+               )}
+            </div>
+          )}
+
+          {/* Farms Tab */}
+          {activeTab === 'farms' && (
+            <div className="animate-fade-in">
+               {/* Farms for this token */}
+               {(() => {
+                 const tokenFarms = tokenOwnerFarms.filter(f => f.stakingTokenId === token.id);
+                 
+                 if (tokenFarms.length === 0) {
+                   return (
+                     <div className="text-center py-12">
+                       <Sprout size={48} className="text-gray-600 mx-auto mb-4" />
+                       <h3 className="text-xl font-bold text-white mb-2">No Farms Available</h3>
+                       <p className="text-gray-500 mb-6">There are no staking farms for {token.ticker} yet.</p>
+                       {isCreator && (
+                         <button
+                           onClick={handleCreateFarm}
+                           className="px-6 py-3 bg-doge hover:bg-doge-light text-black font-bold rounded-xl transition-all"
+                         >
+                           Create a Farm
+                         </button>
+                       )}
+                     </div>
+                   );
+                 }
+
+                 return (
+                   <div className="grid md:grid-cols-2 gap-6">
+                     {tokenFarms.map(farm => {
+                       const rewardToken = tokens.find(t => t.id === farm.rewardTokenId);
+                       const stakingToken = tokens.find(t => t.id === farm.stakingTokenId);
+                       const currentAPY = farm.stats.totalStaked > 0
+                         ? Math.min((farm.config.rewardRate * 86400 * 365 * 100) / farm.stats.totalStaked, 50000)
+                         : 0;
+
+                       return (
+                         <div key={farm.id} className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 hover:border-doge/30 transition-all">
+                           <div className="flex items-start justify-between mb-4">
+                             <div className="flex items-center gap-3">
+                               {rewardToken?.imageUrl && (
+                                 <img src={rewardToken.imageUrl} alt={rewardToken.name} className="w-12 h-12 rounded-full border-2 border-doge/30" />
+                               )}
+                               <div>
+                                 <h4 className="font-bold text-white">{rewardToken?.name} Farm</h4>
+                                 <p className="text-xs text-gray-400">Stake {stakingToken?.ticker} to earn {rewardToken?.ticker}</p>
+                               </div>
+                             </div>
+                             <div className="text-right">
+                               <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">APY</div>
+                               <div className="text-2xl font-mono font-bold text-green-400">{currentAPY.toFixed(2)}%</div>
+                             </div>
+                           </div>
+
+                           <div className="grid grid-cols-3 gap-4 mb-4">
+                             <div className="bg-white/[0.02] rounded-xl p-3">
+                               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">TVL</div>
+                               <div className="text-sm font-bold text-white">{formatNumber(farm.stats.totalStaked)}</div>
+                             </div>
+                             <div className="bg-white/[0.02] rounded-xl p-3">
+                               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Stakers</div>
+                               <div className="text-sm font-bold text-white">{formatNumber(farm.stats.participantCount)}</div>
+                             </div>
+                             <div className="bg-white/[0.02] rounded-xl p-3">
+                               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Rewards</div>
+                               <div className="text-sm font-bold text-white">{formatNumber(farm.pool.totalDistributed)}</div>
+                             </div>
+                           </div>
+
+                           <button
+                             onClick={() => handleFarmStake(farm)}
+                             className="w-full py-3 bg-doge hover:bg-doge-light text-black font-bold rounded-xl transition-all"
+                           >
+                             Stake Now
+                           </button>
+                         </div>
+                       );
+                     })}
+                   </div>
+                 );
+               })()}
+            </div>
+          )}
+      </div>
+
+      {/* Farm Staking Modal */}
+      {selectedFarm && (
+        <FarmStakingModal
+          farm={selectedFarm}
+          rewardToken={tokens.find(t => t.id === selectedFarm.rewardTokenId)}
+          stakingToken={tokens.find(t => t.id === selectedFarm.stakingTokenId)}
+          onClose={() => { setIsFarmStakingModalOpen(false); setSelectedFarm(null); }}
+        />
+      )}
+
+      {/* Create Farm Modal */}
+      {isCreator && (
+        <CreateFarmModal
+          isOpen={isCreateFarmModalOpen}
+          onClose={() => setIsCreateFarmModalOpen(false)}
+          token={token}
+        />
+      )}
+
+      <style>{`@keyframes floatUp { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { opacity: 1; transform: translateY(-20px) scale(1.2); } 100% { transform: translateY(-100px) scale(1); opacity: 0; } } .animate-float-up { animation: floatUp 1s ease-out forwards; }`}</style>
+    </div>
+  );
+};
+
+export default TokenDetail;

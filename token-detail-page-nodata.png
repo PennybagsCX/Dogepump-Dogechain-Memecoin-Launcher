@@ -1,0 +1,6 @@
+uid=9_0 RootWebArea "$0.000045 | RDOG2 - DogePump" url="http://localhost:3000/#/token/token-2"
+  uid=9_1 heading "Something went wrong" level="1"
+  uid=9_2 StaticText "The application encountered an unexpected error. This might be due to a data mismatch or a temporary glitch."
+  uid=9_3 StaticText "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
+  uid=9_4 button "Reset Application"
+  uid=9_5 StaticText "Warning: This will clear your local demo data."

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+
+    <!-- Prevent wallet extension conflicts - must run FIRST before ANYTHING else -->
+    <script>
+    (function() {
+      'use strict';
+
+      // Store references to original console methods BEFORE extensions can capture them
+      // Using apply instead of Function.prototype.bind to avoid CSP violations
+      const _originalError = console.error;
+      const _originalWarn = console.warn;
+      const _originalLog = console.log;
+
+      // Comprehensive error filtering
+      function shouldSuppress(args) {
+        for (const arg of args) {
+          try {
+            const str = arg ? String(arg) : '';
+            if (str.includes('MetaMask encountered an error setting the global Ethereum provider') ||
+                str.includes('Cannot set property ethereum') ||
+                (str.includes('inpage.js') && str.includes('ethereum'))) {
+              return true;
+            }
+            if (arg && arg.stack && String(arg.stack).includes('ethereum')) {
+              return true;
+            }
+          } catch (e) {
+            // If we can't convert to string, just continue checking other args
+            continue;
+          }
+        }
+        return false;
+      }
+
+      // Override console methods
+      console.error = function error(...args) {
+        if (!shouldSuppress(args)) {
+          _originalError.apply(console, args);
+        }
+      };
+
+      console.warn = function warn(...args) {
+        if (!shouldSuppress(args)) {
+          _originalWarn.apply(console, args);
+        }
+      };
+
+      console.log = function log(...args) {
+        if (!shouldSuppress(args)) {
+          _originalLog.apply(console, args);
+        }
+      };
+
+      // Prevent extensions from accessing the original console
+      Object.defineProperty(console, 'error', { value: console.error, writable: false, configurable: false });
+      Object.defineProperty(console, 'warn', { value: console.warn, writable: false, configurable: false });
+      Object.defineProperty(console, 'log', { value: console.log, writable: false, configurable: false });
+
+      // Intercept window error events
+      window.addEventListener('error', function(event) {
+        if (event.message && (
+          event.message.includes('ethereum') ||
+          event.message.includes('MetaMask')
+        )) {
+          event.preventDefault();
+          event.stopPropagation();
+          return true;
+        }
+      }, true);
+
+      // Try to pre-define window.ethereum before extensions inject
+      try {
+        if (!Object.prototype.hasOwnProperty.call(window, 'ethereum')) {
+          const ethereumValue = { value: undefined };
+          Object.defineProperty(window, 'ethereum', {
+            configurable: true,
+            enumerable: true,
+            get: function() { return ethereumValue.value; },
+            set: function(val) { ethereumValue.value = val; }
+          });
+        }
+      } catch (e) {
+        // Silently fail
+      }
+    })();
+    </script>
+
+    <title>DogePump | Dogechain Memecoin Launchpad</title>
+    <meta name="description" content="Launch fair-launch memecoins on Dogechain. Discover, trade, and create memecoins with the most advanced launchpad platform." />
+
+    <!-- Favicon and Apple Touch Icon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FFD93D">
+
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload critical fonts with display swap -->
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dogepump.com/">
+    <meta property="og:title" content="DogePump | Dogechain Memecoin Launchpad">
+    <meta property="og:description" content="Launch fair-launch memecoins on Dogechain. Discover, trade, and create memecoins with the most advanced launchpad platform.">
+    <meta property="og:image" content="https://dogepump.com/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://dogepump.com/">
+    <meta name="twitter:title" content="DogePump | Dogechain Memecoin Launchpad">
+    <meta name="twitter:description" content="Launch fair-launch memecoins on Dogechain. Discover, trade, and create memecoins with the most advanced launchpad platform.">
+    <meta name="twitter:image" content="https://dogepump.com/og-image.png">
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="keywords" content="dogechain, memecoin, launchpad, dogecoin, crypto, trading, defi, nft">
+    <meta name="author" content="DogePump">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://dogepump.com/">
+    
+    <style>
+      /* Font display swap for faster rendering */
+      @font-face {
+        font-family: 'Inter';
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Comic Neue';
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        font-display: swap;
+      }
+    </style>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <noscript>
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #020202; color: white; text-align: center; padding: 20px;">
+        <div>
+          <h1 style="font-size: 24px; margin-bottom: 16px;">JavaScript Required</h1>
+          <p style="font-size: 16px; color: #888;">DogePump requires JavaScript to function properly. Please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
