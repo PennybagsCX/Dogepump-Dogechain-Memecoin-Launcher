@@ -602,7 +602,7 @@ Alternative (Screen Sharing):
                     <div className="text-xs text-gray-500">
                         At 100% progress, LP tokens are burned and token graduates to DEX with permanent liquidity
                     </div>
-                    <div className="text-center sm:text-left">
+                    <div className="text-center">
                         <div className="text-lg font-mono font-bold text-doge">{token.progress.toFixed(1)}%</div>
                         <div className="text-xs text-gray-500">Complete</div>
                     </div>
