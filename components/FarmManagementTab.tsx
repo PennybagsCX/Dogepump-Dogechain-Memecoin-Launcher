@@ -457,19 +457,19 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
               {token ? `${token.name} Farm Summary` : 'Farm Summary'}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="inline-flex items-center gap-2">
+              <div>
                 <p className="text-gray-400 text-sm">Total Farms</p>
                 <p className="text-2xl font-bold text-white">{myFarms.length}</p>
               </div>
-              <div className="inline-flex items-center gap-2">
+              <div>
                 <p className="text-gray-400 text-sm">Active</p>
                 <p className="text-2xl font-bold text-green-400">{activeFarms.length}</p>
               </div>
-              <div className="inline-flex items-center gap-2">
+              <div>
                 <p className="text-gray-400 text-sm">Paused</p>
                 <p className="text-2xl font-bold text-yellow-400">{pausedFarms.length}</p>
               </div>
-              <div className="inline-flex items-center gap-2">
+              <div>
                 <p className="text-gray-400 text-sm">Total Staked</p>
                 <p className="text-2xl font-bold text-purple-400">
                   {myFarms.reduce((sum, f) => sum + (f.stats?.totalStaked || 0), 0).toLocaleString()}
