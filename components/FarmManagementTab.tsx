@@ -2,11 +2,293 @@ import React, { useState } from 'react';
 import { useStore } from '../contexts/StoreContext';
 import { Token, TokenOwnerFarm } from '../types';
 import { FarmCard } from './FarmCard';
-import { CreateFarmModal } from './CreateFarmModal';
 
 interface FarmManagementTabProps {
   token?: Token;
 }
+
+// Inline Create Farm Form Component
+const CreateFarmForm: React.FC<{
+  token: Token;
+  onCancel: () => void;
+}> = ({ token, onCancel }) => {
+  const { createFarm, myHoldings, tokens } = useStore();
+
+  const [formData, setFormData] = useState({
+    stakingTokenId: token.id,
+    rewardTokenId: token.id,
+    rewardRate: 0.0001,
+    duration: 30,
+    lockPeriod: 0,
+    maxStakeAmount: 1000000,
+    minStakeAmount: 1,
+    description: `Stake ${token.ticker} to earn ${token.ticker} rewards`,
+    initialDeposit: 100000
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      await createFarm({
+        ownerTokenId: token.id,
+        stakingTokenId: formData.stakingTokenId,
+        rewardTokenId: formData.rewardTokenId,
+        rewardRate: formData.rewardRate,
+        duration: formData.duration * 24 * 60 * 60 * 1000,
+        lockPeriod: formData.lockPeriod * 24 * 60 * 60 * 1000,
+        maxStakeAmount: formData.maxStakeAmount,
+        minStakeAmount: formData.minStakeAmount,
+        description: formData.description,
+        initialDeposit: formData.initialDeposit
+      });
+      onCancel();
+    } catch (error) {
+      console.error('Failed to create farm:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getTokenBalance = (tokenId: string): number => {
+    if (tokenId === token.id) {
+      return myHoldings.find(h => h.tokenId === tokenId)?.balance || 0;
+    }
+    return 0;
+  };
+
+  const rewardTokenBalance = getTokenBalance(formData.rewardTokenId);
+  const canAffordDeposit = rewardTokenBalance >= formData.initialDeposit;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Token Selection */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Staking Token
+          </label>
+          <select
+            value={formData.stakingTokenId}
+            onChange={(e) => setFormData({ ...formData, stakingTokenId: e.target.value })}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          >
+            {myHoldings.filter(h => h.balance > 0).map(holding => {
+              const t = tokens.find(t => t.id === holding.tokenId);
+              return t ? (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.ticker})
+                </option>
+              ) : null;
+            })}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Reward Token
+          </label>
+          <select
+            value={formData.rewardTokenId}
+            onChange={(e) => setFormData({ ...formData, rewardTokenId: e.target.value })}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          >
+            {myHoldings.filter(h => h.balance > 0).map(holding => {
+              const t = tokens.find(t => t.id === holding.tokenId);
+              return t ? (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.ticker})
+                </option>
+              ) : null;
+            })}
+          </select>
+        </div>
+      </div>
+
+      {/* Reward Rate */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Reward Rate (per token per second)
+        </label>
+        <input
+          id="farm-reward-rate"
+          name="rewardRate"
+          type="number"
+          step="0.00001"
+          min="0.00001"
+          max="0.001"
+          value={formData.rewardRate}
+          onChange={(e) => setFormData({ ...formData, rewardRate: parseFloat(e.target.value) })}
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          placeholder="0.0001"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Higher rates = higher APY. Max rate: 0.001
+        </p>
+      </div>
+
+      {/* Duration */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Farm Duration (days)
+        </label>
+        <input
+          id="farm-duration"
+          name="duration"
+          type="number"
+          min="1"
+          max="365"
+          value={formData.duration}
+          onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          placeholder="30"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Farm will expire after this duration
+        </p>
+      </div>
+
+      {/* Lock Period */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Lock Period (days, 0 for no lock)
+        </label>
+        <input
+          id="farm-lock-period"
+          name="lockPeriod"
+          type="number"
+          min="0"
+          max="365"
+          value={formData.lockPeriod}
+          onChange={(e) => setFormData({ ...formData, lockPeriod: parseInt(e.target.value) })}
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          placeholder="0"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Staked tokens will be locked for this period
+        </p>
+      </div>
+
+      {/* Stake Limits */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Min Stake Amount
+          </label>
+          <input
+            id="farm-min-stake"
+            name="minStakeAmount"
+            type="number"
+            min="1"
+            value={formData.minStakeAmount}
+            onChange={(e) => setFormData({ ...formData, minStakeAmount: parseInt(e.target.value) })}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+            placeholder="1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Max Stake Amount
+          </label>
+          <input
+            id="farm-max-stake"
+            name="maxStakeAmount"
+            type="number"
+            min="1"
+            value={formData.maxStakeAmount}
+            onChange={(e) => setFormData({ ...formData, maxStakeAmount: parseInt(e.target.value) })}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+            placeholder="1000000"
+          />
+        </div>
+      </div>
+
+      {/* Initial Deposit */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Initial Reward Deposit
+        </label>
+        <div className="relative">
+          <input
+            id="farm-initial-deposit"
+            name="initialDeposit"
+            type="number"
+            min="1"
+            value={formData.initialDeposit}
+            onChange={(e) => setFormData({ ...formData, initialDeposit: parseInt(e.target.value) })}
+            className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 ${!canAffordDeposit ? 'border-red-500' : 'border-gray-700'}`}
+            placeholder="100000"
+          />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+            {token.ticker}
+          </span>
+        </div>
+        {!canAffordDeposit && (
+          <p className="text-xs text-red-400 mt-1">
+            Insufficient balance. You have {rewardTokenBalance} {token.ticker}.
+          </p>
+        )}
+        <p className="text-xs text-gray-500 mt-1">
+          These tokens will be deposited into the reward pool for stakers to earn
+        </p>
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Farm Description
+        </label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          rows={3}
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
+          placeholder="Describe your farm..."
+        />
+      </div>
+
+      {/* APY Preview */}
+      <div className="bg-gray-800/50 rounded-lg p-4 border border-purple-500/20">
+        <h3 className="text-lg font-semibold text-purple-400 mb-2">Estimated APY</h3>
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Reward Rate:</span>
+            <span className="text-white">{(formData.rewardRate * 86400 * 365 * 100).toFixed(2)}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Duration:</span>
+            <span className="text-white">{formData.duration} days</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Lock Period:</span>
+            <span className="text-white">{formData.lockPeriod} days</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3 pt-4 border-t border-gray-700">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting || !canAffordDeposit}
+          className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? 'Creating...' : 'Create Farm'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 
 export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) => {
   const {
@@ -16,7 +298,7 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
   } = useStore();
 
   const [selectedFarm, setSelectedFarm] = useState<TokenOwnerFarm | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -40,7 +322,7 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
 
   const handleCloseModals = () => {
     setSelectedFarm(null);
-    setShowCreateModal(false);
+    setShowCreateForm(false);
     setShowDepositModal(false);
     setShowEditModal(false);
   };
@@ -51,7 +333,7 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div>
         <div>
           <h2 className="text-2xl font-bold text-white">
             {token ? `${token.name} Farms` : 'My Farms'}
@@ -64,8 +346,8 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
           </p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l6-6M12 20V4m0 0l-6 6" />
@@ -74,8 +356,34 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
         </button>
       </div>
 
+      {/* Inline Create Farm Form */}
+      {showCreateForm && (token || myCreatedTokens.length > 0) && (
+        <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Create Farm</h2>
+              <p className="text-gray-400 text-sm mt-1">
+                Create a staking farm for {token ? `${token.name} (${token.ticker})` : 'your token'}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCreateForm(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <CreateFarmForm
+            token={token || myCreatedTokens[0]}
+            onCancel={() => setShowCreateForm(false)}
+          />
+        </div>
+      )}
+
       {/* No farms state */}
-      {myFarms.length === 0 ? (
+      {myFarms.length === 0 && !showCreateForm ? (
         <div className="bg-gray-800/50 border border-dashed border-gray-700 rounded-xl p-12 text-center">
           <div className="text-gray-400 mb-4">
             <svg className="w-16 h-16 mx-auto mb-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,7 +399,7 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
           </div>
           {(token || myCreatedTokens.length > 0) ? (
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateForm(true)}
               className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors"
             >
               {token ? `Create Farm for ${token.ticker}` : 'Create Your First Farm'}
@@ -172,15 +480,6 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
             </div>
           </div>
         </>
-      )}
-
-      {/* Create Farm Modal */}
-      {showCreateModal && (token || myCreatedTokens.length > 0) && (
-        <CreateFarmModal
-          isOpen={showCreateModal}
-          onClose={handleCloseModals}
-          token={token || myCreatedTokens[0]} // Use provided token or default to first created token
-        />
       )}
 
       {/* Deposit Rewards Modal */}

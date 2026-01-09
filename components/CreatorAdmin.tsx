@@ -44,7 +44,7 @@ export const CreatorAdmin: React.FC<CreatorAdminProps> = ({ token, defaultTab = 
   const [systemAudioStream, setSystemAudioStream] = useState<MediaStream | null>(null);
   const [micLevel, setMicLevel] = useState(0);
   const [systemAudioLevel, setSystemAudioLevel] = useState(0);
-  const [showAudioSettings, setShowAudioSettings] = useState(false);
+  const [showAudioSettings, setShowAudioSettings] = useState(true);
   const micAnalyserRef = useRef<AnalyserNode | null>(null);
   const systemAnalyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -599,7 +599,7 @@ Alternative (Screen Sharing):
                         <Rocket size={16} className="text-doge" />
                         Graduation Progress
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 text-center">
                         At 100% progress, LP tokens are burned and token graduates to DEX with permanent liquidity
                     </div>
                     <div className="text-center">
