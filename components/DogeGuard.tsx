@@ -29,7 +29,7 @@ export const DogeGuard: React.FC<DogeGuardProps> = ({ token }) => {
             <div className="grid grid-cols-2 gap-4">
                 {/* Standard Launcher Check */}
                 <div className="bg-white/[0.03] rounded-xl p-3 border border-green-500/20 text-center">
-                    <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Contract</div>
+                    <div className="text-[10px] text-green-400 uppercase font-bold tracking-wider mb-1">Contract</div>
                     <div className="font-bold text-xs text-white flex items-center justify-center gap-1">
                         Verified & Renounced
                     </div>
@@ -37,7 +37,7 @@ export const DogeGuard: React.FC<DogeGuardProps> = ({ token }) => {
 
                 {/* Liquidity Check */}
                 <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5 text-center">
-                    <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Liquidity</div>
+                    <div className="text-[10px] text-green-400 uppercase font-bold tracking-wider mb-1">Liquidity</div>
                     <div className="font-bold text-xs text-white">
                         {token.progress >= 100 ? 'Burned Forever' : 'Bonding Curve Locked'}
                     </div>
@@ -50,7 +50,7 @@ export const DogeGuard: React.FC<DogeGuardProps> = ({ token }) => {
                         <Users size={16} className="text-blue-400" />
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Top 10 Holders</span>
                     </div>
-                    <span className={`font-mono font-bold text-center sm:text-right ${isSafe ? 'text-green-400' : 'text-yellow-400'}`}>
+                    <span className={`font-mono font-bold text-center ${isSafe ? 'text-green-400' : 'text-yellow-400'}`}>
                         {top10Holders}%
                     </span>
                 </div>
@@ -60,7 +60,7 @@ export const DogeGuard: React.FC<DogeGuardProps> = ({ token }) => {
                         style={{ width: `${top10Holders}%` }}
                     ></div>
                 </div>
-                <div className="mt-3 text-[10px] text-gray-500 flex items-start gap-2 leading-relaxed bg-white/5 p-2 rounded-lg">
+                <div className="mt-3 text-[10px] text-gray-500 flex items-start justify-center leading-relaxed bg-white/5 p-2 rounded-lg">
                     All contracts deployed via DogePump are immutable. Minting is impossible. Rug pulls via liquidity removal are mathematically impossible before graduation.
                 </div>
             </div>
