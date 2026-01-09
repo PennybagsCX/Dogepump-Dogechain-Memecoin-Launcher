@@ -178,13 +178,15 @@ const TokenCardComponent: React.FC<TokenCardProps> = ({ token, preview = false }
               'bg-doge/5 group-hover:bg-doge/10'}`}></div>
  
         <div className="relative shrink-0">
+          <div className={`relative w-20 h-20 rounded-2xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-500 ${isGraduated ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-gray-900' : ''}`}>
              <OptimizedImage
                 src={token.imageUrl || '/images/default-token.svg'}
                 alt={token.name || 'Token'}
                 width={80}
                 height={80}
-                className={`w-20 h-20 rounded-2xl object-cover bg-gray-800 shadow-lg group-hover:scale-105 transition-transform duration-500 ${isGraduated ? 'border-2 border-purple-500' : ''}`}
+                className="w-full h-full object-cover bg-gray-800"
             />
+          </div>
             {isGraduated && (
                <div className="absolute -bottom-2 -right-2 bg-purple-600 text-white p-1 rounded-full border border-black shadow-lg z-10 animate-bounce-subtle">
                     <Crown size={12} fill="white" />
