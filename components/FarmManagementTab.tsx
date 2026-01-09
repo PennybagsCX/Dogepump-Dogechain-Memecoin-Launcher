@@ -453,7 +453,7 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
 
           {/* Farm Stats Summary */}
           <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-6 mt-8">
-            <h3 className="text-lg font-semibold text-white mb-4">
+            <h3 className="text-lg font-semibold text-white mb-4 text-center">
               {token ? `${token.name} Farm Summary` : 'Farm Summary'}
             </h3>
             <div className="space-y-3">
