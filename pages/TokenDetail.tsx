@@ -954,18 +954,18 @@ const TokenDetail: React.FC = () => {
                    </div>
 
                    {/* Stats Grid - Responsive */}
-                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                         <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Holders</span>
-                         <FlashNumber value={holders} className="font-mono text-white font-bold" />
+                   <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 sm:gap-2 border-b border-white/5 pb-2">
+                         <span className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Holders</span>
+                         <FlashNumber value={holders} className="font-mono text-white text-sm sm:text-base font-bold" />
                       </div>
-                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                         <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Volume</span>
-                         <FlashNumber value={token.volume} className="font-mono text-white font-bold" />
+                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 sm:gap-2 border-b border-white/5 pb-2">
+                         <span className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Volume</span>
+                         <FlashNumber value={token.volume} className="font-mono text-white text-sm sm:text-base font-bold" />
                       </div>
-                      <div className="flex justify-between items-center">
-                         <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Liquidity</span>
-                         <FlashNumber value={token.virtualLiquidity} className="font-mono text-white font-bold" />
+                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 sm:gap-2">
+                         <span className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Liquidity</span>
+                         <FlashNumber value={token.virtualLiquidity} className="font-mono text-white text-sm sm:text-base font-bold" />
                       </div>
                    </div>
                 </div>
@@ -1014,51 +1014,53 @@ const TokenDetail: React.FC = () => {
 
           {/* Chart Container */}
           <div ref={chartContainerRef} className={`bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col group transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[200] rounded-none border-0' : 'min-h-[650px]'}`}>
-             <div className="absolute top-6 left-6 z-30 flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+             {/* Timeframe Selector & Indicators - Hidden on very small screens to save space */}
+             <div className="absolute top-4 left-4 right-4 z-30 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/10 shadow-lg">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
-                  <span className="text-[10px] font-bold text-gray-300 tracking-widest uppercase">Live Feed</span>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-gray-300 tracking-widest uppercase">Live</span>
                 </div>
-                <div className="flex bg-black/60 backdrop-blur-md rounded-full border border-white/10 p-1 gap-1">
+                <div className="flex bg-black/60 backdrop-blur-md rounded-full border border-white/10 p-0.5 sm:p-1 gap-0.5 sm:gap-1">
                    {(['1m', '5m', '15m', '1H', '4H', '1D', '1W'] as const).map(tf => (
-                      <button key={tf} onClick={() => { setTimeframe(tf); playSound('click'); }} className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${timeframe === tf ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}>{tf}</button>
+                      <button key={tf} onClick={() => { setTimeframe(tf); playSound('click'); }} className={`px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold transition-all ${timeframe === tf ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}>{tf}</button>
                    ))}
                 </div>
-                
+
                 {/* Advanced Indicators Toggle */}
                 <div className="relative" ref={indicatorsMenuRef}>
-                    <button onClick={() => setShowIndicatorsMenu(!showIndicatorsMenu)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showIndicatorsMenu ? 'bg-doge/20 text-doge border-doge/50' : 'bg-black/60 text-gray-500 border-white/10 hover:text-white'}`}>
-                        <Settings2 size={12} /> Indicators
+                    <button onClick={() => setShowIndicatorsMenu(!showIndicatorsMenu)} className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-colors ${showIndicatorsMenu ? 'bg-doge/20 text-doge border-doge/50' : 'bg-black/60 text-gray-500 border-white/10 hover:text-white'}`}>
+                        <Settings2 size={10} className="sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Indicators</span>
                     </button>
                     {showIndicatorsMenu && (
-                        <div className="absolute top-full left-0 mt-2 bg-[#111] border border-white/10 rounded-xl p-3 shadow-xl z-50 w-40 flex flex-col gap-2 animate-slide-up">
-                            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Overlays</span>
-                            <button onClick={() => toggleIndicator('ema20')} className={`text-left text-xs px-2 py-1 rounded ${indicators.ema20 ? 'text-purple-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 20</button>
-                            <button onClick={() => toggleIndicator('ema50')} className={`text-left text-xs px-2 py-1 rounded ${indicators.ema50 ? 'text-blue-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 50</button>
-                            <button onClick={() => toggleIndicator('ema200')} className={`text-left text-xs px-2 py-1 rounded ${indicators.ema200 ? 'text-yellow-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 200</button>
-                            <button onClick={() => toggleIndicator('bb')} className={`text-left text-xs px-2 py-1 rounded ${indicators.bb ? 'text-orange-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>Bollinger</button>
-                            <div className="h-px bg-white/10 my-1"></div>
-                            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Oscillators</span>
-                            <button onClick={() => toggleIndicator('rsi')} className={`text-left text-xs px-2 py-1 rounded ${indicators.rsi ? 'text-cyan-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>RSI</button>
-                            <button onClick={() => toggleIndicator('macd')} className={`text-left text-xs px-2 py-1 rounded ${indicators.macd ? 'text-pink-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>MACD</button>
-                            <button onClick={() => toggleIndicator('stoch')} className={`text-left text-xs px-2 py-1 rounded ${indicators.stoch ? 'text-lime-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>Stoch RSI</button>
+                        <div className="absolute top-full left-0 mt-2 bg-[#111] border border-white/10 rounded-xl p-2 sm:p-3 shadow-xl z-50 w-36 sm:w-40 flex flex-col gap-1 sm:gap-2 animate-slide-up">
+                            <span className="text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 sm:mb-1">Overlays</span>
+                            <button onClick={() => toggleIndicator('ema20')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.ema20 ? 'text-purple-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 20</button>
+                            <button onClick={() => toggleIndicator('ema50')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.ema50 ? 'text-blue-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 50</button>
+                            <button onClick={() => toggleIndicator('ema200')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.ema200 ? 'text-yellow-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 200</button>
+                            <button onClick={() => toggleIndicator('bb')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.bb ? 'text-orange-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>Bollinger</button>
+                            <div className="h-px bg-white/10 my-0.5 sm:my-1"></div>
+                            <span className="text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 sm:mb-1">Oscillators</span>
+                            <button onClick={() => toggleIndicator('rsi')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.rsi ? 'text-cyan-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>RSI</button>
+                            <button onClick={() => toggleIndicator('macd')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.macd ? 'text-pink-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>MACD</button>
+                            <button onClick={() => toggleIndicator('stoch')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.stoch ? 'text-lime-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>Stoch RSI</button>
                         </div>
                     )}
                 </div>
              </div>
 
              {/* Fullscreen Button */}
-             <div className="absolute top-6 right-6 z-30">
-                <button 
-                  onClick={toggleFullscreen} 
-                  className="bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+             <div className="absolute top-4 right-4 z-30">
+                <button
+                  onClick={toggleFullscreen}
+                  className="bg-black/60 backdrop-blur-md p-1.5 sm:p-2 rounded-lg border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
                   title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                 >
-                   {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                   {isFullscreen ? <Minimize2 size={14} className="sm:w-4 sm:h-4" /> : <Maximize2 size={14} className="sm:w-4 sm:h-4" />}
                 </button>
              </div>
-             
-             <div className="w-full pt-16 pb-2 px-2 relative">
+
+             {/* Chart area - Adjust padding for mobile */}
+             <div className="w-full pt-20 sm:pt-16 pb-2 px-1 sm:px-2 relative">
                <CandleChart
                   data={chartData}
                   showEMA20={indicators.ema20}
