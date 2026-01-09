@@ -431,7 +431,7 @@ Alternative (Screen Sharing):
           </button>
       )}
 
-      <div className="flex flex-col items-stretch gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col md:items-center md:justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <div className="bg-doge/20 p-2 rounded-lg text-doge">
                 {activeTab === 'security' ? <Shield size={20} /> : activeTab === 'info' ? <Edit2 size={20}/> : activeTab === 'stream' ? <Video size={20}/> : activeTab === 'farms' ? <Sprout size={20}/> : <Gift size={20}/>}
@@ -442,7 +442,7 @@ Alternative (Screen Sharing):
             </div>
           </div>
 
-          <div className="flex bg-white/5 p-1 rounded-lg overflow-x-auto">
+          <div className="flex bg-white/5 p-1 rounded-lg overflow-x-auto md:mt-0">
              <button 
                onClick={() => setActiveTab('security')}
                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'security' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
@@ -507,15 +507,17 @@ Alternative (Screen Sharing):
                     </div>
                 </div>
                 </div>
-                {token.securityState.mintRevoked ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
-                    <Check size={12} /> Auto-Revoked
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20">
-                    <Shield size={12} /> Protected
-                    </span>
-                )}
+                <div className="text-center">
+                    {token.securityState.mintRevoked ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
+                        <Check size={12} /> Auto-Revoked
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20">
+                        <Shield size={12} /> Protected
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Freeze Authority */}
@@ -541,15 +543,17 @@ Alternative (Screen Sharing):
                     </div>
                 </div>
                 </div>
-                {token.securityState.freezeRevoked ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
-                    <Check size={12} /> Auto-Revoked
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20">
-                    <Lock size={12} /> Protected
-                    </span>
-                )}
+                <div className="text-center">
+                    {token.securityState.freezeRevoked ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
+                        <Check size={12} /> Auto-Revoked
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20">
+                        <Lock size={12} /> Protected
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Burn LP */}
@@ -575,30 +579,30 @@ Alternative (Screen Sharing):
                     </div>
                 </div>
                 </div>
-                {token.securityState.lpBurned ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
-                    <Check size={12} /> Burned
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20">
-                    <Flame size={12} /> Locked
-                    </span>
-                )}
+                <div className="text-center">
+                    {token.securityState.lpBurned ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
+                        <Check size={12} /> Burned
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20">
+                        <Flame size={12} /> Locked
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Graduation Status */}
             <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-2xl p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex-1">
-                        <div className="text-sm font-bold text-white flex items-center gap-2">
-                            <Rocket size={16} className="text-doge" />
-                            Graduation Progress
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                            At 100% progress, LP tokens are burned and token graduates to DEX with permanent liquidity
-                        </div>
+                <div className="flex flex-col gap-3">
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <Rocket size={16} className="text-doge" />
+                        Graduation Progress
                     </div>
-                    <div className="text-left sm:text-right">
+                    <div className="text-xs text-gray-500">
+                        At 100% progress, LP tokens are burned and token graduates to DEX with permanent liquidity
+                    </div>
+                    <div className="text-center sm:text-left">
                         <div className="text-lg font-mono font-bold text-doge">{token.progress.toFixed(1)}%</div>
                         <div className="text-xs text-gray-500">Complete</div>
                     </div>
