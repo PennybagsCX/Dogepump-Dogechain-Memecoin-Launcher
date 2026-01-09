@@ -691,7 +691,14 @@ Alternative (Screen Sharing):
                           <span className="text-sm font-bold">Audio Settings</span>
                       </div>
                       <button
-                        onClick={() => setShowAudioSettings(!showAudioSettings)}
+                        onClick={() => {
+                          setShowAudioSettings(!showAudioSettings);
+                          if (!showAudioSettings) {
+                            setTimeout(() => {
+                              document.getElementById('audio-settings-details')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }, 100);
+                          }
+                        }}
                         className="text-gray-400 hover:text-white transition-colors"
                       >
                         <Settings size={16} />
@@ -1028,7 +1035,7 @@ Alternative (Screen Sharing):
 
                   {/* Detailed Audio Settings */}
                   {showAudioSettings && (
-                      <div className="mt-4 space-y-3 border-t border-white/10 pt-3">
+                      <div id="audio-settings-details" className="mt-4 space-y-3 border-t border-white/10 pt-3">
                           <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-400">Echo Cancellation</span>
                               <span className="text-green-400">Enabled</span>
