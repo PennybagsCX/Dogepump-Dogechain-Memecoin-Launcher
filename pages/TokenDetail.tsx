@@ -1017,7 +1017,7 @@ const TokenDetail: React.FC = () => {
           {/* Chart Container */}
           <div ref={chartContainerRef} className={`bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col group transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[200] rounded-none border-0' : 'min-h-[650px]'}`}>
              {/* Timeframe Selector & Indicators - Proper spacing on all devices */}
-             <div className="absolute top-4 left-4 right-12 sm:right-4 z-30 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-4">
+             <div className="absolute top-4 left-4 right-16 sm:right-16 z-20 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-4">
                 <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/10 shadow-lg">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
                   <span className="text-[9px] sm:text-[10px] font-bold text-gray-300 tracking-widest uppercase">Live</span>
