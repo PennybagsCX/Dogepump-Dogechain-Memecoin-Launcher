@@ -695,7 +695,11 @@ Alternative (Screen Sharing):
                           setShowAudioSettings(!showAudioSettings);
                           if (!showAudioSettings) {
                             setTimeout(() => {
-                              document.getElementById('audio-settings-details')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                              const element = document.getElementById('audio-settings-details');
+                              if (element) {
+                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                element.focus({ preventScroll: true });
+                              }
                             }, 100);
                           }
                         }}
@@ -1035,7 +1039,7 @@ Alternative (Screen Sharing):
 
                   {/* Detailed Audio Settings */}
                   {showAudioSettings && (
-                      <div id="audio-settings-details" className="mt-4 space-y-3 border-t border-white/10 pt-3">
+                      <div id="audio-settings-details" tabIndex={-1} className="mt-4 space-y-3 border-t border-white/10 pt-3">
                           <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-400">Echo Cancellation</span>
                               <span className="text-green-400">Enabled</span>
