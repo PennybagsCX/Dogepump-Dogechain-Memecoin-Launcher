@@ -237,14 +237,14 @@ const CreateFarmForm: React.FC<{
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-300 mb-2 text-center">
           Farm Description
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={3}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white text-center focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
           placeholder="Describe your farm..."
         />
       </div>
@@ -252,16 +252,16 @@ const CreateFarmForm: React.FC<{
       {/* APY Preview */}
       <div className="bg-gray-800/50 rounded-lg p-4 border border-purple-500/20">
         <h3 className="text-lg font-semibold text-purple-400 mb-2">Estimated APY</h3>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="inline-flex items-center gap-1">
             <span className="text-gray-400">Reward Rate:</span>
             <span className="text-white">{(formData.rewardRate * 86400 * 365 * 100).toFixed(2)}%</span>
           </div>
-          <div className="flex justify-between">
+          <div className="inline-flex items-center gap-1">
             <span className="text-gray-400">Duration:</span>
             <span className="text-white">{formData.duration} days</span>
           </div>
-          <div className="flex justify-between">
+          <div className="inline-flex items-center gap-1">
             <span className="text-gray-400">Lock Period:</span>
             <span className="text-white">{formData.lockPeriod} days</span>
           </div>
@@ -333,7 +333,7 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="text-center">
         <div>
           <h2 className="text-2xl font-bold text-white">
             {token ? `${token.name} Farms` : 'My Farms'}
@@ -347,7 +347,7 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
         </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
+          className="mt-4 mx-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l6-6M12 20V4m0 0l-6 6" />
@@ -358,22 +358,20 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
 
       {/* Inline Create Farm Form */}
       {showCreateForm && (token || myCreatedTokens.length > 0) && (
-        <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Create Farm</h2>
-              <p className="text-gray-400 text-sm mt-1">
-                Create a staking farm for {token ? `${token.name} (${token.ticker})` : 'your token'}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowCreateForm(false)}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-6 relative">
+          <button
+            onClick={() => setShowCreateForm(false)}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-white text-center">Create Farm</h2>
+            <p className="text-gray-400 text-sm mt-1 text-center">
+              Create a staking farm for {token ? `${token.name} (${token.ticker})` : 'your token'}
+            </p>
           </div>
           <CreateFarmForm
             token={token || myCreatedTokens[0]}

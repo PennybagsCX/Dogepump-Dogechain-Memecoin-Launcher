@@ -486,13 +486,13 @@ Alternative (Screen Sharing):
 
             {/* Mint Authority */}
             <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex flex-col items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
                     <Shield size={18} />
                 </div>
-                <div className="flex-1">
+                <div className="text-center">
                     <div className="text-sm font-bold text-white">Mint Authority</div>
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <div className="text-xs text-gray-500 flex items-center justify-center gap-1">
                         {token.progress >= 50 ? (
                             <span className="text-green-400 flex items-center gap-1">
                                 <Check size={10} />
@@ -522,13 +522,13 @@ Alternative (Screen Sharing):
 
             {/* Freeze Authority */}
             <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex flex-col items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
                     <Lock size={18} />
                 </div>
-                <div className="flex-1">
+                <div className="text-center">
                     <div className="text-sm font-bold text-white">Freeze Authority</div>
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <div className="text-xs text-gray-500 flex items-center justify-center gap-1">
                         {token.progress >= 25 ? (
                             <span className="text-green-400 flex items-center gap-1">
                                 <Check size={10} />
@@ -558,13 +558,13 @@ Alternative (Screen Sharing):
 
             {/* Burn LP */}
             <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex flex-col items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
                     <Flame size={18} />
                 </div>
-                <div className="flex-1">
+                <div className="text-center">
                     <div className="text-sm font-bold text-white">Liquidity Lock</div>
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <div className="text-xs text-gray-500 flex items-center justify-center gap-1">
                         {token.progress >= 100 ? (
                             <span className="text-green-400 flex items-center gap-1">
                                 <Check size={10} />
@@ -595,7 +595,7 @@ Alternative (Screen Sharing):
             {/* Graduation Status */}
             <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-2xl p-4">
                 <div className="flex flex-col gap-3">
-                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                    <div className="text-sm font-bold text-white flex items-center justify-center gap-2">
                         <Rocket size={16} className="text-doge" />
                         Graduation Progress
                     </div>
