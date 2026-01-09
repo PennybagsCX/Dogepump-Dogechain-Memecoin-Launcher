@@ -29,16 +29,14 @@ export const DogeGuard: React.FC<DogeGuardProps> = ({ token }) => {
             <div className="grid grid-cols-2 gap-4">
                 {/* Standard Launcher Check */}
                 <div className="bg-white/[0.03] rounded-xl p-3 border border-green-500/20 text-center">
-                    <ShieldCheck size={20} className="mx-auto mb-2 text-green-500" />
                     <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Contract</div>
                     <div className="font-bold text-xs text-white flex items-center justify-center gap-1">
-                        Verified & Renounced <CheckCircle size={10} className="text-green-500"/>
+                        Verified & Renounced
                     </div>
                 </div>
 
                 {/* Liquidity Check */}
                 <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5 text-center">
-                    <Flame size={20} className={`mx-auto mb-2 ${token.progress >= 100 ? 'text-green-500' : 'text-orange-500'}`} />
                     <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Liquidity</div>
                     <div className="font-bold text-xs text-white">
                         {token.progress >= 100 ? 'Burned Forever' : 'Bonding Curve Locked'}
@@ -47,23 +45,22 @@ export const DogeGuard: React.FC<DogeGuardProps> = ({ token }) => {
             </div>
 
             <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-2 mb-2">
                     <div className="flex items-center gap-2">
                         <Users size={16} className="text-blue-400" />
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Top 10 Holders</span>
                     </div>
-                    <span className={`font-mono font-bold ${isSafe ? 'text-green-400' : 'text-yellow-400'}`}>
+                    <span className={`font-mono font-bold text-center sm:text-right ${isSafe ? 'text-green-400' : 'text-yellow-400'}`}>
                         {top10Holders}%
                     </span>
                 </div>
                 <div className="w-full bg-black/50 h-2 rounded-full overflow-hidden border border-white/5">
-                    <div 
-                        className={`h-full rounded-full ${isSafe ? 'bg-green-500' : 'bg-yellow-500'}`} 
+                    <div
+                        className={`h-full rounded-full ${isSafe ? 'bg-green-500' : 'bg-yellow-500'}`}
                         style={{ width: `${top10Holders}%` }}
                     ></div>
                 </div>
                 <div className="mt-3 text-[10px] text-gray-500 flex items-start gap-2 leading-relaxed bg-white/5 p-2 rounded-lg">
-                    <Info size={12} className="shrink-0 mt-0.5 text-blue-400"/>
                     All contracts deployed via DogePump are immutable. Minting is impossible. Rug pulls via liquidity removal are mathematically impossible before graduation.
                 </div>
             </div>
