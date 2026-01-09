@@ -853,7 +853,7 @@ const TokenDetail: React.FC = () => {
                   <div className="absolute -top-20 -right-20 w-64 h-64 bg-doge/20 blur-[60px]"></div>
                </div>
              )}
-             <div className="flex flex-col md:flex-row gap-8 relative z-10">
+             <div className="flex flex-col md:flex-row gap-8 relative z-10 items-center md:items-start">
                 <div
                   className="relative group/image shrink-0 cursor-pointer select-none"
                   onClick={(e) => { handlePet(e); openLightbox(token.imageUrl); }}
@@ -875,12 +875,12 @@ const TokenDetail: React.FC = () => {
                     ))}
                 </div>
 
-                <div className="flex-1 relative z-10 flex flex-wrap justify-between items-start gap-4">
-                  <div className="flex-1">
+                <div className="flex-1 relative z-10 flex flex-wrap justify-center md:justify-between items-center gap-4">
+                  <div className="flex-1 text-center md:text-left">
                     <h1 className="text-4xl md:text-5xl font-bold text-white font-comic leading-none">
                       {token.name}
                     </h1>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center items-center gap-2 sm:gap-3 mt-2">
                       <span className="text-gray-600 text-2xl font-sans font-medium tracking-wider">${token.ticker}</span>
                       <div className="flex items-center gap-2">
                         <button onClick={() => toggleWatchlist(token.id)} className={`text-2xl transition-all ${isWatched ? 'text-doge scale-110' : 'text-gray-600 hover:text-gray-400'}`}><Star size={24} className={isWatched ? 'fill-doge' : ''} /></button>
@@ -888,38 +888,38 @@ const TokenDetail: React.FC = () => {
                         <button key={`rocket-${boostTrigger}`} onClick={() => setIsBoostModalOpen(true)} className="text-2xl text-doge hover:text-white hover:scale-110 transition-all animate-shake-rocket"><Rocket size={24} /></button>
                       </div>
                     </div>
-                    {/* Status badges - stacked on mobile */}
-                    <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-3">
+                    {/* Status badges - centered on mobile */}
+                    <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
                        {token.isLive && (
-                           <div className="inline-flex items-center gap-1.5 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/30 animate-pulse">
+                           <div className="inline-flex items-center justify-center gap-1.5 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/30 animate-pulse">
                                <Radio size={14} /> LIVE NOW <span className="ml-1 opacity-70 font-mono text-[10px]">{token.streamViewers} Viewers</span>
                            </div>
                        )}
-                       {isGraduated && <div className="inline-flex items-center gap-1.5 bg-doge text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-doge/20 animate-bounce-subtle"><Crown size={14} fill="black" /> King of the Hill</div>}
-                       {(token.boosts || 0) > 0 && <div key={`boosts-${boostTrigger}`} className="inline-flex items-center gap-1.5 bg-doge/20 text-doge border border-doge/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-shake-vertical"><Flame size={14} /> {token.boosts} Boosts</div>}
+                       {isGraduated && <div className="inline-flex items-center justify-center gap-1.5 bg-doge text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-doge/20 animate-bounce-subtle"><Crown size={14} fill="black" /> King of the Hill</div>}
+                       {(token.boosts || 0) > 0 && <div key={`boosts-${boostTrigger}`} className="inline-flex items-center justify-center gap-1.5 bg-doge/20 text-doge border border-doge/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-shake-vertical"><Flame size={14} /> {token.boosts} Boosts</div>}
                     </div>
-                    {/* Creator and social links - stacked on mobile */}
-                    <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-4 text-xs text-gray-400 font-mono uppercase tracking-wider">
-                      <Link to={`/profile/${token.creator}`} className="flex items-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors group/creator">
+                    {/* Creator and social links - centered on mobile */}
+                    <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-start gap-3 mt-4 text-xs text-gray-400 font-mono uppercase tracking-wider">
+                      <Link to={`/profile/${token.creator}`} className="flex items-center justify-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors group/creator">
                         <Users size={12} className="group-hover/creator:text-doge transition-colors" />
                         <span className="group-hover/creator:text-white transition-colors">Creator: {resolveUsername(token.creator)}</span>
                       </Link>
-                      <div className="flex items-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors cursor-pointer select-none active:scale-95" onClick={handleCopyContract}>
+                      <div className="flex items-center justify-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors cursor-pointer select-none active:scale-95" onClick={handleCopyContract}>
                         <span>CA: {token.contractAddress ? `${token.contractAddress.slice(0, 10)}...${token.contractAddress.slice(-4)}` : '0x0000000000...0000'}</span>
                         {copiedContract ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                       </div>
-                      <div className="flex items-center gap-2 border-l border-white/10 pl-4">
-                        {token.website && isValidUrl(token.website) && <a href={token.website} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-white transition-colors"><Globe size={14} /></a>}
-                        {token.twitter && isValidUrl(token.twitter) && <a href={token.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-400 transition-colors"><XIcon size={14} /></a>}
-                        {token.telegram && isValidUrl(token.telegram) && <a href={token.telegram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-500 transition-colors"><Send size={14} /></a>}
-                        {token.discord && isValidUrl(token.discord) && <a href={token.discord} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-purple-400 transition-colors"><MessageCircle size={14} /></a>}
-                        <button onClick={() => setIsReportModalOpen(true)} className="p-1.5 rounded bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-gray-500 transition-colors"><Flag size={14} /></button>
+                      <div className="flex items-center justify-center gap-2 sm:border-l sm:border-white/10 sm:pl-4">
+                        {token.website && isValidUrl(token.website) && <a href={token.website} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-white transition-colors flex items-center justify-center"><Globe size={14} /></a>}
+                        {token.twitter && isValidUrl(token.twitter) && <a href={token.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-400 transition-colors flex items-center justify-center"><XIcon size={14} /></a>}
+                        {token.telegram && isValidUrl(token.telegram) && <a href={token.telegram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-500 transition-colors flex items-center justify-center"><Send size={14} /></a>}
+                        {token.discord && isValidUrl(token.discord) && <a href={token.discord} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-purple-400 transition-colors flex items-center justify-center"><MessageCircle size={14} /></a>}
+                        <button onClick={() => setIsReportModalOpen(true)} className="p-1.5 rounded bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-gray-500 transition-colors flex items-center justify-center"><Flag size={14} /></button>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right flex flex-col items-end gap-2">
-                    <div className="text-5xl font-mono text-white font-medium tracking-tighter text-glow flex items-center justify-end">$<AnimatedNumber value={currentPrice} /></div>
-                    <div className={`text-sm font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded ${
+                  <div className="text-center md:text-right flex flex-col items-center md:items-end gap-2">
+                    <div className="text-5xl font-mono text-white font-medium tracking-tighter text-glow flex items-center justify-center md:justify-end">$<AnimatedNumber value={currentPrice} /></div>
+                    <div className={`text-sm font-bold inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded ${
                       priceChange24h >= 0
                         ? 'bg-green-900/20 text-green-400'
                         : 'bg-red-900/20 text-red-400'

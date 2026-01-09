@@ -83,22 +83,22 @@ export const SentimentVote: React.FC<SentimentVoteProps> = ({ token }) => {
          {hasVoted && <span className="text-xs text-doge font-bold">Voted!</span>}
       </div>
 
-      <div className="flex items-center gap-2 mb-3">
-         <button 
+      <div className="flex flex-col sm:flex-row items-stretch gap-2 sm:gap-0 mb-3">
+         <button
            onClick={() => handleVote('bullish')}
            disabled={hasVoted}
-           className={`flex-1 py-2 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${hasVoted ? 'opacity-50 cursor-default' : 'hover:bg-white/5 hover:scale-[1.02] active:scale-95'}`}
+           className={`flex-1 py-3 sm:py-2 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${hasVoted ? 'opacity-50 cursor-default' : 'hover:bg-white/5 hover:scale-[1.02] active:scale-95'}`}
          >
             <TrendingUp size={20} className="text-green-500" />
             <span className="text-xs font-bold text-green-500">Bullish</span>
          </button>
-         
-         <div className="h-8 w-px bg-white/10"></div>
 
-         <button 
+         <div className="h-px w-full sm:h-8 sm:w-px bg-white/10"></div>
+
+         <button
            onClick={() => handleVote('bearish')}
            disabled={hasVoted}
-           className={`flex-1 py-2 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${hasVoted ? 'opacity-50 cursor-default' : 'hover:bg-white/5 hover:scale-[1.02] active:scale-95'}`}
+           className={`flex-1 py-3 sm:py-2 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${hasVoted ? 'opacity-50 cursor-default' : 'hover:bg-white/5 hover:scale-[1.02] active:scale-95'}`}
          >
             <TrendingDown size={20} className="text-red-500" />
             <span className="text-xs font-bold text-red-500">Bearish</span>
