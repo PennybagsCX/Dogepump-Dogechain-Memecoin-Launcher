@@ -692,8 +692,9 @@ Alternative (Screen Sharing):
                       </div>
                       <button
                         onClick={() => {
-                          setShowAudioSettings(!showAudioSettings);
-                          if (!showAudioSettings) {
+                          const newState = !showAudioSettings;
+                          setShowAudioSettings(newState);
+                          if (newState) {
                             setTimeout(() => {
                               const element = document.getElementById('audio-settings-details');
                               if (element) {
