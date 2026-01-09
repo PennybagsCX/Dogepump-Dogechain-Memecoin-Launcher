@@ -888,7 +888,8 @@ const TokenDetail: React.FC = () => {
                         <button key={`rocket-${boostTrigger}`} onClick={() => setIsBoostModalOpen(true)} className="text-2xl text-doge hover:text-white hover:scale-110 transition-all animate-shake-rocket"><Rocket size={24} /></button>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-3 flex-wrap">
+                    {/* Status badges - stacked on mobile */}
+                    <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-3">
                        {token.isLive && (
                            <div className="inline-flex items-center gap-1.5 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/30 animate-pulse">
                                <Radio size={14} /> LIVE NOW <span className="ml-1 opacity-70 font-mono text-[10px]">{token.streamViewers} Viewers</span>
@@ -897,7 +898,8 @@ const TokenDetail: React.FC = () => {
                        {isGraduated && <div className="inline-flex items-center gap-1.5 bg-doge text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-doge/20 animate-bounce-subtle"><Crown size={14} fill="black" /> King of the Hill</div>}
                        {(token.boosts || 0) > 0 && <div key={`boosts-${boostTrigger}`} className="inline-flex items-center gap-1.5 bg-doge/20 text-doge border border-doge/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-shake-vertical"><Flame size={14} /> {token.boosts} Boosts</div>}
                     </div>
-                    <div className="flex flex-wrap gap-4 mt-4 text-xs text-gray-400 font-mono uppercase tracking-wider items-center">
+                    {/* Creator and social links - stacked on mobile */}
+                    <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-4 text-xs text-gray-400 font-mono uppercase tracking-wider">
                       <Link to={`/profile/${token.creator}`} className="flex items-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors group/creator">
                         <Users size={12} className="group-hover/creator:text-doge transition-colors" />
                         <span className="group-hover/creator:text-white transition-colors">Creator: {resolveUsername(token.creator)}</span>
@@ -906,7 +908,7 @@ const TokenDetail: React.FC = () => {
                         <span>CA: {token.contractAddress ? `${token.contractAddress.slice(0, 10)}...${token.contractAddress.slice(-4)}` : '0x0000000000...0000'}</span>
                         {copiedContract ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                       </div>
-                      <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
+                      <div className="flex items-center gap-2 border-l border-white/10 pl-4">
                         {token.website && isValidUrl(token.website) && <a href={token.website} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-white transition-colors"><Globe size={14} /></a>}
                         {token.twitter && isValidUrl(token.twitter) && <a href={token.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-400 transition-colors"><XIcon size={14} /></a>}
                         {token.telegram && isValidUrl(token.telegram) && <a href={token.telegram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-500 transition-colors"><Send size={14} /></a>}
@@ -953,17 +955,17 @@ const TokenDetail: React.FC = () => {
                       </div>
                    </div>
 
-                   {/* Stats Grid - Responsive */}
+                   {/* Stats Grid - Centered on mobile */}
                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 sm:gap-2 border-b border-white/5 pb-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-1 sm:gap-2 border-b border-white/5 pb-2">
                          <span className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Holders</span>
                          <FlashNumber value={holders} className="font-mono text-white text-sm sm:text-base font-bold" />
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 sm:gap-2 border-b border-white/5 pb-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-1 sm:gap-2 border-b border-white/5 pb-2">
                          <span className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Volume</span>
                          <FlashNumber value={token.volume} className="font-mono text-white text-sm sm:text-base font-bold" />
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 sm:gap-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-1 sm:gap-2">
                          <span className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Liquidity</span>
                          <FlashNumber value={token.virtualLiquidity} className="font-mono text-white text-sm sm:text-base font-bold" />
                       </div>
@@ -1014,8 +1016,8 @@ const TokenDetail: React.FC = () => {
 
           {/* Chart Container */}
           <div ref={chartContainerRef} className={`bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col group transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[200] rounded-none border-0' : 'min-h-[650px]'}`}>
-             {/* Timeframe Selector & Indicators - Hidden on very small screens to save space */}
-             <div className="absolute top-4 left-4 right-4 z-30 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+             {/* Timeframe Selector & Indicators - Proper spacing on all devices */}
+             <div className="absolute top-4 left-4 right-12 sm:right-4 z-30 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-4">
                 <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/10 shadow-lg">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
                   <span className="text-[9px] sm:text-[10px] font-bold text-gray-300 tracking-widest uppercase">Live</span>
@@ -1026,10 +1028,10 @@ const TokenDetail: React.FC = () => {
                    ))}
                 </div>
 
-                {/* Advanced Indicators Toggle */}
+                {/* Advanced Indicators Toggle - Always visible */}
                 <div className="relative" ref={indicatorsMenuRef}>
                     <button onClick={() => setShowIndicatorsMenu(!showIndicatorsMenu)} className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-colors ${showIndicatorsMenu ? 'bg-doge/20 text-doge border-doge/50' : 'bg-black/60 text-gray-500 border-white/10 hover:text-white'}`}>
-                        <Settings2 size={10} className="sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Indicators</span>
+                        <Settings2 size={10} className="sm:w-3 sm:h-3" /> <span className="hidden xs:inline sm:inline">Indicators</span>
                     </button>
                     {showIndicatorsMenu && (
                         <div className="absolute top-full left-0 mt-2 bg-[#111] border border-white/10 rounded-xl p-2 sm:p-3 shadow-xl z-50 w-36 sm:w-40 flex flex-col gap-1 sm:gap-2 animate-slide-up">
