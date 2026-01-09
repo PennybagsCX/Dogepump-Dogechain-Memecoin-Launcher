@@ -203,103 +203,104 @@ const Home: React.FC = () => {
         
         {/* Hero Section */}
         {(filter === 'trending' || filter === 'new') && currentHeroToken && (
-          <section aria-labelledby="hero-heading">
+          <section aria-labelledby="hero-heading" className="px-3 sm:px-4 md:px-0">
             <h2 id="hero-heading" className="sr-only">Featured Token</h2>
           <div className="relative group perspective-1000">
             {/* Ambient Glow */}
             <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] blur-[120px] rounded-full opacity-40 group-hover:opacity-60 transition duration-1000 pointer-events-none ${currentHeroToken.progress >= 100 ? 'bg-purple-500/20' : 'bg-doge/20'}`}></div>
-            
-            <div className={`relative rounded-[2.5rem] overflow-hidden border bg-[#080808] shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] transition-transform duration-500 hover:shadow-[0_0_60px_-10px_rgba(212,175,55,0.15)] group-hover:-translate-y-1 preserve-3d ${currentHeroToken.progress >= 100 ? 'border-purple-500/30' : 'border-doge/20'}`}>
-                
+
+            <div className={`relative rounded-[1rem] sm:rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border bg-[#080808] shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] transition-transform duration-500 hover:shadow-[0_0_60px_-10px_rgba(212,175,55,0.15)] group-hover:-translate-y-1 preserve-3d ${currentHeroToken.progress >= 100 ? 'border-purple-500/30' : 'border-doge/20'}`}>
+
                 {/* Dynamic Background */}
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
                 <div className="absolute inset-0 bg-gradient-to-br from-doge/5 via-transparent to-transparent opacity-50"></div>
-                
+
                 {/* Golden/Purple Border Gradient */}
-                <div className={`absolute inset-0 rounded-[2.5rem] p-[1px] bg-gradient-to-b to-transparent pointer-events-none ${currentHeroToken.progress >= 100 ? 'from-purple-500/40' : 'from-doge/30'}`}></div>
+                <div className={`absolute inset-0 rounded-[1rem] sm:rounded-[1.5rem] md:rounded-[2.5rem] p-[1px] bg-gradient-to-b to-transparent pointer-events-none ${currentHeroToken.progress >= 100 ? 'from-purple-500/40' : 'from-doge/30'}`}></div>
 
                 {isLoading ? (
-                  <div className="p-16 grid md:grid-cols-2 gap-12 items-center">
-                      <div className="space-y-8">
-                        <Skeleton className="w-40 h-8 rounded-full" />
-                        <div className="space-y-4">
-                            <Skeleton className="w-full h-24" />
-                            <Skeleton className="w-1/2 h-10" />
+                  <div className="p-4 sm:p-6 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-12 items-center">
+                      <div className="space-y-4 md:space-y-8">
+                        <Skeleton className="w-32 h-6 sm:w-40 sm:h-8 rounded-full" />
+                        <div className="space-y-2 md:space-y-4">
+                            <Skeleton className="w-full h-16 sm:h-24" />
+                            <Skeleton className="w-1/2 h-6 sm:h-10" />
                         </div>
-                        <Skeleton className="w-3/4 h-20" />
+                        <Skeleton className="w-3/4 h-12 sm:h-20" />
                       </div>
-                      <Skeleton className="w-full h-[400px] rounded-[2.5rem]" />
+                      <Skeleton className="w-full h-48 sm:h-64 md:h-[400px] rounded-[1rem] sm:rounded-[1.5rem] md:rounded-[2.5rem]" />
                   </div>
                 ) : (
-                  <div className="relative p-8 md:p-16 grid md:grid-cols-2 gap-12 items-center z-10" key={currentHeroToken.id}>
+                  <div className="relative p-4 sm:p-6 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-center z-10" key={currentHeroToken.id}>
 
                       {/* Nav Buttons */}
-                      <button onClick={prevHero} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-all z-20">
-                          <ChevronLeft size={24} />
+                      <button onClick={prevHero} className="absolute left-2 top-1/2 -translate-y-1/2 p-3 sm:p-2.5 md:p-3 rounded-full bg-black/50 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-all z-20 sm:left-3 md:left-4 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center">
+                          <ChevronLeft size={18} className="sm:w-5 md:w-6" />
                       </button>
-                      <button onClick={nextHero} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-all z-20">
-                          <ChevronRight size={24} />
+                      <button onClick={nextHero} className="absolute right-2 top-1/2 -translate-y-1/2 p-3 sm:p-2.5 md:p-3 rounded-full bg-black/50 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-all z-20 sm:right-3 md:right-4 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center">
+                          <ChevronRight size={18} className="sm:w-5 md:w-6" />
                       </button>
 
-                      <div className="space-y-8 order-2 md:order-1 animate-fade-in">
-                        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(212,175,55,0.2)] animate-pulse-slow backdrop-blur-sm ${currentHeroToken.progress >= 100 ? 'bg-purple-500/10 border-purple-500/20 text-gold' : 'bg-doge/10 border-doge/20 text-doge'}`}>
-                          <Crown size={14} className="fill-current" />
-                          {currentHeroToken.progress >= 100 ? 'King (Graduated)' : 'Top Trending'}
+                      <div className="space-y-4 sm:space-y-6 md:space-y-8 order-2 md:order-1 animate-fade-in">
+                        <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(212,175,55,0.2)] animate-pulse-slow backdrop-blur-sm ${currentHeroToken.progress >= 100 ? 'bg-purple-500/10 border-purple-500/20 text-gold' : 'bg-doge/10 border-doge/20 text-doge'}`}>
+                          <Crown size={12} className="sm:w-3.5 sm:h-3.5 fill-current" />
+                          <span className="hidden xs:inline">{currentHeroToken.progress >= 100 ? 'King (Graduated)' : 'Top Trending'}</span>
+                          <span className="xs:hidden">{currentHeroToken.progress >= 100 ? 'King' : 'Trending'}</span>
                         </div>
-                        
-                        <div className="space-y-2">
-                          <h1 className="text-6xl md:text-8xl font-comic font-bold text-white leading-none drop-shadow-2xl">
+
+                        <div className="space-y-1 sm:space-y-2">
+                          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-comic font-bold text-white leading-none drop-shadow-2xl break-words">
                             {currentHeroToken.name || 'Unknown Token'}
                           </h1>
-                          <div className="flex items-center gap-4">
-                            <span className="text-3xl md:text-4xl font-sans font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">${currentHeroToken.ticker || 'N/A'}</span>
-                            {currentHeroToken.creator === 'You' && <span className="px-3 py-1 bg-doge/10 text-doge rounded text-xs font-bold border border-doge/20 flex items-center gap-1"><Coins size={10} /> Created by You</span>}
+                          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+                            <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-sans font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">${currentHeroToken.ticker || 'N/A'}</span>
+                            {currentHeroToken.creator === 'You' && <span className="px-2 sm:px-3 py-1 bg-doge/10 text-doge rounded-[8px] sm:rounded text-[10px] sm:text-xs font-bold border border-doge/20 flex items-center gap-1"><Coins size={10} /> Created by You</span>}
                           </div>
                         </div>
-                        
-                        <p className="text-gray-400 text-lg leading-relaxed max-w-md pl-6 border-l-2 border-doge/40 italic relative">
-                          <span className={`absolute -left-1.5 top-0 w-1 h-full shadow-[0_0_10px_rgba(212,175,55,0.5)] ${currentHeroToken.progress >= 100 ? 'bg-purple-500' : 'bg-doge'}`}></span>
+
+                        <p className="text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed max-w-full pl-4 sm:pl-6 border-l-2 border-doge/40 italic relative">
+                          <span className={`absolute -left-1 sm:-left-1.5 top-0 w-1 h-full shadow-[0_0_10px_rgba(212,175,55,0.5)] ${currentHeroToken.progress >= 100 ? 'bg-purple-500' : 'bg-doge'}`}></span>
                           "{currentHeroToken.description || 'No description available for this token.'}"
                         </p>
 
-                        <div className="flex flex-wrap gap-6 p-6 bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner">
-                          <div className="space-y-1">
-                              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Market Cap</div>
-                              <div className="text-3xl font-mono text-white font-medium tracking-tight">{formatCurrency(currentHeroToken.marketCap)}</div>
+                        <div className="flex flex-wrap gap-3 sm:gap-6 p-3 sm:p-4 md:p-6 bg-black/40 rounded-xl sm:rounded-2xl border border-white/10 backdrop-blur-md shadow-inner">
+                          <div className="space-y-0.5 sm:space-y-1">
+                              <div className="text-[8px] sm:text-[10px] text-gray-500 uppercase font-bold tracking-wider">Market Cap</div>
+                              <div className="text-xl sm:text-2xl md:text-3xl font-mono text-white font-medium tracking-tight">{formatCurrency(currentHeroToken.marketCap)}</div>
                           </div>
-                          <div className="w-px bg-white/10 mx-2"></div>
-                          <div className="space-y-1">
-                              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider text-doge">Bonding Curve</div>
-                              <div className={`text-3xl font-mono font-bold text-glow ${currentHeroToken.progress >= 100 ? 'text-purple-400' : 'text-doge'}`}>
+                          <div className="w-px bg-white/10 mx-1 sm:mx-2"></div>
+                          <div className="space-y-0.5 sm:space-y-1">
+                              <div className="text-[8px] sm:text-[10px] text-gray-500 uppercase font-bold tracking-wider text-doge">Bonding Curve</div>
+                              <div className={`text-xl sm:text-2xl md:text-3xl font-mono font-bold text-glow ${currentHeroToken.progress >= 100 ? 'text-purple-400' : 'text-doge'}`}>
                                   {currentHeroToken.progress >= 100 ? '100%' : `${currentHeroToken.progress.toFixed(1)}%`}
                               </div>
                           </div>
                         </div>
 
                         <Link to={`/token/${currentHeroToken.id}`} className="inline-block group/btn">
-                          <Button size="lg" className={`rounded-full px-12 h-16 text-xl shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-white/20 relative overflow-hidden group-hover/btn:scale-105 transition-transform duration-300 ${currentHeroToken.progress >= 100 ? 'bg-gradient-to-r from-purple-600 to-purple-800' : 'bg-gradient-to-r from-doge to-doge-dark'}`}>
+                          <Button size="lg" className={`rounded-full px-6 sm:px-8 md:px-12 h-12 sm:h-14 md:h-16 text-base sm:text-lg md:text-xl shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-white/20 relative overflow-hidden group-hover/btn:scale-105 transition-transform duration-300 ${currentHeroToken.progress >= 100 ? 'bg-gradient-to-r from-purple-600 to-purple-800' : 'bg-gradient-to-r from-doge to-doge-dark'}`}>
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 rotate-12"></div>
-                            <span className="relative z-10 flex items-center gap-2">Trade Now <ArrowRight size={20} /></span>
+                            <span className="relative z-10 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">Trade Now <ArrowRight size={16} className="sm:w-4 md:w-5" /></span>
                           </Button>
                         </Link>
                       </div>
 
                       {/* Hero Image */}
                       <div className="flex justify-center md:justify-end order-1 md:order-2 relative perspective-500 animate-fade-in">
-                        <div className="relative w-72 h-72 md:w-[400px] md:h-[400px] group-hover:scale-[1.02] transition-transform duration-700 ease-in-out">
-                            <div className={`absolute inset-0 bg-gradient-to-tr rounded-[2.5rem] blur-3xl opacity-20 animate-pulse-slow ${currentHeroToken.progress >= 100 ? 'from-purple-500 to-transparent' : 'from-doge to-transparent'}`}></div>
+                        <div className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-72 md:h-72 lg:w-[400px] lg:h-[400px] group-hover:scale-[1.02] transition-transform duration-700 ease-in-out">
+                            <div className={`absolute inset-0 bg-gradient-to-tr rounded-[1rem] sm:rounded-[1.5rem] md:rounded-[2.5rem] blur-3xl opacity-20 animate-pulse-slow ${currentHeroToken.progress >= 100 ? 'from-purple-500 to-transparent' : 'from-doge to-transparent'}`}></div>
                             <img
                               src={currentHeroToken.imageUrl || '/images/default-token.png'}
-                              alt={currentHeroToken.name || 'Token image'} 
-                              className={`relative w-full h-full rounded-[2.5rem] object-cover shadow-2xl border-2 rotate-3 group-hover:rotate-0 transition-all duration-700 grayscale-[20%] group-hover:grayscale-0 ${currentHeroToken.progress >= 100 ? 'border-purple-500/50' : 'border-white/10'}`}
+                              alt={currentHeroToken.name || 'Token image'}
+                              className={`relative w-full h-full rounded-[1rem] sm:rounded-[1.5rem] md:rounded-[2.5rem] object-cover shadow-2xl border-2 rotate-3 group-hover:rotate-0 transition-all duration-700 grayscale-[20%] group-hover:grayscale-0 ${currentHeroToken.progress >= 100 ? 'border-purple-500/50' : 'border-white/10'}`}
                             />
-                            
-                            {/* Floating Badges */}
-                            <div className="absolute -top-6 -right-6 bg-[#0F0F0F]/90 backdrop-blur-xl border border-doge/30 p-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-float" style={{animationDelay: '1s'}}>
-                              <div className="bg-doge/20 p-2 rounded-lg text-doge"><Trophy size={18} /></div>
+
+                            {/* Floating Badges - Positioned to stay visible on all screens */}
+                            <div className="absolute -top-3 sm:-top-4 md:-top-6 -right-3 sm:-right-4 md:-right-6 bg-[#0F0F0F]/90 backdrop-blur-xl border border-doge/30 p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 animate-float" style={{animationDelay: '1s'}}>
+                              <div className="bg-doge/20 p-1.5 sm:p-2 rounded-lg text-doge"><Trophy size={14} className="sm:w-4 md:w-[18px]" /></div>
                               <div className="flex flex-col">
-                                  <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Rank</span>
-                                  <span className="text-sm font-bold text-white">#{heroIndex + 1} Trending</span>
+                                  <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold uppercase tracking-wider">Rank</span>
+                                  <span className="text-xs sm:text-sm font-bold text-white">#{heroIndex + 1} <span className="hidden sm:inline">Trending</span></span>
                               </div>
                             </div>
                         </div>
