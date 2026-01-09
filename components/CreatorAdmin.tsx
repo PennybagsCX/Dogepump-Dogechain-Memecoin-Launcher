@@ -693,7 +693,19 @@ Alternative (Screen Sharing):
                       <button
                         onClick={() => {
                           const newState = !showAudioSettings;
+
+                          // If settings are already visible, scroll immediately
+                          if (showAudioSettings) {
+                            const element = document.getElementById('audio-settings-details');
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              return;
+                            }
+                          }
+
                           setShowAudioSettings(newState);
+
+                          // If we're showing settings, scroll after they render
                           if (newState) {
                             setTimeout(() => {
                               const element = document.getElementById('audio-settings-details');
@@ -701,7 +713,7 @@ Alternative (Screen Sharing):
                                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 element.focus({ preventScroll: true });
                               }
-                            }, 100);
+                            }, 150);
                           }
                         }}
                         className="text-gray-400 hover:text-white transition-colors"
