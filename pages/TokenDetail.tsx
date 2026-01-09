@@ -858,13 +858,15 @@ const TokenDetail: React.FC = () => {
                   className="relative group/image shrink-0 cursor-pointer select-none"
                   onClick={(e) => { handlePet(e); openLightbox(token.imageUrl); }}
                 >
+                  <div className="relative w-24 h-24 rounded-3xl overflow-hidden shadow-2xl bg-gray-800">
                     <OptimizedImage
                       src={token.imageUrl}
                       alt={token.name}
-                      className="w-24 h-24 rounded-3xl bg-gray-800 object-cover shadow-2xl border border-white/5 relative z-10 active:scale-95 transition-transform"
+                      className="w-full h-full object-cover relative z-10 active:scale-95 transition-transform"
                       loading="eager"
                       fetchPriority="high"
                     />
+                  </div>
                     <div className="absolute bottom-0 right-0 z-20 bg-white text-black p-1 rounded-full text-[8px] font-bold opacity-0 group-hover/image:opacity-100 transition-opacity pointer-events-none">PET ME</div>
                     {hearts.map(heart => (
                        <div key={heart.id} className="absolute z-50 pointer-events-none animate-float-up text-pink-500" style={{ left: heart.x, top: heart.y, transform: `rotate(${heart.rotation}deg)` }}>
@@ -1221,13 +1223,15 @@ const TokenDetail: React.FC = () => {
                     {/* Image Preview */}
                     {selectedImage && !commentImageUploading && (
                       <div className="mt-2 relative group">
-                        <OptimizedImage
-                          src={selectedImage}
-                          alt="Selected image"
-                          className="max-w-full h-32 object-cover rounded-lg border border-white/10"
-                          loading="eager"
-                          fetchPriority="high"
-                        />
+                        <div className="max-w-full h-32 rounded-lg overflow-hidden border border-white/10 bg-gray-800">
+                          <OptimizedImage
+                            src={selectedImage}
+                            alt="Selected image"
+                            className="w-full h-full object-cover"
+                            loading="eager"
+                            fetchPriority="high"
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={() => setSelectedImage(null)}
@@ -1307,7 +1311,7 @@ const TokenDetail: React.FC = () => {
                             <span className="text-[10px] text-gray-600 font-mono ml-auto">{timeAgo(comment.timestamp)}</span>
                           </div>
                           <div className="text-sm text-gray-300 leading-relaxed bg-white/[0.02] p-3 rounded-tr-xl rounded-b-xl border border-white/5">
-                            {comment.imageUrl && <div className="mb-3 rounded-lg overflow-hidden max-w-xs border border-white/10 cursor-pointer" onClick={() => openLightbox(comment.imageUrl!)}><OptimizedImage src={comment.imageUrl} alt="Attachment" className="w-full h-auto hover:scale-105 transition-transform" loading="lazy" fetchPriority="low" /></div>}
+                            {comment.imageUrl && <div className="mb-3 rounded-lg overflow-hidden max-w-xs cursor-pointer bg-gray-800" onClick={() => openLightbox(comment.imageUrl!)}><OptimizedImage src={comment.imageUrl} alt="Attachment" className="w-full h-auto object-cover hover:scale-105 transition-transform" loading="lazy" fetchPriority="low" /></div>}
                             <FormattedText text={comment.text} />
                             {comment.tradeAction && <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-4"><div className="text-xs text-gray-400 font-bold uppercase">Suggestion:</div><div className={`px-4 py-1.5 rounded-lg font-bold text-xs uppercase flex items-center gap-2 ${comment.tradeAction.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{comment.tradeAction.type.toUpperCase()} {formatNumber(comment.tradeAction.amount)}</div></div>}
                           </div>
