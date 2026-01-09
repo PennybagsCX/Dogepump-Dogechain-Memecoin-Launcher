@@ -111,7 +111,7 @@ export const SentimentVote: React.FC<SentimentVoteProps> = ({ token }) => {
          <div className="h-full bg-red-500 transition-all duration-1000" style={{ width: `${100 - bullishPct}%` }}></div>
       </div>
       
-      <div className="flex justify-between mt-1 text-[10px] font-mono text-gray-500">
+      <div className="flex justify-between mt-1 text-[10px] font-mono text-gray-500 hidden sm:flex">
          <span>{bullishPct.toFixed(0)}%</span>
          <span>{(100 - bullishPct).toFixed(0)}%</span>
       </div>
