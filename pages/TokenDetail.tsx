@@ -876,15 +876,18 @@ const TokenDetail: React.FC = () => {
                 </div>
 
                 <div className="flex-1 relative z-10 flex flex-wrap justify-between items-start gap-4">
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white font-comic flex items-center gap-3 leading-none">
-                      {token.name} <span className="text-gray-600 text-2xl font-sans font-medium tracking-wider">${token.ticker}</span>
+                  <div className="flex-1">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white font-comic leading-none">
+                      {token.name}
+                    </h1>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2">
+                      <span className="text-gray-600 text-2xl font-sans font-medium tracking-wider">${token.ticker}</span>
                       <div className="flex items-center gap-2">
                         <button onClick={() => toggleWatchlist(token.id)} className={`text-2xl transition-all ${isWatched ? 'text-doge scale-110' : 'text-gray-600 hover:text-gray-400'}`}><Star size={24} className={isWatched ? 'fill-doge' : ''} /></button>
                         <button onClick={() => setIsAlertModalOpen(true)} className={`text-2xl transition-all hover:text-white ${tokenAlerts.length > 0 ? 'text-doge' : 'text-gray-600'}`}><Bell size={24} className={tokenAlerts.length > 0 ? 'fill-doge' : ''} /></button>
                         <button key={`rocket-${boostTrigger}`} onClick={() => setIsBoostModalOpen(true)} className="text-2xl text-doge hover:text-white hover:scale-110 transition-all animate-shake-rocket"><Rocket size={24} /></button>
                       </div>
-                    </h1>
+                    </div>
                     <div className="flex gap-2 mt-3 flex-wrap">
                        {token.isLive && (
                            <div className="inline-flex items-center gap-1.5 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/30 animate-pulse">
