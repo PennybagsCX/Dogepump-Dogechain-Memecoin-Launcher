@@ -237,29 +237,42 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
     isBuyCandle: true
   }];
 
-  // Debug: Check if Bollinger Bands data exists
-  console.log('CandleChart Debug - Data length:', chartData.length);
-  console.log('showBollinger:', showBollinger);
-  if (chartData.length > 0 && showBollinger) {
-    console.log('First candle Bollinger data:', {
-      bollinger: chartData[0].bollinger,
-      bollingerUpper: chartData[0].bollinger?.upper,
-      bollingerMiddle: chartData[0].bollinger?.middle,
-      bollingerLower: chartData[0].bollinger?.lower,
-      hasBollinger: !!chartData[0].bollinger
+  // Debug: Check all indicator data
+  console.log('=== CandleChart Component Render ===');
+  console.log('Props received:', { showRSI, showMACD, showStochRSI, showBollinger, showVolume });
+  console.log('Data length:', chartData.length);
+
+  if (chartData.length > 0) {
+    const firstCandle = chartData[0];
+    const lastCandle = chartData[chartData.length - 1];
+
+    console.log('First candle indicators:', {
+      ema20: firstCandle.ema20,
+      ema50: firstCandle.ema50,
+      ema200: firstCandle.ema200,
+      bollinger: firstCandle.bollinger,
+      rsi: firstCandle.rsi,
+      macd: firstCandle.macd,
+      stochRsi: firstCandle.stochRsi
     });
 
-    const candlesWithBollinger = chartData.filter(d => d.bollinger);
-    console.log('Candles with Bollinger data:', candlesWithBollinger.length);
+    console.log('Last candle indicators:', {
+      ema20: lastCandle.ema20,
+      ema50: lastCandle.ema50,
+      ema200: lastCandle.ema200,
+      bollinger: lastCandle.bollinger,
+      rsi: lastCandle.rsi,
+      macd: lastCandle.macd,
+      stochRsi: lastCandle.stochRsi
+    });
 
-    if (candlesWithBollinger.length > 0) {
-      console.log('Sample Bollinger values:', {
-        upper: candlesWithBollinger[0].bollinger?.upper,
-        middle: candlesWithBollinger[0].bollinger?.middle,
-        lower: candlesWithBollinger[0].bollinger?.lower
-      });
-    }
+    // Count candles with indicator data
+    const withRSI = chartData.filter(d => d.rsi !== undefined).length;
+    const withMACD = chartData.filter(d => d.macd !== undefined).length;
+    const withStoch = chartData.filter(d => d.stochRsi !== undefined).length;
+    console.log('Candles with indicator data:', { withRSI, withMACD, withStoch });
   }
+  console.log('=====================================');
 
   const minPrice = Math.min(...chartData.map(d => d.low));
   const maxPrice = Math.max(...chartData.map(d => d.high));
@@ -300,6 +313,26 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
   const hasIndicators = showRSI || showMACD || showStochRSI;
   const indicatorCount = (showRSI ? 1 : 0) + (showMACD ? 1 : 0) + (showStochRSI ? 1 : 0);
 
+  // Data validation: Check if indicator data actually exists
+  const hasValidRSI = showRSI && formattedData.some(d => d.rsi !== undefined && d.rsi !== null);
+  const hasValidMACD = showMACD && formattedData.some(d => d.macd !== undefined && d.macd !== null);
+  const hasValidStoch = showStochRSI && formattedData.some(d => d.stochRsi !== undefined && d.stochRsi !== null);
+
+  // Count candles with indicator data
+  const rsiCount = formattedData.filter(d => d.rsi !== undefined && d.rsi !== null).length;
+  const macdCount = formattedData.filter(d => d.macd !== undefined && d.macd !== null).length;
+  const stochCount = formattedData.filter(d => d.stochRsi !== undefined && d.stochRsi !== null).length;
+
+  // Log validation results for debugging
+  if (showRSI || showMACD || showStochRSI) {
+    console.log('🔍 [CandleChart] Indicator Data Validation:', {
+      totalDataPoints: formattedData.length,
+      rsi: { enabled: showRSI, valid: hasValidRSI, count: rsiCount },
+      macd: { enabled: showMACD, valid: hasValidMACD, count: macdCount },
+      stochRsi: { enabled: showStochRSI, valid: hasValidStoch, count: stochCount }
+    });
+  }
+
   let mainChartHeight = 500;
   let volumeChartHeight = 0;
   let subChartHeight = 0;
@@ -313,11 +346,17 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
       // Volume + indicators - balanced layout
       mainChartHeight = 300;
       volumeChartHeight = 75;
-      subChartHeight = Math.floor(125 / indicatorCount); // Divide remaining space among indicators
+      // Ensure minimum 100px height per indicator, prevent division by zero
+      subChartHeight = indicatorCount > 0
+        ? Math.max(100, Math.floor(125 / indicatorCount))
+        : 0;
     } else if (!showVolume && hasIndicators) {
       // Only indicators - give main chart more space
       mainChartHeight = 350;
-      subChartHeight = Math.floor(150 / indicatorCount); // Divide space among indicators
+      // Ensure minimum 100px height per indicator, prevent division by zero
+      subChartHeight = indicatorCount > 0
+        ? Math.max(100, Math.floor(150 / indicatorCount))
+        : 0;
     }
   }
 
@@ -445,13 +484,13 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
         )}
 
         {/* RSI Subchart */}
-        {showRSI && subChartHeight > 0 && (
-            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto' }}>
+        {hasValidRSI && subChartHeight > 0 && (
+            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a', position: 'relative' }}>
                 <ResponsiveContainer width="100%" height={subChartHeight}>
                     <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} syncId="anyId">
                         <YAxis domain={[0, 100]} orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} ticks={[30, 50, 70]} />
                         <XAxis dataKey="time" hide />
-                        <Tooltip content={null} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
                         <ReferenceLine y={70} stroke="#444" strokeDasharray="3 3" />
                         <ReferenceLine y={30} stroke="#444" strokeDasharray="3 3" />
                         <Line type="monotone" dataKey="rsi" stroke="#22d3ee" strokeWidth={1.5} dot={false} isAnimationActive={false} />
@@ -461,13 +500,13 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
         )}
 
         {/* MACD Subchart */}
-        {showMACD && subChartHeight > 0 && (
-            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto' }}>
+        {hasValidMACD && subChartHeight > 0 && (
+            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a' }}>
                 <ResponsiveContainer width="100%" height={subChartHeight}>
                     <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} syncId="anyId">
                         <YAxis orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} />
                         <XAxis dataKey="time" hide />
-                        <Tooltip content={null} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
                         <ReferenceLine y={0} stroke="#444" />
                         <Bar dataKey="macd.histogram" fill="#ec4899" isAnimationActive={false}>
                             {chartData.map((entry, index) => (
@@ -482,13 +521,13 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
         )}
 
         {/* StochRSI Subchart */}
-        {showStochRSI && subChartHeight > 0 && (
-            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto' }}>
+        {hasValidStoch && subChartHeight > 0 && (
+            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a' }}>
                 <ResponsiveContainer width="100%" height={subChartHeight}>
                     <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} syncId="anyId">
                         <YAxis domain={[0, 100]} orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} ticks={[20, 80]} />
                         <XAxis dataKey="time" hide />
-                        <Tooltip content={null} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
                         <ReferenceLine y={80} stroke="#444" strokeDasharray="3 3" />
                         <ReferenceLine y={20} stroke="#444" strokeDasharray="3 3" />
                         <Line type="monotone" dataKey="stochRsi.k" stroke="#84cc16" strokeWidth={1} dot={false} isAnimationActive={false} />

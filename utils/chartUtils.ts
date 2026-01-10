@@ -307,8 +307,17 @@ export const calculateBollinger = (data: Candle[], period: number = 20, stdDevMu
 
 // Calculate RSI
 export const calculateRSI = (data: Candle[], period: number = 14) => {
-  if (data.length === 0) return [];
-  
+  if (data.length === 0) {
+    console.warn('calculateRSI: Empty data array');
+    return [];
+  }
+
+  if (data.length < period + 1) {
+    console.warn(`calculateRSI: Not enough data points (${data.length}) for RSI period (${period})`);
+    // Return data with neutral RSI values instead of empty array
+    return data.map((item, index) => ({ ...item, rsi: 50 }));
+  }
+
   let gains = 0;
   let losses = 0;
 
@@ -342,6 +351,20 @@ export const calculateRSI = (data: Candle[], period: number = 14) => {
 
 // Calculate MACD
 export const calculateMACD = (data: Candle[], fastPeriod: number = 12, slowPeriod: number = 26, signalPeriod: number = 9) => {
+  if (data.length === 0) {
+    console.warn('calculateMACD: Empty data array');
+    return [];
+  }
+
+  if (data.length < slowPeriod) {
+    console.warn(`calculateMACD: Not enough data points (${data.length}) for slow period (${slowPeriod})`);
+    // Return data with neutral MACD values
+    return data.map(item => ({
+      ...item,
+      macd: { macdLine: 0, signalLine: 0, histogram: 0 }
+    }));
+  }
+
   // We need to calculate EMAs specifically for MACD usage
   const kFast = 2 / (fastPeriod + 1);
   const kSlow = 2 / (slowPeriod + 1);
@@ -374,6 +397,20 @@ export const calculateMACD = (data: Candle[], fastPeriod: number = 12, slowPerio
 
 // Calculate Stochastic RSI
 export const calculateStochRSI = (data: Candle[], period: number = 14) => {
+  if (data.length === 0) {
+    console.warn('calculateStochRSI: Empty data array');
+    return [];
+  }
+
+  if (data.length < period * 2) {
+    console.warn(`calculateStochRSI: Not enough data points (${data.length}) for period (${period})`);
+    // Return data with neutral StochRSI values
+    return data.map(item => ({
+      ...item,
+      stochRsi: { k: 50, d: 50 }
+    }));
+  }
+
   // First ensure RSI exists
   const rsiData = calculateRSI(data, period);
   

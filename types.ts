@@ -167,6 +167,25 @@ export interface Candle {
   tradeCount: number;
   isBuyCandle: boolean; // true if buy volume > sell volume
   sma?: number | null;
+  // Technical indicator fields
+  rsi?: number;
+  macd?: {
+    macdLine: number;
+    signalLine: number;
+    histogram: number;
+  };
+  stochRsi?: {
+    k: number;
+    d: number;
+  };
+  ema20?: number;
+  ema50?: number;
+  ema200?: number;
+  bollinger?: {
+    upper: number;
+    middle: number;
+    lower: number;
+  };
 }
 
 export interface AppNotification {
