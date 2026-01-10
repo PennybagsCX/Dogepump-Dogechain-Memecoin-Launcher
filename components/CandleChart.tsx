@@ -302,10 +302,22 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
 
     return {
       ...d,
+      // Bollinger (existing)
       bollingerUpper: bollinger ? bollinger.upper : null,
       bollingerLower: bollinger ? bollinger.lower : null,
       bollingerMiddle: bollinger ? bollinger.middle : null,
-      hasBollinger: !!bollinger
+      hasBollinger: !!bollinger,
+      // Explicit indicator preservation for Recharts
+      rsi: d.rsi !== undefined ? d.rsi : null,
+      macd: d.macd ? {
+        macdLine: d.macd.macdLine !== undefined ? d.macd.macdLine : 0,
+        signalLine: d.macd.signalLine !== undefined ? d.macd.signalLine : 0,
+        histogram: d.macd.histogram !== undefined ? d.macd.histogram : 0
+      } : null,
+      stochRsi: d.stochRsi ? {
+        k: d.stochRsi.k !== undefined ? d.stochRsi.k : 50,
+        d: d.stochRsi.d !== undefined ? d.stochRsi.d : 50
+      } : null
     };
   });
 
@@ -493,7 +505,7 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
                         <ReferenceLine y={70} stroke="#444" strokeDasharray="3 3" />
                         <ReferenceLine y={30} stroke="#444" strokeDasharray="3 3" />
-                        <Line type="monotone" dataKey="rsi" stroke="#22d3ee" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                        <Line type="monotone" dataKey="rsi" stroke="#22d3ee" strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls={false} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
@@ -504,17 +516,17 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
             <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a' }}>
                 <ResponsiveContainer width="100%" height={subChartHeight}>
                     <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} syncId="anyId">
-                        <YAxis orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} />
+                        <YAxis domain={['auto', 'auto']} orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} />
                         <XAxis dataKey="time" hide />
                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
                         <ReferenceLine y={0} stroke="#444" />
                         <Bar dataKey="macd.histogram" fill="#ec4899" isAnimationActive={false}>
-                            {chartData.map((entry, index) => (
+                            {formattedData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={(entry.macd?.histogram || 0) > 0 ? '#00E054' : '#FF3B30'} />
                             ))}
                         </Bar>
-                        <Line type="monotone" dataKey="macd.macdLine" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} />
-                        <Line type="monotone" dataKey="macd.signalLine" stroke="#f59e0b" strokeWidth={1} dot={false} isAnimationActive={false} />
+                        <Line type="monotone" dataKey="macd.macdLine" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
+                        <Line type="monotone" dataKey="macd.signalLine" stroke="#f59e0b" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
@@ -530,8 +542,8 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
                         <ReferenceLine y={80} stroke="#444" strokeDasharray="3 3" />
                         <ReferenceLine y={20} stroke="#444" strokeDasharray="3 3" />
-                        <Line type="monotone" dataKey="stochRsi.k" stroke="#84cc16" strokeWidth={1} dot={false} isAnimationActive={false} />
-                        <Line type="monotone" dataKey="stochRsi.d" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} />
+                        <Line type="monotone" dataKey="stochRsi.k" stroke="#84cc16" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
+                        <Line type="monotone" dataKey="stochRsi.d" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
