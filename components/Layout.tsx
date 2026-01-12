@@ -1082,7 +1082,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       {/* <div className="h-12 lg:hidden" aria-hidden /> */}
 
       {/* Footer - visible on all breakpoints; extra bottom padding on small screens to clear the mobile trade bar */}
-      <footer className="border-t border-white/[0.05] py-12 pb-32 md:pb-28 lg:pb-20 mt-auto relative z-0 bg-[#0A0A0A] block flex-shrink-0">
+      <footer className="border-t border-white/[0.05] py-12 pb-20 md:pb-28 lg:pb-20 mt-auto relative z-0 bg-[#0A0A0A] block flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-center md:text-left w-full md:w-auto flex flex-col items-center md:items-start">
              <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
