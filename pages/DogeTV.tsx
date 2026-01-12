@@ -10,6 +10,7 @@ import { timeAgo } from '../utils';
 import { DOGE_TV_ROTATION_INTERVAL_MS, DOGE_TV_TOKEN_COUNT, DOGE_TV_TRADE_COUNT } from '../constants';
 import { DogeTVSkeleton } from '../components/DogeTVSkeleton';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { Trade } from '../types';
 
 // Lazy load heavy components
 const CandleChart = React.lazy(() => import('../components/CandleChart').then(m => ({ default: m.CandleChart })));
@@ -75,17 +76,23 @@ const DogeTV: React.FC = () => {
   if (!currentToken) return <DogeTVSkeleton />;
 
   return (
-    <div ref={containerRef} className="lg:fixed lg:inset-0 z-[200] bg-black text-white lg:overflow-hidden min-h-screen flex flex-col font-sans">
+    <div
+      ref={containerRef}
+      className="lg:fixed lg:inset-0 lg:z-[200] z-10 bg-black text-white lg:overflow-hidden min-h-screen flex flex-col font-sans"
+    >
        {/* TV Header */}
-       <div className="h-14 md:h-16 border-b border-white/10 bg-[#0A0A0A] flex items-center justify-between px-3 md:px-6 shrink-0 relative z-20">
+      <div className="sticky top-0 inset-x-0 md:static h-14 md:h-16 border-b border-white/10 bg-[#0A0A0A] flex items-center justify-between px-3 md:px-6 shrink-0 z-20">
           <div className="flex items-center gap-2 md:gap-4">
              <Link to="/" className="text-gray-500 hover:text-white transition-colors p-1">
                 <ArrowLeft size={18} className="md:hidden" />
                 <ArrowLeft size={20} className="hidden md:block" />
              </Link>
-             <div className="flex items-center gap-2">
-                <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_red]"></div>
-                <span className="font-bold font-comic text-base md:text-xl tracking-tight">DogeTV <span className="text-[10px] md:text-xs font-sans font-normal text-gray-500 ml-1 md:ml-2">LIVE FEED</span></span>
+             <div className="flex flex-col leading-tight">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_red]"></div>
+                  <span className="font-bold font-comic text-base md:text-xl tracking-tight">DogeTV</span>
+                </div>
+                <span className="text-[10px] md:text-xs font-sans font-semibold text-gray-400 uppercase tracking-wide pl-4 md:pl-5">Live Feed</span>
              </div>
           </div>
 
@@ -121,10 +128,12 @@ const DogeTV: React.FC = () => {
              </button>
 
              <div className="hidden md:block w-px h-6 bg-white/10 mx-2"></div>
-             <button onClick={toggleFullscreen} className="p-1.5 md:p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white">
-                {isFullscreen ? <Minimize2 size={14} className="md:hidden" /> : <Maximize2 size={14} className="md:hidden" />}
-                {isFullscreen ? <Minimize2 size={16} className="hidden md:block" /> : <Maximize2 size={16} className="hidden md:block" />}
-             </button>
+            <button
+              onClick={toggleFullscreen}
+              className="hidden md:inline-flex p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white"
+            >
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
           </div>
        </div>
 
@@ -223,18 +232,20 @@ const DogeTV: React.FC = () => {
            </div>
 
            {/* Right: Info & Tape - Responsive */}
-           <div className="lg:w-[400px] bg-[#080808] flex flex-col shrink-0 border-l border-white/10 max-h-[40vh] lg:max-h-none overflow-hidden">
+           <div className="lg:w-[400px] bg-[#080808] flex flex-col shrink-0 border-l border-white/10 overflow-hidden lg:max-h-none">
               <div className="flex-1 p-4 md:p-6 border-b border-white/5 lg:overflow-y-auto">
                  <h3 className="text-gray-500 font-bold uppercase text-xs tracking-widest mb-3 md:mb-4">About</h3>
                  <div className="flex gap-3 md:gap-4 mb-3 md:mb-4">
                     <Link to={`/token/${currentToken.id}`} className="block group flex-shrink-0 w-20 h-20 md:w-32 md:h-32">
-                       <OptimizedImage
-                         src={currentToken.imageUrl}
-                         alt={currentToken.name}
-                         className="w-full h-full object-cover rounded-xl md:rounded-2xl border border-white/10 group-hover:border-doge/30 transition-colors"
-                         loading="eager"
-                         fetchPriority="high"
-                       />
+                      <div className="w-full h-full rounded-xl md:rounded-2xl overflow-hidden bg-[#0f0f0f] border border-white/10 group-hover:border-doge/30 transition-colors">
+                        <OptimizedImage
+                          src={currentToken.imageUrl}
+                          alt={currentToken.name}
+                          className="w-full h-full object-cover"
+                          loading="eager"
+                          fetchPriority="high"
+                        />
+                      </div>
                     </Link>
                     <div className="flex-1 min-w-0">
                        <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentToken.description}</p>
@@ -243,7 +254,7 @@ const DogeTV: React.FC = () => {
                  </div>
               </div>
 
-              <div className="h-1/2 lg:h-1/2 flex flex-col max-h-[30vh]">
+              <div className="flex flex-col min-h-0 max-h-none md:min-h-[44vh] md:max-h-[60vh] lg:min-h-0 lg:max-h-none pb-16">
                  <div className="px-3 md:px-6 py-2 md:py-3 border-b border-white/5 bg-white/[0.02]">
                     <h3 className="text-gray-500 font-bold uppercase text-[10px] md:text-xs tracking-widest flex items-center gap-2">
                        <Activity size={12} className="md:hidden" />
@@ -251,7 +262,7 @@ const DogeTV: React.FC = () => {
                     </h3>
                  </div>
                  <div className="flex-1 overflow-y-auto p-1 md:p-2 space-y-0.5 custom-scrollbar">
-                    {recentTrades.slice(0, 10).map(trade => (
+                    {recentTrades.slice(0, 10).map((trade: Trade) => (
                        <div key={trade.id} className="flex justify-between items-center gap-2 p-1.5 md:p-2 rounded hover:bg-white/5 text-[10px] md:text-xs font-mono animate-fade-in">
                           <span className="text-gray-500 truncate flex-1">{timeAgo(trade.timestamp)}</span>
                           <span className={`${trade.type === 'buy' ? 'text-green-500' : 'text-red-500'}`}>{trade.type === 'buy' ? 'BUY' : 'SELL'}</span>

@@ -20,7 +20,7 @@ export const DogeGuard: React.FC<DogeGuardProps> = ({ token }) => {
             <ShieldCheck className="text-green-500" size={24} />
             <h3 className="font-bold text-lg text-white">DogeGuard</h3>
         </div>
-        <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider bg-white/5 px-2 py-1 rounded">
+        <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider bg-white/5 px-2 py-1 rounded ml-3">
             Automated Checks
         </div>
       </div>

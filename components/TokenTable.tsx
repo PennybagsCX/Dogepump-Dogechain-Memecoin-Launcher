@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { formatCurrency, formatNumber as formatNumberWeb3 } from '../services/web3Service';
 import { timeAgo, formatNumber } from '../utils';
-import { Zap, TrendingUp, Crown, Rocket } from 'lucide-react';
+import { Crown, Rocket } from 'lucide-react';
 import { Sparkline } from './Sparkline';
 import { useStore } from '../contexts/StoreContext';
 import { OptimizedImage } from './OptimizedImage';
@@ -17,7 +17,60 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens }) => {
 
   return (
     <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-xl animate-fade-in">
-      <div className="overflow-x-auto">
+      {/* Mobile card list for tight layouts */}
+      <div className="sm:hidden divide-y divide-white/5">
+        {tokens.map((token) => {
+          const isGraduated = token.progress >= 100;
+          const displayPrice =
+            token.price >= 1
+              ? formatNumber(token.price.toFixed(2))
+              : formatNumber(token.price.toPrecision(4));
+
+          return (
+            <Link
+              to={`/token/${token.id}`}
+              key={token.id}
+              className="flex items-center gap-3 px-3 py-3 w-full hover:bg-white/[0.02] transition-colors"
+            >
+              <OptimizedImage
+                src={token.imageUrl}
+                alt={token.name}
+                className="w-10 h-10 rounded-xl object-cover bg-gray-800 shrink-0"
+                loading="lazy"
+                fetchPriority="low"
+              />
+              <div className="flex-1 min-w-0 space-y-0.5">
+                <div className="font-semibold text-white text-sm truncate flex items-center gap-1.5 leading-tight">
+                  <span className="truncate">{token.name}</span>
+                  {(token.boosts || 0) > 0 && <Rocket size={12} className="text-orange-500 shrink-0" />}
+                </div>
+                <div className="text-[11px] text-gray-500 font-mono truncate">${token.ticker}</div>
+              </div>
+              <div className="text-right shrink-0 space-y-1 ml-2">
+                <div className="text-sm font-mono text-white font-bold leading-tight">
+                  ${displayPrice}
+                </div>
+                {isGraduated ? (
+                  <span className="inline-flex items-center gap-1 bg-doge/20 text-doge px-2 py-1 rounded text-[10px] font-bold uppercase border border-doge/20">
+                    <Crown size={10} fill="currentColor" />
+                    King
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-2 justify-end">
+                    <span className="text-[10px] font-bold text-doge whitespace-nowrap">{token.progress.toFixed(0)}%</span>
+                    <div className="w-12 h-1 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-doge" style={{ width: `${token.progress}%` }}></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="bg-white/[0.03] border-b border-white/5">
             <tr>
@@ -34,7 +87,7 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens }) => {
           <tbody className="divide-y divide-white/5">
             {tokens.map((token) => {
               const history = priceHistory[token.id] || [];
-              const sparkData = history.map(p => p.price);
+              const sparkData = history.map((p: { price: number }) => p.price);
               const isGraduated = token.progress >= 100;
 
               return (

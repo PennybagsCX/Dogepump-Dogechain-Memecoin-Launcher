@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { X, Plus, Droplets, AlertCircle, Check } from 'lucide-react';
-import { Pool } from '../../contexts/DexContext';
-import { Token } from '../../types';
+import { Pool, Token } from '../../contexts/DexContext';
 import AmountInput from '../AmountInput';
 import Button from '../Button';
 import { formatNumber } from '../../utils';
@@ -40,7 +39,7 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
   const handleSelectToken0 = useCallback((token: Token) => {
     playSound('click');
     setToken0(token);
-    if (token1 && token.id === token1.id) {
+    if (token1 && token.address === token1.address) {
       setToken1(null);
     }
   }, [playSound, token1]);
@@ -48,7 +47,7 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
   const handleSelectToken1 = useCallback((token: Token) => {
     playSound('click');
     setToken1(token);
-    if (token0 && token.id === token0.id) {
+    if (token0 && token.address === token0.address) {
       setToken0(null);
     }
   }, [playSound, token0]);
@@ -89,7 +88,7 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
 
     // Simulate pool creation
     setTimeout(() => {
-      onCreatePool(token0.id, token1.id, amount0, amount1);
+      onCreatePool(token0.address, token1.address, amount0, amount1);
       setIsCreating(false);
       playSound('success');
 
@@ -105,7 +104,7 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
 
   // Filter out selected tokens
   const availableTokens0 = tokens;
-  const availableTokens1 = tokens.filter(t => !token0 || t.id !== token0.id);
+  const availableTokens1 = tokens.filter(t => !token0 || t.address !== token0.address);
 
   if (!isOpen) return null;
 
@@ -142,10 +141,10 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                   {availableTokens0.map(token => (
                     <button
-                      key={token.id}
+                      key={token.address}
                       onClick={() => handleSelectToken0(token)}
                       className={`p-3 rounded-xl border transition-all ${
-                        token0?.id === token.id
+                        token0?.address === token.address
                           ? 'bg-doge/20 border-doge text-doge'
                           : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-doge/30'
                       }`}
@@ -164,14 +163,14 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                   {availableTokens1.map(token => (
                     <button
-                      key={token.id}
+                      key={token.address}
                       onClick={() => handleSelectToken1(token)}
-                      disabled={token0?.id === token.id}
+                      disabled={token0?.address === token.address}
                       className={`p-3 rounded-xl border transition-all ${
-                        token1?.id === token.id
+                        token1?.address === token.address
                           ? 'bg-purple-500/20 border-purple-500/30 text-purple-400'
                           : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-purple-500/30'
-                      } ${token0?.id === token.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${token0?.address === token.address ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="text-sm font-bold">{token.symbol}</div>
                       <div className="text-xs text-gray-400 mt-1">{token.name}</div>

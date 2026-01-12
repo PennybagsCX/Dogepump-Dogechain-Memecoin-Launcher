@@ -85,7 +85,7 @@ const DexPoolDetailPage: React.FC = () => {
         <meta name="twitter:description" content={`View detailed information about the ${pool.tokenA.symbol}/${pool.tokenB.symbol} liquidity pool.`} />
       </Helmet>
 
-      <div className="space-y-8 animate-fade-in relative -mt-12 overflow-x-hidden">
+      <div className="space-y-8 animate-fade-in relative overflow-x-hidden pt-2 md:pt-4">
         {/* Breadcrumb */}
         <Breadcrumb items={[
           { name: 'Home', url: '/' },

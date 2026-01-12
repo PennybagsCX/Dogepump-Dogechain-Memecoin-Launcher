@@ -80,17 +80,17 @@ const TokenDetail: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { tokens, addComment, likeComment, getTradesForToken, getCommentsForToken, myHoldings, priceHistory, watchlist, toggleWatchlist, openLightbox, activeOrders, cancelOrder, priceAlerts, resolveUsername, warnedUsers, warningNoticeModal, showWarningModal, showBanNoticeModal, userProfile, userAddress, bannedUsers, banNoticeModal, closeBanNoticeModal } = useStore();
 
-  const token = tokens.find(t => t.id === id);
+  const token = tokens.find((t: any) => t.id === id);
 
   // Debug logging - using structured logger
-  logger.debug('TOKEN_PAGE', 'Loading token', { tokenId: id, tokenFound: !!token, delisted: token?.delisted });
+  logger.debug('Loading token', { tokenId: id, tokenFound: !!token, delisted: token?.delisted });
 
   // Check if current user is the creator (needed before banned check)
   const isCreator = token?.creator === 'You';
 
   // Check if token creator is banned
-  const isCreatorBanned = token ? bannedUsers.some(b => b.address.toLowerCase() === token.creator.toLowerCase()) : false;
-  logger.debug('TOKEN_PAGE', 'Checking ban status', { creator: token?.creator, isCreatorBanned });
+  const isCreatorBanned = token ? bannedUsers.some((b: any) => b.address.toLowerCase() === token.creator.toLowerCase()) : false;
+  logger.debug('Checking ban status', { creator: token?.creator, isCreatorBanned });
 
   // Calculate 24h price change from price history (must be before any early returns to avoid hook violations)
   const history = id ? (priceHistory[id] || []) : [];
@@ -104,7 +104,7 @@ const TokenDetail: React.FC = () => {
     const recentPrice = history[history.length - 1]?.price || token?.price || 0;
 
     // Find the oldest price point within 24 hours, or use the first available
-    const oldPricePoint = history.find(h => h.timestamp >= twentyFourHoursAgo);
+    const oldPricePoint = history.find((h: any) => h.timestamp >= twentyFourHoursAgo);
     const oldPrice = oldPricePoint?.price || history[0]?.price || recentPrice;
 
     // Calculate percentage change
@@ -115,7 +115,7 @@ const TokenDetail: React.FC = () => {
 
   // Redirect or show warning if token is delisted
   if (token?.delisted) {
-    logger.warn('TOKEN_PAGE', 'Access denied to delisted token', { name: token.name, delisted: token.delisted, reason: token.delistedReason });
+    logger.warn('Access denied to delisted token', { name: token.name, delisted: token.delisted, reason: token.delistedReason });
     return (
       <>
         <Helmet>
@@ -152,8 +152,8 @@ const TokenDetail: React.FC = () => {
 
   // Show warning if token creator is banned (only to visitors, not the creator themselves)
   if (isCreatorBanned && !isCreator) {
-    const bannedUser = bannedUsers.find(b => b.address.toLowerCase() === token.creator.toLowerCase());
-    logger.warn('TOKEN_PAGE', 'Access denied to token with banned creator', { name: token.name, reason: bannedUser?.reason });
+    const bannedUser = bannedUsers.find((b: any) => b.address.toLowerCase() === token.creator.toLowerCase());
+    logger.warn('Access denied to token with banned creator', { name: token.name, reason: bannedUser?.reason });
     return (
       <>
         <Helmet>
@@ -195,14 +195,14 @@ const TokenDetail: React.FC = () => {
 
   const trades = getTradesForToken(id || '');
   const comments = getCommentsForToken(id || '');
-  const tokenOrders = activeOrders.filter(o => o.tokenId === id);
-  const tokenAlerts = priceAlerts.filter(a => a.tokenId === id);
+  const tokenOrders = activeOrders.filter((o: any) => o.tokenId === id);
+  const tokenAlerts = priceAlerts.filter((a: any) => a.tokenId === id);
 
-  const userTokenBalance = myHoldings.find(h => h.tokenId === id)?.balance || 0;
+  const userTokenBalance = myHoldings.find((h: any) => h.tokenId === id)?.balance || 0;
   const isWatched = id ? watchlist.includes(id) : false;
 
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const creatorAdminRef = useRef<HTMLDivElement>(null);
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const creatorAdminRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Check for action param to auto-scroll to creator tools
@@ -230,17 +230,17 @@ const TokenDetail: React.FC = () => {
   useEffect(() => {
     if (!token) return;
 
-    logger.debug('TOKEN_PAGE', 'Warning check triggered', { tokenId: token.id, creator: token.creator, warningsCount: warnedUsers.length, warnings: warnedUsers });
+    logger.debug('Warning check triggered', { tokenId: token.id, creator: token.creator, warningsCount: warnedUsers.length, warnings: warnedUsers });
 
     const currentUser = userProfile.username || 'You';
-    const activeWarning = warnedUsers.find(u =>
+    const activeWarning = warnedUsers.find((u: any) =>
       u.isActive &&
       u.tokenId === token.id &&
       (u.address.toLowerCase() === token.creator.toLowerCase() ||
        u.address.toLowerCase() === currentUser.toLowerCase())
     );
 
-    logger.debug('TOKEN_PAGE', 'Active warning found', { activeWarning });
+    logger.debug('Active warning found', { activeWarning });
 
     if (activeWarning) {
       // Only show warning if not yet acknowledged OR if warning was updated after acknowledgment
@@ -249,7 +249,7 @@ const TokenDetail: React.FC = () => {
 
       if (needsAcknowledge) {
         // Count total active warnings for this user (both user and token warnings)
-        const warningCount = warnedUsers.filter(u =>
+        const warningCount = warnedUsers.filter((u: any) =>
           u.isActive &&
           u.tokenId === token.id &&
           (u.address.toLowerCase() === token.creator.toLowerCase() ||
@@ -273,12 +273,12 @@ const TokenDetail: React.FC = () => {
   useEffect(() => {
     if (!token || !isCreator) return;
 
-    const bannedUserRecord = bannedUsers.find(b =>
+    const bannedUserRecord = bannedUsers.find((b: any) =>
       b.address.toLowerCase() === token.creator.toLowerCase()
     );
 
     if (bannedUserRecord && !banNoticeModal.isOpen) {
-      logger.warn('TOKEN_PAGE', 'Creator is banned, showing ban notice modal', { reason: bannedUserRecord.reason });
+      logger.warn('Creator is banned, showing ban notice modal', { reason: bannedUserRecord.reason });
       const banReason = `Account Banned: ${bannedUserRecord.reason}${bannedUserRecord.notes ? `. ${bannedUserRecord.notes}` : ''}`;
       showBanNoticeModal(banReason);
     }
@@ -286,9 +286,9 @@ const TokenDetail: React.FC = () => {
 
   const userAverageBuyPrice = useMemo(() => {
     if (!token) return 0;
-    const userBuys = trades.filter(t => t.tokenId === token.id && t.user === 'You' && t.type === 'buy');
-    const totalCost = userBuys.reduce((acc, t) => acc + t.amountDC, 0);
-    const totalTokens = userBuys.reduce((acc, t) => acc + t.amountToken, 0);
+    const userBuys = trades.filter((t: any) => t.tokenId === token.id && t.user === 'You' && t.type === 'buy');
+    const totalCost = userBuys.reduce((acc: number, t: any) => acc + t.amountDC, 0);
+    const totalTokens = userBuys.reduce((acc: number, t: any) => acc + t.amountToken, 0);
     return totalTokens > 0 ? totalCost / totalTokens : 0;
   }, [trades, token]);
 
@@ -305,11 +305,11 @@ const TokenDetail: React.FC = () => {
   };
   const [indicators, setIndicators] = useState(initialIndicators);
   const [showIndicatorsMenu, setShowIndicatorsMenu] = useState(false);
-  const indicatorsMenuRef = useRef<HTMLDivElement>(null);
+  const indicatorsMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Close indicators menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: any) => {
       if (indicatorsMenuRef.current && !indicatorsMenuRef.current.contains(event.target as Node)) {
         setShowIndicatorsMenu(false);
       }
@@ -328,8 +328,8 @@ const TokenDetail: React.FC = () => {
     if (!token) return [];
 
     // Filter trades for current token only
-    const tokenTrades = trades.filter(t => t.tokenId === token.id);
-    logger.debug('TOKEN_PAGE', 'Chart data generation', { tokenId: token.id, ticker: token.ticker, tradesCount: tokenTrades.length, totalTrades: trades.length, timeframe });
+    const tokenTrades = trades.filter((t: any) => t.tokenId === token.id);
+    logger.debug('Chart data generation', { tokenId: token.id, ticker: token.ticker, tradesCount: tokenTrades.length, totalTrades: trades.length, timeframe });
 
     // Bulletproof environment check
     const isDevelopment = import.meta.env.DEV;
@@ -339,7 +339,7 @@ const TokenDetail: React.FC = () => {
     let data;
     if (useTestData) {
       // Development mode with test data forced
-      logger.debug('TOKEN_PAGE', 'Using TEST DATA for chart display (forced)', {
+      logger.debug('Using TEST DATA for chart display (forced)', {
         isDevelopment,
         testModeEnabled,
         tokenId: token.id
@@ -371,7 +371,7 @@ const TokenDetail: React.FC = () => {
         const low = Math.min(open, close) * (1 - Math.random() * 0.02);
 
         return {
-          time: timestamp,
+          time: new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           timestamp: timestamp,
           open,
           high,
@@ -385,7 +385,7 @@ const TokenDetail: React.FC = () => {
         };
       });
 
-      logger.debug('TOKEN_PAGE', 'Test candles generated', {
+      logger.debug('Test candles generated', {
         candlesCount: data.length,
         numCandles,
         interval: `${candleInterval / 1000}s per candle`,
@@ -394,7 +394,7 @@ const TokenDetail: React.FC = () => {
     } else {
       // Production mode: use real trade data
       data = generateCandlesFromTrades(tokenTrades, timeframe);
-      logger.debug('TOKEN_PAGE', 'Candles generated from real trades', {
+      logger.debug('Candles generated from real trades', {
         candlesCount: data.length,
         source: 'trades',
         timeframe
@@ -406,7 +406,7 @@ const TokenDetail: React.FC = () => {
         const needed = 50 - data.length;
         const basePrice = lastCandle?.close || token.price || 0.000001;
 
-        logger.info('TOKEN_PAGE', `Insufficient real data (${data.length} candles), padding with ${needed} synthetic candles for indicators`);
+        logger.info(`Insufficient real data (${data.length} candles), padding with ${needed} synthetic candles for indicators`);
 
         // Generate synthetic candles by extending the trend
         const syntheticData = Array.from({ length: needed }, (_, i) => {
@@ -416,7 +416,7 @@ const TokenDetail: React.FC = () => {
           const price = basePrice * (1 + trend + noise);
 
           return {
-            time: Date.now() - ((needed - 1 - i) * 6000),
+            time: new Date(Date.now() - ((needed - 1 - i) * 6000)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             timestamp: Date.now() - ((needed - 1 - i) * 6000),
             open: price,
             high: price * 1.01,
@@ -431,12 +431,12 @@ const TokenDetail: React.FC = () => {
         });
 
         data = [...data, ...syntheticData];
-        logger.debug('TOKEN_PAGE', 'Data after padding', { totalCandles: data.length });
+        logger.debug('Data after padding', { totalCandles: data.length });
       }
     }
 
     if (data.length > 0) {
-      logger.debug('TOKEN_PAGE', 'First candle', { candle: data[0] });
+      logger.debug('First candle', { candle: data[0] });
     }
 
     // Calculate indicators based on active state
@@ -463,6 +463,7 @@ const TokenDetail: React.FC = () => {
        return newState;
      });
      playSound('click');
+     return; // Add explicit return
   };
 
   const toggleFullscreen = () => {
@@ -668,9 +669,9 @@ const TokenDetail: React.FC = () => {
   const [commentImageProgress, setCommentImageProgress] = useState(0);
   const [commentImageStatus, setCommentImageStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [showStickerPicker, setShowStickerPicker] = useState(false);
-  const stickerButtonRef = useRef<HTMLButtonElement>(null);
+  const stickerButtonRef = useRef<HTMLButtonElement | null>(null);
   const [stickerPickerPosition, setStickerPickerPosition] = useState<{ top: number; left: number } | undefined>(undefined);
 
   // Moved useMemo here to avoid React Error #310
@@ -709,9 +710,10 @@ const TokenDetail: React.FC = () => {
         }, 5000);
         return () => clearInterval(interval);
      }
+     return; // Add explicit return for the else case
   }, [token]);
 
-  const handleQuickCopyTrade = (amount: number, e: React.MouseEvent) => {
+  const handleQuickCopyTrade = (trade: any) => (amount: number, e: any) => {
     e.stopPropagation();
     setCopyTradeAmount(amount.toString());
     addToast('success', `Copied Buy for ${formatNumber(amount)} DC`, 'Settings Updated');
@@ -766,7 +768,7 @@ const TokenDetail: React.FC = () => {
     setIsReportModalOpen(true);
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: any) => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate image upload before processing
@@ -817,7 +819,7 @@ const TokenDetail: React.FC = () => {
      setShowStickerPicker(false);
   };
 
-  const handlePostComment = async (e: React.FormEvent) => {
+  const handlePostComment = async (e: any) => {
     e.preventDefault();
     if (!token) return;
     if (!newComment.trim() && !selectedImage) return;
@@ -828,7 +830,7 @@ const TokenDetail: React.FC = () => {
     addToast('success', 'Comment posted to thread');
   };
 
-  const handlePet = (e: React.MouseEvent<HTMLImageElement>) => {
+  const handlePet = (e: any) => {
      e.stopPropagation();
      const rect = e.currentTarget.getBoundingClientRect();
      const x = e.clientX - rect.left;
@@ -877,7 +879,7 @@ const TokenDetail: React.FC = () => {
   const currentPrice = token.price;
   document.title = `$${currentPrice.toFixed(6)} | ${token.ticker} - DogePump`;
 
-  const displayedTrades = trades.filter(t => {
+  const displayedTrades = trades.filter((t: any) => {
     if (tradeFilter === 'all') return true;
     return t.type === tradeFilter;
   });
@@ -897,7 +899,7 @@ const TokenDetail: React.FC = () => {
         <meta name="twitter:image" content={token?.imageUrl || 'https://dogepump.com/og-image.png'} />
       </Helmet>
       {/* Add bottom padding on mobile to prevent footer overlap with the sticky trade bar */}
-      <div className="space-y-8 animate-fade-in relative -mt-12 pb-64 lg:pb-0 safe-area-pb">
+      <div className="space-y-8 animate-fade-in relative overflow-x-hidden pt-2 md:pt-4 pb-64 lg:pb-0 safe-area-pb">
       <AlertModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} token={token} />
       <BoostModal isOpen={isBoostModalOpen} onClose={() => setIsBoostModalOpen(false)} onBoostComplete={handleBoostComplete} token={token} />
       <ReportModal
@@ -940,7 +942,7 @@ const TokenDetail: React.FC = () => {
              <div className="flex flex-col md:flex-row gap-8 relative z-10 items-center md:items-start">
                 <div
                   className="relative group/image shrink-0 cursor-pointer select-none"
-                  onClick={(e) => { handlePet(e); openLightbox(token.imageUrl); }}
+                  onClick={(e: any) => { handlePet(e); openLightbox(token.imageUrl); }}
                 >
                   <div className="relative w-24 h-24 rounded-3xl overflow-hidden shadow-2xl bg-gray-800">
                     <OptimizedImage
@@ -992,7 +994,7 @@ const TokenDetail: React.FC = () => {
                         <span>CA: {token.contractAddress ? `${token.contractAddress.slice(0, 10)}...${token.contractAddress.slice(-4)}` : '0x0000000000...0000'}</span>
                         {copiedContract ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                       </div>
-                      <div className="flex items-center justify-center gap-2 sm:border-l sm:border-white/10 sm:pl-4">
+                      <div className="flex items-center justify-center gap-2">
                         {token.website && isValidUrl(token.website) && <a href={token.website} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-white transition-colors flex items-center justify-center"><Globe size={14} /></a>}
                         {token.twitter && isValidUrl(token.twitter) && <a href={token.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-400 transition-colors flex items-center justify-center"><XIcon size={14} /></a>}
                         {token.telegram && isValidUrl(token.telegram) && <a href={token.telegram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded bg-white/5 hover:bg-white/10 hover:text-blue-500 transition-colors flex items-center justify-center"><Send size={14} /></a>}
@@ -1101,54 +1103,32 @@ const TokenDetail: React.FC = () => {
           {/* Chart Container */}
           <div ref={chartContainerRef} className={`bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-2xl relative flex flex-col group transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[200] rounded-none border-0' : 'min-h-[650px]'}`}>
              {/* Timeframe Selector & Indicators - Proper spacing on all devices */}
-             <div className="absolute top-4 left-4 right-16 sm:right-16 z-20 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-4">
+             <div
+               className={`${isFullscreen ? 'absolute top-4 left-4 right-16 sm:right-16' : 'relative w-full px-4 pt-4 pr-16 sm:pr-24'} z-20 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-4`}
+             >
                 <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/10 shadow-lg">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
                   <span className="text-[9px] sm:text-[10px] font-bold text-gray-300 tracking-widest uppercase">Live</span>
                 </div>
                 <div className="flex bg-black/60 backdrop-blur-md rounded-full border border-white/10 p-0.5 sm:p-1 gap-0.5 sm:gap-1">
-                   {(['1m', '5m', '15m', '1H', '4H', '1D', '1W'] as const).map(tf => (
+                   {(['1m', '5m', '15m', '1H', '4H', '1D'] as const).map(tf => (
                       <button key={tf} onClick={() => { setTimeframe(tf); playSound('click'); }} className={`px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold transition-all ${timeframe === tf ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}>{tf}</button>
                    ))}
                 </div>
 
                 {/* Advanced Indicators Toggle - Always visible */}
                 <div className="relative" ref={indicatorsMenuRef}>
-                    {/* Data sufficiency checks for indicators */}
-                    {(() => {
+                    <button onClick={() => setShowIndicatorsMenu(!showIndicatorsMenu)} className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-colors ${showIndicatorsMenu ? 'bg-doge/20 text-doge border-doge/50' : 'bg-black/80 text-gray-500 border-white/10 hover:text-white'}`}>
+                        <Settings2 size={10} className="sm:w-3 sm:h-3" /> <span className="inline">Indicators</span>
+                    </button>
+                    {showIndicatorsMenu && (() => {
                         const dataCount = chartData.length;
                         const canShowRSI = dataCount >= 15; // RSI period (14) + 1
                         const canShowMACD = dataCount >= 26; // MACD slow period
                         const canShowStoch = dataCount >= 28; // StochRSI period (14) × 2
 
-                        // Log data availability for debugging
-                        if (indicators.rsi || indicators.macd || indicators.stoch) {
-                            console.log('📊 Indicator Data Availability:', {
-                                totalDataPoints: dataCount,
-                                canShowRSI,
-                                canShowMACD,
-                                canShowStoch,
-                                activeIndicators: {
-                                    rsi: indicators.rsi,
-                                    macd: indicators.macd,
-                                    stoch: indicators.stoch
-                                }
-                            });
-                        }
-
-                        return null; // This is just for data checks, no rendering
-                    })()}
-                    <button onClick={() => setShowIndicatorsMenu(!showIndicatorsMenu)} className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-colors ${showIndicatorsMenu ? 'bg-doge/20 text-doge border-doge/50' : 'bg-black/60 text-gray-500 border-white/10 hover:text-white'}`}>
-                        <Settings2 size={10} className="sm:w-3 sm:h-3" /> <span className="hidden xs:inline sm:inline">Indicators</span>
-                    </button>
-                    {showIndicatorsMenu && (() => {
-                        const dataCount = chartData.length;
-                        const canShowRSI = dataCount >= 15;
-                        const canShowMACD = dataCount >= 26;
-                        const canShowStoch = dataCount >= 28;
-
                         return (
-                        <div className="absolute top-full left-0 mt-2 bg-[#111] border border-white/10 rounded-xl p-2 sm:p-3 shadow-xl z-50 w-36 sm:w-40 flex flex-col gap-1 sm:gap-2 animate-slide-up">
+                        <div className="absolute top-full left-0 mt-2 bg-[#0B0B0B] border border-white/10 rounded-xl p-2 sm:p-3 shadow-xl z-50 w-36 sm:w-40 flex flex-col gap-1 sm:gap-2 animate-slide-up">
                             <span className="text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 sm:mb-1">Overlays</span>
                             <button onClick={() => toggleIndicator('ema20')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.ema20 ? 'text-purple-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 20</button>
                             <button onClick={() => toggleIndicator('ema50')} className={`text-left text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${indicators.ema50 ? 'text-blue-400 bg-white/5' : 'text-gray-400 hover:text-white'}`}>EMA 50</button>
@@ -1198,7 +1178,7 @@ const TokenDetail: React.FC = () => {
              </div>
 
              {/* Chart area - Adjust padding for mobile */}
-             <div className="w-full pt-20 sm:pt-16 pb-2 px-1 sm:px-2 relative">
+             <div className={`w-full ${isFullscreen ? 'pt-20 sm:pt-16' : 'pt-6 sm:pt-16'} pb-2 px-1 sm:px-2 relative`}>
                <CandleChart
                   data={chartData}
                   showEMA20={indicators.ema20}
@@ -1238,13 +1218,13 @@ const TokenDetail: React.FC = () => {
                   <div className="w-1/4">Time</div><div className="w-1/4 text-right">Amount</div><div className="w-1/4 text-right">Price</div><div className="w-1/4 text-right">Copy</div>
                 </div>
                 <div className="overflow-y-auto flex-1 pr-1 space-y-0.5 custom-scrollbar">
-                  {displayedTrades.length > 0 ? displayedTrades.map((trade) => (
+                  {displayedTrades.length > 0 ? displayedTrades.map((trade: any) => (
                     <div key={trade.id} onClick={() => { setSelectedTrade(trade); playSound('click'); }} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors text-[10px] group font-mono animate-fade-in cursor-pointer">
                       <div className="w-1/4 text-gray-500 group-hover:text-gray-300 transition-colors">{timeAgo(trade.timestamp)}</div>
                       <div className={`w-1/4 text-right font-bold ${trade.type === 'buy' ? 'text-green-400' : 'text-red-400'}`}>{formatNumber(trade.amountToken)}</div>
                       <div className="w-1/4 text-right text-white group-hover:text-doge transition-colors">${trade.price.toFixed(6)}</div>
                       <div className="w-1/4 flex justify-end">
-                         {trade.type === 'buy' && <button onClick={(e) => handleQuickCopyTrade(trade.amountDC, e)} className="p-1 rounded bg-white/5 hover:bg-doge/20 hover:text-doge text-gray-500 transition-colors opacity-100" title="Copy Trade Amount"><Copy size={10} /></button>}
+                         {trade.type === 'buy' && <button onClick={(e: any) => handleQuickCopyTrade(trade)(trade.amountDC, e)} className="p-1 rounded bg-white/5 hover:bg-doge/20 hover:text-doge text-gray-500 transition-colors opacity-100" title="Copy Trade Amount"><Copy size={10} /></button>}
                       </div>
                     </div>
                   )) : <div className="text-center text-gray-600 text-[10px] py-4">No trades yet</div>}
@@ -1264,7 +1244,7 @@ const TokenDetail: React.FC = () => {
              <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-lg animate-fade-in">
                  <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2"><List size={16} /> Active Orders</h3>
                  <div className="space-y-2">
-                    {tokenOrders.map(order => (
+                    {tokenOrders.map((order: any) => (
                        <div key={order.id} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:bg-white/[0.05] transition-colors">
                           <div>
                                <div className="flex items-center gap-2 mb-1">
@@ -1307,7 +1287,7 @@ const TokenDetail: React.FC = () => {
              <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-lg animate-fade-in">
                  <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2"><List size={16} /> Active Orders</h3>
                  <div className="space-y-2">
-                    {tokenOrders.map(order => (
+                    {tokenOrders.map((order: any) => (
                        <div key={order.id} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:bg-white/[0.05] transition-colors">
                           <div>
                                <div className="flex items-center gap-2 mb-1">
@@ -1346,10 +1326,10 @@ const TokenDetail: React.FC = () => {
                       id="token-comment-textarea"
                       name="token-comment-textarea"
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      onChange={(e: any) => setNewComment(e.target.value)}
                       placeholder="Type a message or upload a meme..."
                       className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-doge/50 outline-none transition-all resize-none h-20"
-                      onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) handlePostComment(e); }}
+                      onKeyDown={(e: any) => { if(e.key === 'Enter' && !e.shiftKey) handlePostComment(e); }}
                     />
  
                     {/* Image Upload Progress */}
@@ -1358,7 +1338,7 @@ const TokenDetail: React.FC = () => {
                         <UploadProgress
                           progress={commentImageProgress}
                           fileName="image.jpg"
-                          status={commentImageStatus}
+                          status={commentImageStatus as any}
                         />
                       </div>
                     )}
@@ -1392,7 +1372,7 @@ const TokenDetail: React.FC = () => {
                                 type="button"
                                 ref={stickerButtonRef}
                                 onClick={() => {
-                                  logger.debug('TOKEN_PAGE', 'StickerPicker button clicked', { currentState: showStickerPicker });
+                                  logger.debug('StickerPicker button clicked', { currentState: showStickerPicker });
                                   if (!showStickerPicker && stickerButtonRef.current) {
                                     const rect = stickerButtonRef.current.getBoundingClientRect();
                                     const pickerHeight = 400; // Approximate height of StickerPicker
@@ -1419,11 +1399,11 @@ const TokenDetail: React.FC = () => {
                                       left = 20;
                                     }
 
-                                    logger.debug('TOKEN_PAGE', 'StickerPicker position calculated', { top, left, viewportHeight, viewportWidth });
+                                    logger.debug('StickerPicker position calculated', { top, left, viewportHeight, viewportWidth });
                                     setStickerPickerPosition({ top, left });
                                   }
                                   setShowStickerPicker(!showStickerPicker);
-                                  logger.debug('TOKEN_PAGE', 'StickerPicker state toggled', { newState: !showStickerPicker });
+                                  logger.debug('StickerPicker state toggled', { newState: !showStickerPicker });
                                 }}
                                 className="text-gray-500 hover:text-yellow-400 transition-colors flex items-center justify-center"
                               >
@@ -1444,13 +1424,13 @@ const TokenDetail: React.FC = () => {
                   </div>
               </form>
               <div className="space-y-6">
-                  {comments.length > 0 ? comments.map((comment) => (
+                  {comments.length > 0 ? comments.map((comment: any) => (
                     <div key={comment.id} className="flex gap-4 group animate-slide-up">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border bg-white/5 border-white/10`}><span className="text-xs font-bold text-gray-500">{comment.user.slice(0,2)}</span></div>
                       <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`text-sm font-bold transition-colors cursor-pointer text-gray-300 group-hover:text-doge`}>{resolveUsername(comment.user)}</span>
-                            {comment.badges && comment.badges.map((b, idx) => <Badge key={`${comment.id}-${b}-${idx}`} type={b} size="sm" showTooltip={true} />)}
+                            {comment.badges && comment.badges.map((b: any, idx: any) => <Badge type={b} size="sm" showTooltip={true} />)}
                             <span className="text-[10px] text-gray-600 font-mono ml-auto">{timeAgo(comment.timestamp)}</span>
                           </div>
                           <div className="text-sm text-gray-300 leading-relaxed bg-white/[0.02] p-3 rounded-tr-xl rounded-b-xl border border-white/5">
@@ -1494,14 +1474,22 @@ const TokenDetail: React.FC = () => {
                     </div>
                  </div>
               ) : (
-                 <div className="overflow-hidden rounded-2xl border border-white/5">
-                    <table className="w-full text-left text-sm">
-                       <thead className="bg-white/[0.03] text-gray-500 text-xs font-bold uppercase tracking-wider"><tr><th className="px-4 py-3">Rank</th><th className="px-4 py-3">Address</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3 text-right">% Supply</th><th className="px-4 py-3 text-right">Value</th></tr></thead>
-                       <tbody className="divide-y divide-white/5">
+                 <div className="overflow-x-auto rounded-2xl border border-white/5">
+                    <table className="w-full min-w-[580px] md:min-w-0 text-left text-sm table-fixed">
+                       <thead className="bg-white/[0.03] text-gray-500 text-[11px] md:text-xs font-bold uppercase tracking-wider">
+                         <tr>
+                           <th className="px-3 md:px-4 py-3 w-[70px]">Rank</th>
+                           <th className="px-3 md:px-4 py-3 w-[180px] sm:w-[200px] md:w-[240px]">Address</th>
+                           <th className="px-3 md:px-4 py-3 text-right w-[110px] md:w-[130px]">Balance</th>
+                           <th className="px-3 md:px-4 py-3 text-right w-[90px] md:w-[110px]">% Supply</th>
+                           <th className="px-3 md:px-4 py-3 text-right w-[140px] md:w-[170px]">Value</th>
+                         </tr>
+                       </thead>
+                       <tbody className="divide-y divide-white/5 text-[13px] md:text-sm">
                           {holdersList.map((holder, idx) => (
                              <tr key={idx} className="hover:bg-white/[0.02]">
-                                <td className="px-4 py-3 text-gray-500 font-mono">#{idx + 1}</td>
-                                <td className={`px-4 py-3 font-mono font-bold ${holder.isContract ? 'text-doge' : holder.isYou ? 'text-green-400' : 'text-gray-300'}`}>
+                                <td className="px-3 md:px-4 py-3 text-gray-500 font-mono whitespace-nowrap">#{idx + 1}</td>
+                                <td className={`px-3 md:px-4 py-3 font-mono font-bold whitespace-nowrap pr-6 max-w-[210px] md:max-w-[280px] truncate ${holder.isContract ? 'text-doge' : holder.isYou ? 'text-green-400' : 'text-gray-300'}`}>
                                     {holder.isContract ? (
                                         <span>{resolveUsername(holder.address)} (Contract)</span>
                                     ) : (
@@ -1510,9 +1498,9 @@ const TokenDetail: React.FC = () => {
                                         </Link>
                                     )}
                                 </td>
-                                <td className="px-4 py-3 text-right text-gray-400 font-mono">{formatNumber((holder.percentage / 100) * token.supply)}</td>
-                                <td className="px-4 py-3 text-right text-white font-mono">{holder.percentage.toFixed(2)}%</td>
-                                <td className="px-4 py-3 text-right text-green-400 font-mono">{formatCurrency(holder.value || 0)}</td>
+                                <td className="px-3 md:px-4 py-3 text-right text-gray-400 font-mono whitespace-nowrap">{formatNumber((holder.percentage / 100) * token.supply)}</td>
+                                <td className="px-3 md:px-4 py-3 text-right text-white font-mono whitespace-nowrap">{holder.percentage.toFixed(2)}%</td>
+                                <td className="px-3 md:px-4 py-3 text-right text-green-400 font-mono whitespace-nowrap pr-6 max-w-[180px] md:max-w-[220px] truncate">{formatCurrency(holder.value || 0)}</td>
                              </tr>
                           ))}
                        </tbody>

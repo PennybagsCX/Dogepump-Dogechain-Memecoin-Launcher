@@ -34,7 +34,7 @@ export const ChartReactions: React.FC<ChartReactionsProps> = ({
   visible = true
 }) => {
   const [particles, setParticles] = useState<Particle[]>([]);
-  const requestRef = useRef<number>(null);
+  const requestRef = useRef<number | null>(null);
 
   const emojis = [
     { id: 'rocket', label: '🚀', icon: Rocket, color: 'text-doge', count: counts.rocket },
@@ -43,15 +43,7 @@ export const ChartReactions: React.FC<ChartReactionsProps> = ({
     { id: 'skull', label: '💀', icon: Skull, color: 'text-gray-400', count: counts.skull },
   ];
 
-  const addReaction = (type: ChartEmoji) => {
-    playSound('hover');
-    
-    // Call the callback if provided
-    if (onReactionClick) {
-      onReactionClick(type);
-    }
-    
-    // Create particle animation
+  const spawnParticle = (type: ChartEmoji) => {
     const id = Math.random().toString(36);
     const x = 20 + Math.random() * 60; // Random start X (20-80%)
     
@@ -96,9 +88,18 @@ export const ChartReactions: React.FC<ChartReactionsProps> = ({
             return (
               <button
                 key={emoji.id}
-                onClick={() => addReaction(emoji.label as ChartEmoji)}
+                aria-label={`${emoji.label} reaction`}
+                onClick={() => {
+                  const isRemoving = userReaction === emoji.label;
+                  if (onReactionClick) {
+                    onReactionClick(emoji.label as ChartEmoji);
+                  }
+                  if (!isRemoving) {
+                    playSound('hover');
+                    spawnParticle(emoji.label as ChartEmoji);
+                  }
+                }}
                 className={`relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors active:scale-90 text-lg ${isUserReacted ? 'bg-doge/20 ring-2 ring-doge' : ''}`}
-                title={`${emoji.label} ${emoji.count > 0 ? `(${emoji.count})` : ''}`}
               >
                 {emoji.label}
                 {emoji.count > 0 && (

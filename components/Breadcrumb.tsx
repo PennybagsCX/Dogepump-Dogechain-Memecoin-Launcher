@@ -28,7 +28,10 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
       <script type="application/ld+json">
         {JSON.stringify(schemaData)}
       </script>
-      <nav className="flex items-center gap-2 text-sm text-gray-400 mb-4" aria-label="Breadcrumb">
+      <nav
+        className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm text-gray-400 mb-4 w-full leading-tight"
+        aria-label="Breadcrumb"
+      >
         {items.map((item, index) => (
           <React.Fragment key={index}>
             {index > 0 && <ChevronRight size={14} className="text-gray-500" />}

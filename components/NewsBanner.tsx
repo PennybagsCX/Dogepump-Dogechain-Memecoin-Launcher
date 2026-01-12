@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { type ReactElement } from 'react';
 import { TrendingUp, TrendingDown, X, Rocket, ExternalLink, Flame, Trophy, Sparkles } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 
@@ -12,7 +12,7 @@ export const NewsBanner: React.FC = () => {
   const colorScheme = marketEvent.colorScheme || 'green';
 
   // Color scheme configurations
-  const colorConfigs = {
+  const colorConfigs: Record<'green' | 'purple' | 'gold' | 'rainbow', { bg: string; iconBg: string; icon: ReactElement }> = {
     green: {
       bg: 'bg-green-900/90',
       iconBg: 'bg-green-500 text-black',
@@ -35,12 +35,31 @@ export const NewsBanner: React.FC = () => {
     }
   };
 
-  const config = colorConfigs[colorScheme];
+  const config = colorConfigs[colorScheme as keyof typeof colorConfigs];
   const isRainbow = colorScheme === 'rainbow';
 
   return (
-    <div id="news-banner" className={`overflow-hidden ${config.bg} backdrop-blur-md border-b border-white/10 transition-all duration-500`}
-         style={{ zIndex: 50 }}>
+    <div
+      id="news-banner"
+      className="relative overflow-hidden backdrop-blur-md border-b border-white/10 transition-all duration-500 mb-3"
+      style={{
+        zIndex: 50,
+        width: '100%',
+        maxWidth: '100%',
+        marginLeft: 0,
+        marginRight: 0
+      }}
+    >
+      {/* Full-bleed background to avoid right-edge gap */}
+      <div
+        className={`absolute inset-0 ${config.bg}`}
+        style={{
+          width: '100%',
+          maxWidth: '100%'
+        }}
+        aria-hidden
+      />
+
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-4 flex-1 min-w-0">
            <div className={`p-2 rounded-full shrink-0 ${config.iconBg} animate-pulse`}>
@@ -51,7 +70,7 @@ export const NewsBanner: React.FC = () => {
                 <a
                   href={marketEvent.sourceUrl}
                   className="block hover:bg-white/5 rounded-lg transition-colors active:bg-white/10"
-                  onClick={(e) => {
+                  onClick={(e: any) => {
                     // Ensure the link works properly on mobile
                     e.stopPropagation();
                   }}
@@ -79,7 +98,7 @@ export const NewsBanner: React.FC = () => {
         </div>
 
         <button
-          onClick={(e) => {
+          onClick={(e: any) => {
             e.preventDefault();
             e.stopPropagation();
             setMarketEvent(null);

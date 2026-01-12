@@ -12,6 +12,7 @@ import { FarmDiscovery } from '../components/FarmDiscovery';
 import { CreateFarmModal } from '../components/CreateFarmModal';
 import { useAuth } from '../contexts/AuthContext';
 import { FarmErrorBoundary } from '../components/error/FarmErrorBoundary';
+import { Breadcrumb } from '../components/Breadcrumb';
 
 const Earn: React.FC = () => {
   const { tokens, farmPositions, myHoldings, stakeToken, unstakeToken, harvestRewards, tokenOwnerFarms, createFarm, getMyFarms } = useStore();
@@ -94,6 +95,10 @@ const Earn: React.FC = () => {
         <meta name="twitter:description" content="Stake your graduated tokens on DogePump to earn passive $DC rewards. High APY yield farming with auto-compound rewards." />
       </Helmet>
     <div className="space-y-12 animate-fade-in pb-12">
+      <Breadcrumb items={[
+        { name: 'Home', url: '/' },
+        { name: 'Earn', url: '/earn' }
+      ]} />
        {/* Hero */}
        <div className="text-center relative py-8">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-green-500/10 blur-[80px] rounded-full pointer-events-none"></div>

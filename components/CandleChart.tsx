@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ResponsiveContainer, ComposedChart, Bar, Line, Area, XAxis, YAxis, Tooltip, Cell, CartesianGrid, Brush, ReferenceLine } from 'recharts';
+import { ComposedChart, Bar, Line, Area, XAxis, YAxis, Tooltip, Cell, CartesianGrid, Brush, ReferenceLine } from 'recharts';
 import { Candle, Order, PriceAlert } from '../types';
 
 interface CandleChartProps {
@@ -73,18 +73,57 @@ const CustomCandleShape = (props: any) => {
       {/* Candle body */}
       <rect x={x} y={bodyTop} width={width} height={bodyHeight} fill={color} stroke={color} />
 
-      {/* Trade count indicator for very active candles */}
-      {tradeCount > 5 && (
-        <circle
-          cx={x + width}
-          cy={bodyTop}
-          r={3}
-          fill="#FFD700"
-          stroke="#000"
-          strokeWidth={0.5}
-        />
-      )}
     </g>
+  );
+};
+
+const IndicatorTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  const point = payload[0]?.payload;
+  if (!point) return null;
+
+  return (
+    <div className="bg-[#050505]/95 border border-white/10 rounded-lg p-2 sm:p-3 backdrop-blur-md shadow-xl text-xs font-mono z-50 min-w-[160px] max-w-[90vw]">
+      <div className="text-gray-400 mb-2 font-sans font-bold uppercase tracking-wider text-[10px] sm:text-xs">{label}</div>
+      <div className="space-y-1">
+        {point.rsi !== null && point.rsi !== undefined && (
+          <div className="flex justify-between gap-2 text-cyan-400">
+            <span>RSI</span>
+            <span>{point.rsi.toFixed(2)}</span>
+          </div>
+        )}
+        {(point.macd_macdLine !== null && point.macd_macdLine !== undefined) && (
+          <div className="flex justify-between gap-2 text-white">
+            <span>MACD</span>
+            <span>{point.macd_macdLine.toFixed(6)}</span>
+          </div>
+        )}
+        {(point.macd_signalLine !== null && point.macd_signalLine !== undefined) && (
+          <div className="flex justify-between gap-2 text-amber-300">
+            <span>Signal</span>
+            <span>{point.macd_signalLine.toFixed(6)}</span>
+          </div>
+        )}
+        {(point.macd_histogram !== null && point.macd_histogram !== undefined) && (
+          <div className="flex justify-between gap-2 text-pink-400">
+            <span>Histogram</span>
+            <span>{point.macd_histogram.toFixed(6)}</span>
+          </div>
+        )}
+        {(point.stochRsi_k !== null && point.stochRsi_k !== undefined) && (
+          <div className="flex justify-between gap-2 text-lime-400">
+            <span>Stoch %K</span>
+            <span>{point.stochRsi_k.toFixed(2)}</span>
+          </div>
+        )}
+        {(point.stochRsi_d !== null && point.stochRsi_d !== undefined) && (
+          <div className="flex justify-between gap-2 text-white">
+            <span>Stoch %D</span>
+            <span>{point.stochRsi_d.toFixed(2)}</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -93,7 +132,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const candlePayload = payload.find((p: any) => p.dataKey === 'close')?.payload;
     if (!candlePayload) return null;
 
-    const { open, high, low, close, volume, buyVolume, sellVolume, tradeCount, ema20, ema50, ema200, bollinger, rsi, macd, stochRsi } = candlePayload;
+    const { open, high, low, close, volume, buyVolume, sellVolume, tradeCount, ema20, ema50, ema200, bollinger, rsi, macd_macdLine, macd_signalLine, macd_histogram, stochRsi_k, stochRsi_d } = candlePayload;
     const isUp = close >= open;
     const isPredominantlyBuy = buyVolume > sellVolume;
 
@@ -142,8 +181,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                </div>
             )}
             {rsi && <div className="text-cyan-400">RSI(14): {rsi.toFixed(2)}</div>}
-            {macd && <div className="text-pink-400">MACD: {macd.histogram.toFixed(6)}</div>}
-            {stochRsi && <div className="text-lime-400">Stoch: {stochRsi.k.toFixed(1)}</div>}
+            {macd_histogram !== null && macd_histogram !== undefined && <div className="text-pink-400">MACD: {macd_histogram.toFixed(6)}</div>}
+            {stochRsi_k !== null && stochRsi_k !== undefined && <div className="text-lime-400">Stoch: {stochRsi_k.toFixed(1)}</div>}
         </div>
       </div>
     );
@@ -205,20 +244,26 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
     userAverageBuyPrice, activeOrders = [], priceAlerts = []
 }) => {
   const [chartWidth, setChartWidth] = React.useState<number>(0);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  const formatTimeTick = React.useCallback((ts: number) => {
+    if (!ts) return '';
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }, []);
 
   React.useEffect(() => {
-    if (containerRef.current) {
-      const updateWidth = () => {
-        const width = containerRef.current?.clientWidth || 0;
-        // Calculate optimal chart width (container width minus Y-axis space)
-        // Y-axis is 60px plus small margin
-        setChartWidth(Math.max(width - 65, 300)); // Minimum 300px for chart
-      };
-      updateWidth();
-      window.addEventListener('resize', updateWidth);
-      return () => window.removeEventListener('resize', updateWidth);
-    }
+    const updateWidth = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const width = container.clientWidth || 0;
+      // Use full container width so tooltip/cursor math matches rendered bars
+      setChartWidth(Math.max(width, 300)); // Minimum 300px for chart
+    };
+    
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
   // Always render chart container, even with minimal data
@@ -236,43 +281,6 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
     tradeCount: 1,
     isBuyCandle: true
   }];
-
-  // Debug: Check all indicator data
-  console.log('=== CandleChart Component Render ===');
-  console.log('Props received:', { showRSI, showMACD, showStochRSI, showBollinger, showVolume });
-  console.log('Data length:', chartData.length);
-
-  if (chartData.length > 0) {
-    const firstCandle = chartData[0];
-    const lastCandle = chartData[chartData.length - 1];
-
-    console.log('First candle indicators:', {
-      ema20: firstCandle.ema20,
-      ema50: firstCandle.ema50,
-      ema200: firstCandle.ema200,
-      bollinger: firstCandle.bollinger,
-      rsi: firstCandle.rsi,
-      macd: firstCandle.macd,
-      stochRsi: firstCandle.stochRsi
-    });
-
-    console.log('Last candle indicators:', {
-      ema20: lastCandle.ema20,
-      ema50: lastCandle.ema50,
-      ema200: lastCandle.ema200,
-      bollinger: lastCandle.bollinger,
-      rsi: lastCandle.rsi,
-      macd: lastCandle.macd,
-      stochRsi: lastCandle.stochRsi
-    });
-
-    // Count candles with indicator data
-    const withRSI = chartData.filter(d => d.rsi !== undefined).length;
-    const withMACD = chartData.filter(d => d.macd !== undefined).length;
-    const withStoch = chartData.filter(d => d.stochRsi !== undefined).length;
-    console.log('Candles with indicator data:', { withRSI, withMACD, withStoch });
-  }
-  console.log('=====================================');
 
   const minPrice = Math.min(...chartData.map(d => d.low));
   const maxPrice = Math.max(...chartData.map(d => d.high));
@@ -307,43 +315,19 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
       bollingerLower: bollinger ? bollinger.lower : null,
       bollingerMiddle: bollinger ? bollinger.middle : null,
       hasBollinger: !!bollinger,
-      // Explicit indicator preservation for Recharts
+      // No need to preserve indicators - data is already flat from chartUtils
       rsi: d.rsi !== undefined ? d.rsi : null,
-      macd: d.macd ? {
-        macdLine: d.macd.macdLine !== undefined ? d.macd.macdLine : 0,
-        signalLine: d.macd.signalLine !== undefined ? d.macd.signalLine : 0,
-        histogram: d.macd.histogram !== undefined ? d.macd.histogram : 0
-      } : null,
-      stochRsi: d.stochRsi ? {
-        k: d.stochRsi.k !== undefined ? d.stochRsi.k : 50,
-        d: d.stochRsi.d !== undefined ? d.stochRsi.d : 50
-      } : null
+      macd_macdLine: d.macd_macdLine !== undefined ? d.macd_macdLine : null,
+      macd_signalLine: d.macd_signalLine !== undefined ? d.macd_signalLine : null,
+      macd_histogram: d.macd_histogram !== undefined ? d.macd_histogram : null,
+      stochRsi_k: d.stochRsi_k !== undefined ? d.stochRsi_k : null,
+      stochRsi_d: d.stochRsi_d !== undefined ? d.stochRsi_d : null
     };
   });
 
   // Layout calculations - use fixed pixel heights for better ResponsiveContainer compatibility
   const hasIndicators = showRSI || showMACD || showStochRSI;
   const indicatorCount = (showRSI ? 1 : 0) + (showMACD ? 1 : 0) + (showStochRSI ? 1 : 0);
-
-  // Data validation: Check if indicator data actually exists
-  const hasValidRSI = showRSI && formattedData.some(d => d.rsi !== undefined && d.rsi !== null);
-  const hasValidMACD = showMACD && formattedData.some(d => d.macd !== undefined && d.macd !== null);
-  const hasValidStoch = showStochRSI && formattedData.some(d => d.stochRsi !== undefined && d.stochRsi !== null);
-
-  // Count candles with indicator data
-  const rsiCount = formattedData.filter(d => d.rsi !== undefined && d.rsi !== null).length;
-  const macdCount = formattedData.filter(d => d.macd !== undefined && d.macd !== null).length;
-  const stochCount = formattedData.filter(d => d.stochRsi !== undefined && d.stochRsi !== null).length;
-
-  // Log validation results for debugging
-  if (showRSI || showMACD || showStochRSI) {
-    console.log('🔍 [CandleChart] Indicator Data Validation:', {
-      totalDataPoints: formattedData.length,
-      rsi: { enabled: showRSI, valid: hasValidRSI, count: rsiCount },
-      macd: { enabled: showMACD, valid: hasValidMACD, count: macdCount },
-      stochRsi: { enabled: showStochRSI, valid: hasValidStoch, count: stochCount }
-    });
-  }
 
   let mainChartHeight = 500;
   let volumeChartHeight = 0;
@@ -379,10 +363,23 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
         {/* Main Price Chart */}
         <div ref={containerRef} style={{ height: mainChartHeight, transition: 'height 0.3s', minHeight: 200, flex: '0 0 auto', width: '100%', overflow: 'visible', position: 'relative', display: 'block' }}>
             {chartWidth > 0 && (
-              <ComposedChart width={chartWidth} height={mainChartHeight} data={formattedData} margin={{ top: 8, right: 5, left: 5, bottom: 0 }} syncId="anyId">
+              <ComposedChart
+                width={chartWidth}
+                height={mainChartHeight}
+                data={formattedData}
+                margin={{ top: 8, right: 5, left: 5, bottom: 0 }}
+                syncId="anyId"
+                syncMethod="index"
+                onMouseEnter={() => setActiveTooltip('main')}
+                onMouseLeave={() => setActiveTooltip(null)}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" vertical={false} />
                 <XAxis 
-                    dataKey="time" 
+                    dataKey="timestamp"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    scale="time"
+                    tickFormatter={formatTimeTick}
                     stroke="#333" 
                     tick={{fontSize: 10, fill: '#444', fontFamily: 'monospace'}} 
                     minTickGap={40}
@@ -394,14 +391,24 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
                     domain={[minPrice - padding, maxPrice + padding]}
                     stroke="#666"
                     tick={{fontSize: 10, fill: '#888', fontFamily: 'monospace', fontWeight: 'bold'}}
-                    tickFormatter={(val) => val >= 0.000001 ? `$${val.toFixed(6)}` : `$${val.toExponential(2)}`}
+                    tickFormatter={(val: number) => val >= 0.000001 ? `$${val.toFixed(6)}` : `$${val.toExponential(2)}`}
                     width={60}
                     orientation="right"
                     axisLine={false}
                     tickLine={false}
                     mirror={false}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Tooltip 
+                  active={activeTooltip === 'main'}
+                  content={<CustomTooltip />} 
+                  cursor={{ fill: 'rgba(255,255,255,0.03)' }} 
+                  allowEscapeViewBox={{ x: false, y: true }}
+                  wrapperStyle={{
+                    zIndex: 9999,
+                    pointerEvents: 'none',
+                    maxWidth: 'min(340px, calc(100vw - 16px))'
+                  }}
+                />
                 
                 {/* Overlays */}
                 {showBollinger && (
@@ -460,20 +467,42 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
 
         {/* Volume Subchart */}
         {showVolume && volumeChartHeight > 0 && (
-            <div style={{ height: volumeChartHeight, borderTop: '1px solid #222', flex: '0 0 auto' }}>
-                <ResponsiveContainer width="100%" height={volumeChartHeight}>
-                    <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+            <div style={{ height: volumeChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', width: '100%' }}>
+                {chartWidth > 0 && (
+                    <ComposedChart width={chartWidth} height={volumeChartHeight} data={formattedData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }} syncId="anyId" syncMethod="index" onMouseEnter={() => setActiveTooltip('volume')} onMouseLeave={() => setActiveTooltip(null)}>
                         <YAxis
                             domain={[0, 'dataMax']}
                             orientation="right"
-                            width={80}
+                            width={60}
                             tick={{fontSize: 9, fill: '#666'}}
                             axisLine={false}
                             tickLine={false}
-                            tickFormatter={(val) => val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : val >= 1000 ? `${(val / 1000).toFixed(1)}K` : val.toFixed(0)}
+                            tickFormatter={(val: number) => val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : val >= 1000 ? `${(val / 1000).toFixed(1)}K` : val.toFixed(0)}
                         />
-                        <XAxis dataKey="time" hide />
-                        <Tooltip content={<VolumeTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.05)' }} />
+                        <XAxis 
+                            dataKey="timestamp" 
+                            type="number"
+                            domain={['dataMin', 'dataMax']}
+                            scale="time"
+                            tickFormatter={formatTimeTick}
+                            stroke="#333" 
+                            tick={{fontSize: 10, fill: '#444', fontFamily: 'monospace'}} 
+                            minTickGap={40}
+                            axisLine={false}
+                            tickLine={false}
+                            hide={hasIndicators} // Only hide if there are indicators below
+                        />
+                        <Tooltip 
+                          active={activeTooltip === 'volume'}
+                          content={<VolumeTooltip />} 
+                          cursor={{ stroke: 'rgba(255,255,255,0.05)' }} 
+                          allowEscapeViewBox={{ x: false, y: true }}
+                          wrapperStyle={{
+                            zIndex: 9999,
+                            maxWidth: 'min(320px, calc(100vw - 16px))',
+                            pointerEvents: 'none'
+                          }}
+                        />
 
                         {/* Volume Bars */}
                         <Bar
@@ -491,82 +520,131 @@ const CandleChartComponent: React.FC<CandleChartProps> = ({
                             ))}
                         </Bar>
                     </ComposedChart>
-                </ResponsiveContainer>
+                )}
             </div>
         )}
 
         {/* RSI Subchart */}
-        {hasValidRSI && subChartHeight > 0 && (
-            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a', position: 'relative' }}>
-                <ResponsiveContainer width="100%" height={subChartHeight}>
-                    <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} syncId="anyId">
-                        <YAxis domain={[0, 100]} orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} ticks={[30, 50, 70]} />
-                        <XAxis dataKey="time" hide />
-                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+        {showRSI && subChartHeight > 0 && (
+            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a', position: 'relative', width: '100%' }}>
+                {chartWidth > 0 && (
+                    <ComposedChart width={chartWidth} height={subChartHeight} data={formattedData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }} syncId="anyId" syncMethod="index" onMouseEnter={() => setActiveTooltip('rsi')} onMouseLeave={() => setActiveTooltip(null)}>
+                        <YAxis domain={[0, 100]} orientation="right" width={60} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} ticks={[30, 50, 70]} />
+                        <XAxis 
+                            dataKey="timestamp" 
+                            type="number"
+                            domain={['dataMin', 'dataMax']}
+                            scale="time"
+                            tickFormatter={formatTimeTick}
+                            stroke="#333" 
+                            tick={{fontSize: 10, fill: '#444', fontFamily: 'monospace'}} 
+                            minTickGap={40}
+                            axisLine={false}
+                            tickLine={false}
+                            hide={showMACD || showStochRSI} // Hide if indicators below
+                        />
+                        <Tooltip 
+                          active={activeTooltip === 'rsi'}
+                          content={<IndicatorTooltip />} 
+                          cursor={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                          allowEscapeViewBox={{ x: false, y: true }}
+                          wrapperStyle={{
+                            zIndex: 9999,
+                            maxWidth: 'min(320px, calc(100vw - 16px))',
+                            pointerEvents: 'none'
+                          }}
+                        />
                         <ReferenceLine y={70} stroke="#444" strokeDasharray="3 3" />
                         <ReferenceLine y={30} stroke="#444" strokeDasharray="3 3" />
                         <Line type="monotone" dataKey="rsi" stroke="#22d3ee" strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls={false} />
                     </ComposedChart>
-                </ResponsiveContainer>
+                )}
             </div>
         )}
 
         {/* MACD Subchart */}
-        {hasValidMACD && subChartHeight > 0 && (
-            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a' }}>
-                <ResponsiveContainer width="100%" height={subChartHeight}>
-                    <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} syncId="anyId">
-                        <YAxis domain={['auto', 'auto']} orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} />
-                        <XAxis dataKey="time" hide />
-                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+        {showMACD && subChartHeight > 0 && (
+            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a', width: '100%' }}>
+                {chartWidth > 0 && (
+                    <ComposedChart width={chartWidth} height={subChartHeight} data={formattedData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }} syncId="anyId" syncMethod="index" onMouseEnter={() => setActiveTooltip('macd')} onMouseLeave={() => setActiveTooltip(null)}>
+                        <YAxis domain={['auto', 'auto']} orientation="right" width={60} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} />
+                        <XAxis 
+                            dataKey="timestamp" 
+                            type="number"
+                            domain={['dataMin', 'dataMax']}
+                            scale="time"
+                            tickFormatter={formatTimeTick}
+                            stroke="#333" 
+                            tick={{fontSize: 10, fill: '#444', fontFamily: 'monospace'}} 
+                            minTickGap={40}
+                            axisLine={false}
+                            tickLine={false}
+                            hide={showStochRSI} // Hide if indicators below
+                        />
+                        <Tooltip 
+                          active={activeTooltip === 'macd'}
+                          content={<IndicatorTooltip />} 
+                          cursor={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                          allowEscapeViewBox={{ x: false, y: true }}
+                          wrapperStyle={{
+                            zIndex: 9999,
+                            maxWidth: 'min(320px, calc(100vw - 16px))',
+                            pointerEvents: 'none'
+                          }}
+                        />
                         <ReferenceLine y={0} stroke="#444" />
-                        <Bar dataKey="macd.histogram" fill="#ec4899" isAnimationActive={false}>
+                        <Bar dataKey="macd_histogram" fill="#ec4899" isAnimationActive={false}>
                             {formattedData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={(entry.macd?.histogram || 0) > 0 ? '#00E054' : '#FF3B30'} />
+                                <Cell key={`cell-${index}`} fill={(entry.macd_histogram || 0) > 0 ? '#00E054' : '#FF3B30'} />
                             ))}
                         </Bar>
-                        <Line type="monotone" dataKey="macd.macdLine" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
-                        <Line type="monotone" dataKey="macd.signalLine" stroke="#f59e0b" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
+                        <Line type="monotone" dataKey="macd_macdLine" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
+                        <Line type="monotone" dataKey="macd_signalLine" stroke="#f59e0b" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
                     </ComposedChart>
-                </ResponsiveContainer>
+                )}
             </div>
         )}
 
         {/* StochRSI Subchart */}
-        {hasValidStoch && subChartHeight > 0 && (
-            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a' }}>
-                <ResponsiveContainer width="100%" height={subChartHeight}>
-                    <ComposedChart data={formattedData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} syncId="anyId">
-                        <YAxis domain={[0, 100]} orientation="right" width={80} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} ticks={[20, 80]} />
-                        <XAxis dataKey="time" hide />
-                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+        {showStochRSI && subChartHeight > 0 && (
+            <div style={{ height: subChartHeight, borderTop: '1px solid #222', flex: '0 0 auto', backgroundColor: '#0a0a0a', width: '100%' }}>
+                {chartWidth > 0 && (
+                    <ComposedChart width={chartWidth} height={subChartHeight} data={formattedData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }} syncId="anyId" syncMethod="index" onMouseEnter={() => setActiveTooltip('stoch')} onMouseLeave={() => setActiveTooltip(null)}>
+                        <YAxis domain={[0, 100]} orientation="right" width={60} tick={{fontSize: 9, fill: '#444'}} axisLine={false} tickLine={false} ticks={[20, 80]} />
+                        <XAxis 
+                            dataKey="timestamp" 
+                            type="number"
+                            domain={['dataMin', 'dataMax']}
+                            scale="time"
+                            tickFormatter={formatTimeTick}
+                            stroke="#333" 
+                            tick={{fontSize: 10, fill: '#444', fontFamily: 'monospace'}} 
+                            minTickGap={40}
+                            axisLine={false}
+                            tickLine={false}
+                            // Always show XAxis for the last chart
+                        />
+                        <Tooltip 
+                          active={activeTooltip === 'stoch'}
+                          content={<IndicatorTooltip />} 
+                          cursor={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                          allowEscapeViewBox={{ x: false, y: true }}
+                          wrapperStyle={{
+                            zIndex: 9999,
+                            maxWidth: 'min(320px, calc(100vw - 16px))',
+                            pointerEvents: 'none'
+                          }}
+                        />
                         <ReferenceLine y={80} stroke="#444" strokeDasharray="3 3" />
                         <ReferenceLine y={20} stroke="#444" strokeDasharray="3 3" />
-                        <Line type="monotone" dataKey="stochRsi.k" stroke="#84cc16" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
-                        <Line type="monotone" dataKey="stochRsi.d" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
+                        <Line type="monotone" dataKey="stochRsi_k" stroke="#84cc16" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
+                        <Line type="monotone" dataKey="stochRsi_d" stroke="#fff" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} />
                     </ComposedChart>
-                </ResponsiveContainer>
+                )}
             </div>
         )}
     </div>
   );
 };
 
-// Memoize with custom comparison for performance optimization
-export const CandleChart = React.memo(CandleChartComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.data.length === nextProps.data.length &&
-    prevProps.data[prevProps.data.length - 1]?.timestamp === nextProps.data[nextProps.data.length - 1]?.timestamp &&
-    prevProps.showEMA20 === nextProps.showEMA20 &&
-    prevProps.showEMA50 === nextProps.showEMA50 &&
-    prevProps.showEMA200 === nextProps.showEMA200 &&
-    prevProps.showBollinger === nextProps.showBollinger &&
-    prevProps.showRSI === nextProps.showRSI &&
-    prevProps.showMACD === nextProps.showMACD &&
-    prevProps.showStochRSI === nextProps.showStochRSI &&
-    prevProps.showVolume === nextProps.showVolume &&
-    prevProps.userAverageBuyPrice === nextProps.userAverageBuyPrice
-  );
-});
-
-CandleChart.displayName = 'CandleChart';
+export const CandleChart = CandleChartComponent;

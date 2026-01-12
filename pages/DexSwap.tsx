@@ -45,7 +45,7 @@ const DexSwapPage: React.FC = () => {
         <meta name="twitter:description" content="Swap tokens on Dogepump DEX. Trade DC, wDOGE, and all memecoins launched on the platform." />
       </Helmet>
 
-      <div className="space-y-8 animate-fade-in relative -mt-12 overflow-x-hidden">
+      <div className="space-y-8 animate-fade-in relative overflow-x-hidden pt-2 md:pt-4">
         {/* Breadcrumb */}
         <Breadcrumb items={[
           { name: 'Home', url: '/' },
@@ -112,53 +112,60 @@ const DexSwapPage: React.FC = () => {
         </div>
 
         {/* Info Section */}
-        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-4">About Dogepump DEX</h2>
-          <div className="space-y-4 text-gray-300 leading-relaxed">
-            <p>
-              Dogepump DEX is a decentralized exchange built on Dogechain, enabling fast and secure token swaps with low fees.
-            </p>
-            <div className="grid md:grid-cols-2 gap-6 mt-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Key Features</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Low 0.3% trading fees</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Instant token swaps</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Best price routing</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>High liquidity pools</span>
-                  </li>
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+          <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-doge/10 blur-3xl" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-doge/10 to-transparent" />
+          <div className="relative px-6 py-7 md:px-8 md:py-10 flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-doge/30 text-doge shadow-lg">
+                <ArrowLeftRight size={28} className="fill-doge/30" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-doge/80 font-semibold">About</p>
+                    <p className="text-xl md:text-2xl font-black text-white leading-tight">Dogepump DEX</p>
+                  </div>
+                  <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full text-gray-300 font-semibold uppercase tracking-widest">Swap</span>
+                </div>
+                <p className="text-sm md:text-base text-gray-200 leading-relaxed">
+                  Built on Dogechain for fast, low-fee swaps with auditable routing and deep liquidity.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-5 text-gray-200 text-sm md:text-base leading-relaxed">
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] text-doge/80 font-semibold">Key Features</p>
+                <ul className="grid grid-cols-1 gap-2 text-[13px] md:text-sm">
+                  {[
+                    '0.3% ultra-low trading fees',
+                    'Instant token swaps with best route',
+                    'Smart price impact protection',
+                    'High liquidity pools backed by bonding curves'
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Supported Tokens</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>DC - DogePump Coin (native)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>wDOGE - Wrapped Doge</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>All launched memecoins</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Custom token pairs</span>
-                  </li>
+
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] text-doge/80 font-semibold">Supported Tokens</p>
+                <ul className="grid grid-cols-1 gap-2 text-[13px] md:text-sm">
+                  {[
+                    'DC - DogePump Coin (native)',
+                    'wDOGE - Wrapped Doge',
+                    'All launched memecoins',
+                    'Custom token pairs'
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>

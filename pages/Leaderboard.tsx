@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../contexts/StoreContext';
 import { Button } from '../components/Button';
 import { playSound } from '../services/audio';
-import { Breadcrumb } from '../components/Breadcrumb';
 import { LEADERBOARD_PAGE_SIZE, TraderStats, BurnerStats, CreatorStats, LeaderboardEntry } from '../types';
+import { Breadcrumb } from '../components/Breadcrumb';
 
 /**
  * Leaderboard Component
@@ -98,7 +98,7 @@ const Leaderboard: React.FC = () => {
     const burnerStats: Record<string, BurnerStats> = {};
 
     // Aggregate trade data
-    trades.forEach(t => {
+    trades.forEach((t: any) => {
       if (!isValidTrade(t)) {
         console.warn('[Leaderboard] Invalid trade:', t);
         return;
@@ -124,7 +124,7 @@ const Leaderboard: React.FC = () => {
     // 3. Top Creators (Market Cap Generated)
     const creatorStats: Record<string, CreatorStats> = {};
 
-    tokens.forEach(t => {
+    tokens.forEach((t: any) => {
       if (!isValidToken(t)) {
         console.warn('[Leaderboard] Invalid token:', t);
         return;
@@ -278,8 +278,12 @@ const Leaderboard: React.FC = () => {
       <>
         <Helmet>
           <title>Leaderboard | DogePump Dogechain</title>
-          <meta name="description" content="View top traders, creators, and token burners on DogePump. Track rankings, trading volume, and achievements on Dogechain." />
+          <meta name="description" content="Top traders, creators, and burners on DogePump Dogechain. Hall of Fame rankings updated in real-time." />
         </Helmet>
+        <Breadcrumb items={[
+          { name: 'Home', url: '/' },
+          { name: 'Leaderboard', url: '/leaderboard' }
+        ]} />
         <div className="flex items-center justify-center min-h-screen bg-[#0A0A0A]">
           <div className="text-center">
             <Trophy size={64} className="text-doge animate-pulse mx-auto mb-6" />
@@ -306,6 +310,12 @@ const Leaderboard: React.FC = () => {
           <meta name="twitter:title" content="Leaderboard | DogePump Dogechain" />
           <meta name="twitter:description" content="View top traders, creators, and token burners on DogePump. Track rankings, trading volume, and achievements on Dogechain." />
         </Helmet>
+        <Breadcrumb
+          items={[
+            { name: 'Home', url: '/' },
+            { name: 'Leaderboard', url: '/leaderboard' }
+          ]}
+        />
       <div className="w-full space-y-12 animate-fade-in pb-12">
        
        {/* Hero */}
@@ -353,7 +363,7 @@ const Leaderboard: React.FC = () => {
                type="text"
                placeholder="Search by address or name..."
                value={search}
-               onChange={(e) => setSearch(e.target.value)}
+               onChange={(e: { target: { value: string } }) => setSearch(e.target.value)}
                className="w-full bg-[#0A0A0A] border border-white/10 rounded-full py-3 pl-14 pr-6 text-white outline-none focus:border-doge/50 transition-all placeholder:text-gray-600 text-center"
             />
          </div>

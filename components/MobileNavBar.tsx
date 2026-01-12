@@ -1,11 +1,21 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { Coins, Rocket, Trophy, User, Sprout, ArrowLeftRight } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Coins, Rocket, Trophy, User, Sprout, ArrowLeftRight, Tv } from 'lucide-react';
 import { playSound } from '../services/audio';
 
 export const MobileNavBar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  const handleNavigate = (path: string) => (event: any) => {
+    playSound('click');
+    if (path === '/tv') {
+      // Force navigation for iOS Safari where NavLink sometimes drops touch events
+      event.preventDefault?.();
+      navigate('/tv');
+    }
+  };
   
   // Hide on Token Detail pages because the Trade Bar takes precedence
   if (location.pathname.startsWith('/token/')) return null;
@@ -15,6 +25,7 @@ export const MobileNavBar: React.FC = () => {
     { path: '/launch', icon: Rocket, label: 'Launch' },
     { path: '/dex/swap', icon: ArrowLeftRight, label: 'DEX' },
     { path: '/earn', icon: Sprout, label: 'Earn' },
+    { path: '/tv', icon: Tv, label: 'TV' },
     { path: '/leaderboard', icon: Trophy, label: 'Winners' },
     { path: '/profile', icon: User, label: 'Profile' },
   ];
@@ -26,17 +37,17 @@ export const MobileNavBar: React.FC = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            onClick={() => playSound('click')}
-            className={({ isActive }) => `
+            onClick={handleNavigate(item.path)}
+            onTouchEnd={handleNavigate(item.path)}
+            className={({ isActive }: { isActive: boolean }) => `
                flex flex-col items-center justify-center w-full h-full gap-1 transition-colors
                ${isActive ? 'text-doge' : 'text-gray-500 hover:text-gray-300'}
             `}
           >
-            {({ isActive }) => (
+            {({ isActive }: { isActive: boolean }) => (
                <>
                   <div className={`relative ${isActive ? 'scale-110' : 'scale-100'} transition-transform`}>
                     <item.icon size={20} className={isActive ? 'fill-doge/20' : ''} />
-                    {isActive && <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-doge shadow-[0_0_8px_#D4AF37]"></div>}
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-wide">{item.label}</span>
                </>

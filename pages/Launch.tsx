@@ -14,6 +14,7 @@ import { backendService } from '../services/backendService';
 import { Token } from '../types';
 import { formatNumber } from '../services/web3Service';
 import { LAUNCH_FEE, MAX_CREATOR_BUY_PERCENTAGE, TOTAL_SUPPLY, INITIAL_TOKEN_PRICE } from '../constants';
+import { Breadcrumb } from '../components/Breadcrumb';
 
 // Lazy load components for better performance
 // TokenCard has a named export, so we need to handle it specially
@@ -385,6 +386,10 @@ const Launch: React.FC = () => {
         <meta name="twitter:description" content="Launch your own memecoin on Dogechain with DogePump. Fair launch, no presale, instant deployment to bonding curve. Create your token in minutes." />
       </Helmet>
     <div className="animate-slide-up pb-12">
+      <Breadcrumb items={[
+        { name: 'Home', url: '/' },
+        { name: 'Launch', url: '/launch' }
+      ]} />
       <div className="text-center relative py-8">
         {/* Glow behind header */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-doge/10 blur-[80px] rounded-full pointer-events-none"></div>
@@ -637,25 +642,59 @@ const Launch: React.FC = () => {
                    </div>
               </div>
 
-              <div className="bg-doge/5 border border-doge/20 rounded-3xl p-8 flex gap-6 items-start relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-doge/10 to-transparent opacity-50"></div>
-                <div className="p-4 bg-[#0A0A0A] border border-doge/20 rounded-2xl text-doge shrink-0 relative z-10 shadow-lg">
-                  <Zap size={28} className="fill-doge/20"/>
-                </div>
-                <div className="text-sm text-gray-300 relative z-10 space-y-2">
-                  <p className="font-bold text-white text-lg flex items-center gap-3">
-                    Deployment Cost: {formatNumber(LAUNCH_FEE)} $DC
-                    <span className="text-xs bg-white/10 px-2 py-1 rounded text-gray-400 font-normal uppercase tracking-wider">Fee</span>
-                  </p>
-                  <p className="opacity-70 leading-relaxed">
-                      Upon launch, your token will be instantly tradeable on the bonding curve. 
-                      Once the market cap hits <span className="text-white">$6.9k</span>, liquidity is migrated to <span className="text-doge font-bold">DogePump DEX</span> and burned. 
-                  </p>
-                  <p className="text-doge font-bold text-xs uppercase tracking-widest pt-2 flex items-center gap-2">
-                    <Rocket size={12} /> Rug pulls are mathematically impossible.
-                  </p>
-                </div>
-              </div>
+              <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+               <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-doge/10 blur-3xl"></div>
+               <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-doge/10 to-transparent"></div>
+               <div className="relative px-5 py-6 sm:px-6 sm:py-7 md:px-8 md:py-9 flex flex-col gap-5">
+                 <div className="flex items-center gap-4 sm:gap-5">
+                   <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-doge/30 text-doge shadow-lg">
+                     <Zap size={28} className="fill-doge/30" />
+                   </div>
+                   <div className="flex-1 min-w-0 space-y-1">
+                     <div className="flex items-start justify-between gap-2">
+                       <div>
+                         <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-doge/80 font-semibold">Launch fee</p>
+                         <p className="text-lg sm:text-xl font-black text-white leading-tight">Deployment Cost</p>
+                       </div>
+                       <span className="text-[10px] sm:text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 font-semibold uppercase tracking-widest">Fee</span>
+                     </div>
+                     <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
+                       {formatNumber(LAUNCH_FEE)} <span className="text-doge">$DC</span>
+                     </p>
+                   </div>
+                 </div>
+
+                 <div className="space-y-3 text-sm sm:text-base leading-relaxed text-gray-200">
+                   <p className="text-gray-300">
+                     Upon launch, your token is instantly tradeable on the bonding curve. Once market cap hits <span className="text-white font-semibold">$6.9k</span>, liquidity migrates to <span className="text-doge font-semibold">DogePump DEX</span> and burns.
+                   </p>
+                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/10">
+                     <div className="flex items-center gap-2 text-doge font-semibold uppercase tracking-widest text-[11px] sm:text-xs">
+                       <Rocket size={14} /> Rug pulls are mathematically impossible.
+                     </div>
+                     <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">Graduated liquidity + auditable bonding curve</span>
+                   </div>
+                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[12px] sm:text-sm text-gray-300">
+                     <li className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge"></span>
+                       <span>Flat, transparent launch fee</span>
+                     </li>
+                     <li className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge"></span>
+                       <span>Instant trading with protected bonding curve</span>
+                     </li>
+                     <li className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge"></span>
+                       <span>Automatic graduation at $6.9k market cap</span>
+                     </li>
+                     <li className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge"></span>
+                       <span>Liquidity migrated and burned for permanence</span>
+                     </li>
+                   </ul>
+                 </div>
+               </div>
+             </div>
 
               {/* Launch Progress Indicator */}
               {loading && launchProgress > 0 && (

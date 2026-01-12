@@ -5,12 +5,12 @@ import { Helmet } from 'react-helmet-async';
 import { Search, Flame, Clock, Trophy, ArrowRight, Crown, Coins, User, Star, LayoutGrid, List, ChevronDown, Radio, ChevronRight, ChevronLeft, ArrowLeftRight, Droplets, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '../services/web3Service';
 import { Button } from '../components/Button';
+import type { ButtonProps } from '../components/Button';
 import { CardSkeleton, Skeleton } from '../components/Skeleton';
 import { useStore } from '../contexts/StoreContext';
 import { playSound } from '../services/audio';
 import { TokenCard } from '../components/TokenCard';
 import { TokenTable } from '../components/TokenTable';
-import { MarketStats } from '../components/MarketStats';
 import { StructuredData } from '../components/StructuredData';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { HOME, CAROUSEL, LOADING } from '../constants/homeConstants';
@@ -24,7 +24,7 @@ const Home: React.FC = () => {
   const [search, setSearch] = useState('');
   const [searchError, setSearchError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(HOME.INITIAL_VISIBLE_COUNT);
+  const [visibleCount, setVisibleCount] = useState<number>(HOME.INITIAL_VISIBLE_COUNT);
   const [newsBannerHeight, setNewsBannerHeight] = useState(0);
 
   // Hero Carousel State
@@ -50,7 +50,7 @@ const Home: React.FC = () => {
       updateBannerHeight();
     }) : null;
 
-    if (observer && banner.parentElement) {
+    if (observer && banner && banner.parentElement) {
       // Only observe direct children changes (banner being added/removed)
       observer.observe(banner.parentElement, {
         childList: true,
@@ -73,6 +73,7 @@ const Home: React.FC = () => {
     // If tokens are present, loading is done
     if (tokens && tokens.length > 0) {
         setIsLoading(false);
+        return;
     } else {
         // Fallback for very first load or if store is slow
         const timer = setTimeout(() => setIsLoading(false), LOADING.INITIAL_DELAY_MS);
@@ -83,7 +84,7 @@ const Home: React.FC = () => {
   // Update Tab Title with Global MC
   useEffect(() => {
      if (tokens.length > 0) {
-        const totalMC = tokens.reduce((acc, t) => acc + t.marketCap, 0);
+        const totalMC = tokens.reduce((acc: number, t: any) => acc + t.marketCap, 0);
         document.title = `DogePump | MC: ${formatCurrency(totalMC)}`;
      }
   }, [tokens]);
@@ -153,11 +154,14 @@ const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, [topHeroTokens.length]);
 
+  // Sticky offset relies on CSS var from Layout; pull up slightly to stay tight under nav.
+  const stickyControlsTop = 'calc(var(--header-height, 140px) - 6px)';
+
   const paginatedTokens = sortedTokens.slice(0, visibleCount);
   const hasMore = visibleCount < sortedTokens.length;
 
   const handleLoadMore = () => {
-      setVisibleCount(prev => prev + HOME.PAGE_SIZE);
+      setVisibleCount((prev) => prev + HOME.PAGE_SIZE);
       playSound('click');
   };
 
@@ -193,12 +197,8 @@ const Home: React.FC = () => {
           'query-input': 'required'
         }
       }} />
-      <div className="-mt-12 mb-8">
-         <MarketStats />
-      </div>
-      
       <Breadcrumb items={[{ name: 'Home', url: '/' }]} />
-      
+
       <div className="space-y-16 animate-fade-in pb-12">
         
         {/* Hero Section */}
@@ -277,12 +277,14 @@ const Home: React.FC = () => {
                           </div>
                         </div>
 
-                        <Link to={`/token/${currentHeroToken.id}`} className="inline-block group/btn">
-                          <Button size="lg" className={`rounded-full px-6 sm:px-8 md:px-12 h-12 sm:h-14 md:h-16 text-base sm:text-lg md:text-xl shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-white/20 relative overflow-hidden group-hover/btn:scale-105 transition-transform duration-300 ${currentHeroToken.progress >= 100 ? 'bg-gradient-to-r from-purple-600 to-purple-800' : 'bg-gradient-to-r from-doge to-doge-dark'}`}>
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 rotate-12"></div>
-                            <span className="relative z-10 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">Trade Now <ArrowRight size={16} className="sm:w-4 md:w-5" /></span>
-                          </Button>
-                        </Link>
+                        <div className="flex justify-center">
+                          <Link to={`/token/${currentHeroToken.id}`} className="inline-block group/btn">
+                            <Button size="lg" className={`rounded-full px-6 sm:px-8 md:px-12 h-12 sm:h-14 md:h-16 text-base sm:text-lg md:text-xl shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-white/20 relative overflow-hidden group-hover/btn:scale-105 transition-transform duration-300 ${currentHeroToken.progress >= 100 ? 'bg-gradient-to-r from-purple-600 to-purple-800' : 'bg-gradient-to-r from-doge to-doge-dark'}`}>
+                              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 rotate-12"></div>
+                              <span className="relative z-10 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">Trade Now <ArrowRight size={16} className="sm:w-4 md:w-5" /></span>
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
 
                       {/* Hero Image */}
@@ -314,7 +316,7 @@ const Home: React.FC = () => {
 
         {/* Controls Container - Transparent background fix */}
         <div className="space-y-6 sticky z-40 backdrop-blur-xl py-2 rounded-2xl"
-             style={{ top: `${newsBannerHeight + 112}px` }}>
+             style={{ top: stickyControlsTop }}>
             {/* Tabs Row */}
             <div className="relative flex justify-center">
                 <div className="flex p-1.5 rounded-2xl overflow-x-auto max-w-full no-scrollbar">
@@ -394,7 +396,7 @@ const Home: React.FC = () => {
                         placeholder="Search token name or address..."
                         maxLength={HOME.SEARCH.MAX_LENGTH}
                         value={search}
-                        onChange={(e) => {
+                        onChange={(e: any) => {
                             const value = e.target.value;
 
                             // Validate and sanitize input
@@ -443,7 +445,7 @@ const Home: React.FC = () => {
             <h2 id="tokens-heading" className="sr-only">Token List</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-4 min-h-[300px]">
               {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+                Array.from({ length: 6 }).map((_, i: number) => <div key={i}><CardSkeleton /></div>)
               ) : (
                 paginatedTokens.map((token) => (
                   <TokenCard key={token.id} token={token} />

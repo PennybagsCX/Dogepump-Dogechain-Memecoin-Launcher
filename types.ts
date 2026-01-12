@@ -169,15 +169,13 @@ export interface Candle {
   sma?: number | null;
   // Technical indicator fields
   rsi?: number;
-  macd?: {
-    macdLine: number;
-    signalLine: number;
-    histogram: number;
-  };
-  stochRsi?: {
-    k: number;
-    d: number;
-  };
+  // Flattened MACD properties (Recharts can't access nested objects in dataKey)
+  macd_macdLine?: number;
+  macd_signalLine?: number;
+  macd_histogram?: number;
+  // Flattened Stochastic RSI properties
+  stochRsi_k?: number;
+  stochRsi_d?: number;
   ema20?: number;
   ema50?: number;
   ema200?: number;

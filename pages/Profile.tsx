@@ -12,8 +12,8 @@ import { SettingsModal } from '../components/SettingsModal';
 import { Badge } from '../components/Badge';
 import { PortfolioChart } from '../components/PortfolioChart';
 import { CreatorAdmin } from '../components/CreatorAdmin';
-import { Breadcrumb } from '../components/Breadcrumb';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { Breadcrumb } from '../components/Breadcrumb';
 
 const Profile: React.FC = () => {
   const { address } = useParams();
@@ -152,6 +152,10 @@ const Profile: React.FC = () => {
   return (
     <div className="space-y-12 animate-fade-in pb-12">
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <Breadcrumb items={[
+        { name: 'Home', url: '/' },
+        { name: 'Profile', url: isSelf ? '/profile' : `/profile/${profileAddress}` }
+      ]} />
 
       {/* Profile Header */}
       <div className="relative overflow-hidden rounded-[2.5rem] bg-[#0A0A0A] border border-white/10 shadow-2xl p-8 md:p-12">
@@ -427,7 +431,11 @@ const Profile: React.FC = () => {
                         ) : (
                             <div className="grid gap-3">
                                 {createdTokens.map(token => (
-                                    <div key={token.id} className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-white/20 transition-colors">
+                                    <Link
+                                        to={`/token/${token.id}`}
+                                        key={token.id}
+                                        className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-white/20 transition-colors"
+                                    >
                                         <div className="flex items-center gap-4">
                                             <OptimizedImage src={token.imageUrl} className="w-12 h-12 rounded-xl object-cover" alt={token.name} loading="lazy" fetchPriority="low" />
                                             <div>
@@ -439,13 +447,13 @@ const Profile: React.FC = () => {
                                             {token.isLive && <div className="text-[10px] bg-red-600 text-white px-2 py-1 rounded flex items-center gap-1 animate-pulse"><Radio size={10}/> LIVE</div>}
                                             <Button 
                                                 size="sm" 
-                                                onClick={() => { setManagingTokenId(token.id); playSound('click'); }}
+                                                onClick={(e) => { e.preventDefault(); setManagingTokenId(token.id); playSound('click'); }}
                                                 className="bg-white/10 hover:bg-white/20 border-0 text-white"
                                             >
                                                 <Settings size={14} className="mr-2"/> Manage
                                             </Button>
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         )}

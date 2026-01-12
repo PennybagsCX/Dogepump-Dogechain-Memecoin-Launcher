@@ -22,16 +22,16 @@ export const Ticker: React.FC<TickerProps> = ({ newsBannerHeight = 0 }) => {
   const { trades, tokens, resolveUsername } = useStore();
 
   // Convert real trades to activity format
-  const recentRealTrades = trades.slice(0, 10).map(t => {
-     const token = tokens.find(tk => tk.id === t.tokenId);
-     return {
-        user: resolveUsername(t.user),
-        action: t.type === 'buy' ? 'bought' : t.type === 'sell' ? 'sold' : t.type,
-        amount: formatNumber(t.amountToken),
-        token: token?.name || 'Unknown',
-        tokenId: token?.id,
-        time: timeAgo(t.timestamp)
-     };
+  const recentRealTrades = trades.slice(0, 10).map((t: any) => {
+    const token = tokens.find((tk: any) => tk.id === t.tokenId);
+    return {
+      user: resolveUsername(t.user),
+      action: t.type === 'buy' ? 'bought' : t.type === 'sell' ? 'sold' : t.type,
+      amount: formatNumber(t.amountToken),
+      token: token?.name || 'Unknown',
+      tokenId: token?.id,
+      time: timeAgo(t.timestamp)
+    };
   });
 
   const displayActivities = recentRealTrades.length > 0
@@ -39,11 +39,10 @@ export const Ticker: React.FC<TickerProps> = ({ newsBannerHeight = 0 }) => {
     : MOCK_ACTIVITIES;
 
   return (
-    <div className="bg-[#050505] border-b border-white/5 h-8 overflow-hidden flex items-center relative w-full"
-         style={{ zIndex: 45 }}>
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#050505] to-transparent z-10 pointer-events-none"></div>
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#050505] to-transparent z-10 pointer-events-none"></div>
-      
+    <div
+      className="h-7 min-h-[28px] max-h-[28px] leading-[28px] overflow-hidden flex items-center relative w-[100vw] min-w-[100vw] max-w-none bg-[#0D0D0D] border-t border-white/10 pointer-events-none"
+      style={{ zIndex: 0 }}
+    >
       <div className="absolute left-0 right-0 top-0 bottom-0 overflow-hidden w-full">
         <div className="animate-ticker flex items-center gap-12 whitespace-nowrap hover:[animation-play-state:paused]" style={{ width: 'max-content' }}>
           {[...displayActivities, ...displayActivities, ...displayActivities].map((activity, i) => (

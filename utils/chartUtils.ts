@@ -96,9 +96,6 @@ export const generateCandles = (history: PricePoint[], timeframe: '1m' | '5m' | 
 export const generateCandlesFromTrades = (trades: Trade[], timeframe: '1m' | '5m' | '15m' | '1H' | '4H' | '1D' | '1W'): Candle[] => {
   if (!trades || trades.length === 0) return [];
 
-  console.log(`generateCandlesFromTrades: Input trades: ${trades.length} for timeframe ${timeframe}`);
-  trades.forEach((t, i) => console.log(`  Trade ${i}: ${t.type} ${t.amountDC}DC at ${t.price}, timestamp: ${new Date(t.timestamp).toLocaleTimeString()}`));
-
   // Determine bucket size in milliseconds
   let bucketSize = 60 * 1000; // Default 1 minute candles
   let limit = 200;
@@ -358,10 +355,12 @@ export const calculateMACD = (data: Candle[], fastPeriod: number = 12, slowPerio
 
   if (data.length < slowPeriod) {
     console.warn(`calculateMACD: Not enough data points (${data.length}) for slow period (${slowPeriod})`);
-    // Return data with neutral MACD values
+    // Return data with neutral MACD values (flattened structure)
     return data.map(item => ({
       ...item,
-      macd: { macdLine: 0, signalLine: 0, histogram: 0 }
+      macd_macdLine: 0,
+      macd_signalLine: 0,
+      macd_histogram: 0
     }));
   }
 
@@ -386,11 +385,9 @@ export const calculateMACD = (data: Candle[], fastPeriod: number = 12, slowPerio
 
     return {
       ...item,
-      macd: {
-        macdLine,
-        signalLine: emaSignal,
-        histogram: macdLine - emaSignal
-      }
+      macd_macdLine: macdLine,
+      macd_signalLine: emaSignal,
+      macd_histogram: macdLine - emaSignal
     };
   });
 };
@@ -404,10 +401,11 @@ export const calculateStochRSI = (data: Candle[], period: number = 14) => {
 
   if (data.length < period * 2) {
     console.warn(`calculateStochRSI: Not enough data points (${data.length}) for period (${period})`);
-    // Return data with neutral StochRSI values
+    // Return data with neutral StochRSI values (flattened structure)
     return data.map(item => ({
       ...item,
-      stochRsi: { k: 50, d: 50 }
+      stochRsi_k: 50,
+      stochRsi_d: 50
     }));
   }
 
@@ -415,7 +413,7 @@ export const calculateStochRSI = (data: Candle[], period: number = 14) => {
   const rsiData = calculateRSI(data, period);
   
   return rsiData.map((item, index, arr) => {
-    if (index < period * 2) return { ...item, stochRsi: { k: 50, d: 50 } }; // Neutral start
+    if (index < period * 2) return { ...item, stochRsi_k: 50, stochRsi_d: 50 }; // Neutral start
 
     // Get slice of last 'period' RSIs
     const slice = arr.slice(index - period + 1, index + 1);
@@ -431,9 +429,10 @@ export const calculateStochRSI = (data: Candle[], period: number = 14) => {
     
     // Smooth K and D (usually simple moving average of 3)
     // Simplified for demo: return raw Stoch as K, and previous as D
-    return { 
-        ...item, 
-        stochRsi: { k: stoch * 100, d: stoch * 100 } // Need proper smoothing for real K/D, simplified here
+    return {
+        ...item,
+        stochRsi_k: stoch * 100,
+        stochRsi_d: stoch * 100 // Need proper smoothing for real K/D, simplified here
     };
   });
 };

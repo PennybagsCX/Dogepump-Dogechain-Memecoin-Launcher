@@ -269,18 +269,18 @@ const CreateFarmForm: React.FC<{
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 pt-4 border-t border-gray-700">
+      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+          className="w-full sm:flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting || !canAffordDeposit}
-          className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Creating...' : 'Create Farm'}
         </button>

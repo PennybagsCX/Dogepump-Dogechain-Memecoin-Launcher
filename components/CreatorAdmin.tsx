@@ -474,9 +474,7 @@ Alternative (Screen Sharing):
         <div className="space-y-4 animate-fade-in">
             {/* Security Notice */}
             <div className="bg-doge/10 border border-doge/30 rounded-2xl p-4 text-center">
-                <Shield size={24} className="text-doge mx-auto mb-2" />
                 <h4 className="font-bold text-white text-sm mb-1 flex items-center justify-center gap-1">
-                    <Shield size={16} className="text-doge" />
                     Unruggable Platform
                 </h4>
                 <p className="text-xs text-gray-300">

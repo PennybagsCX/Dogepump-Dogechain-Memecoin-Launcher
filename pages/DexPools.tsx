@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useDex } from '../contexts/DexContext';
+import { useDex, Pool, Token } from '../contexts/DexContext';
 import { DUMMY_POOLS, DUMMY_RECENT_SWAPS, DUMMY_LIQUIDITY_POSITIONS } from '../services/dex/dummyData';
 import DexPoolList from '../components/dex/DexPoolList';
 import DexLiquidityPositions from '../components/dex/DexLiquidityPositions';
@@ -75,21 +75,23 @@ const DexPoolsPage: React.FC = () => {
 
   // Handle create pool
   const handleCreatePool = useCallback((token0: string, token1: string, amount0: string, amount1: string) => {
-    // Create a new pool
-    const newPool = {
+    // Create a new pool (temporary client-only object)
+    const newPool: Pool = {
       address: `pool-${Date.now()}`,
-      tokenA: { symbol: token0, name: token0 },
-      tokenB: { symbol: token1, name: token1 },
+      tokenA: { address: token0, symbol: token0, name: token0, decimals: 18 },
+      tokenB: { address: token1, symbol: token1, name: token1, decimals: 18 },
+      reserve0: amount0,
+      reserve1: amount1,
+      totalSupply: '0',
       tvl: parseFloat(amount0) * 2, // Simplified TVL calculation
       volume24h: 0,
       apy: 0,
-      fee: 0.003,
+      fee: 0.3,
       price0: 1,
-      reserve0: parseFloat(amount0),
-      reserve1: parseFloat(amount1)
+      price1: 1,
     };
 
-    setLocalPools(prev => [newPool, ...prev]);
+    setLocalPools((prev) => [newPool, ...prev]);
     console.log('Pool created:', newPool);
   }, []);
 
@@ -120,7 +122,7 @@ const DexPoolsPage: React.FC = () => {
         <meta name="twitter:description" content="Browse and discover liquidity pools on Dogepump DEX. Add liquidity and earn rewards." />
       </Helmet>
 
-      <div className="space-y-8 animate-fade-in relative -mt-12 overflow-x-hidden">
+      <div className="space-y-8 animate-fade-in relative overflow-x-hidden pt-2 md:pt-4">
         {/* Breadcrumb */}
         <Breadcrumb items={[
           { name: 'Home', url: '/' },
@@ -336,53 +338,60 @@ const DexPoolsPage: React.FC = () => {
         </div>
 
         {/* Info Section */}
-        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-4">About Liquidity Pools</h2>
-          <div className="space-y-4 text-gray-300 leading-relaxed">
-            <p>
-              Liquidity pools are the backbone of Dogepump DEX. By providing liquidity to a pool, you enable trading between token pairs and earn a share of the trading fees.
-            </p>
-            <div className="grid md:grid-cols-2 gap-6 mt-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Benefits of Providing Liquidity</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Earn trading fees (0.3% of each swap)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Receive LP tokens representing your share</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Stake LP tokens to earn additional rewards</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Support the Dogechain ecosystem</span>
-                  </li>
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+          <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-doge/10 blur-3xl" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-doge/10 to-transparent" />
+          <div className="relative px-6 py-7 md:px-8 md:py-10 flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-doge/30 text-doge shadow-lg">
+                <Droplets size={28} className="fill-doge/30" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-doge/80 font-semibold">About</p>
+                    <p className="text-xl md:text-2xl font-black text-white leading-tight">Liquidity Pools</p>
+                  </div>
+                  <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full text-gray-300 font-semibold uppercase tracking-widest">Pools</span>
+                </div>
+                <p className="text-sm md:text-base text-gray-200 leading-relaxed">
+                  Provide equal-value tokens, earn fees on every swap, and support deep liquidity across Dogepump DEX.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-5 text-gray-200 text-sm md:text-base leading-relaxed">
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] text-doge/80 font-semibold">Benefits</p>
+                <ul className="grid grid-cols-1 gap-2 text-[13px] md:text-sm">
+                  {[
+                    'Earn 0.3% of each swap in the pool',
+                    'Receive LP tokens representing your share',
+                    'Stake LP tokens to stack extra rewards',
+                    'Strengthen the Dogechain ecosystem'
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">How It Works</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Deposit equal value of both tokens</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Receive LP tokens in return</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>LP tokens earn fees automatically</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-doge mt-1">•</span>
-                    <span>Withdraw anytime with accumulated fees</span>
-                  </li>
+
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] text-doge/80 font-semibold">How It Works</p>
+                <ul className="grid grid-cols-1 gap-2 text-[13px] md:text-sm">
+                  {[
+                    'Deposit equal value of both tokens',
+                    'Receive LP tokens back instantly',
+                    'LP tokens auto-earn fees as trades happen',
+                    'Withdraw anytime with your share + fees'
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-doge" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -415,10 +424,10 @@ const DexPoolsPage: React.FC = () => {
         onClose={() => setShowCreatePoolModal(false)}
         onCreatePool={handleCreatePool}
         tokens={[
-          { id: 'doge', symbol: 'DC', name: 'DogeChain', balance: '10000' },
-          { id: 'usdc', symbol: 'USDC', name: 'USD Coin', balance: '5000' },
-          { id: 'eth', symbol: 'ETH', name: 'Ethereum', balance: '2500' },
-          { id: 'wdoge', symbol: 'wDOGE', name: 'Wrapped DOGE', balance: '8000' },
+          { address: 'doge', symbol: 'DC', name: 'DogeChain', decimals: 18, balance: '10000' },
+          { address: 'usdc', symbol: 'USDC', name: 'USD Coin', decimals: 6, balance: '5000' },
+          { address: 'eth', symbol: 'ETH', name: 'Ethereum', decimals: 18, balance: '2500' },
+          { address: 'wdoge', symbol: 'wDOGE', name: 'Wrapped DOGE', decimals: 18, balance: '8000' },
         ]}
         soundsEnabled={true}
       />

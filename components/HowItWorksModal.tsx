@@ -41,9 +41,9 @@ export const HowItWorksModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   return (
     <ModalPortal>
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-center justify-center p-3 sm:p-4">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-        <div className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-slide-up overflow-hidden">
+        <div className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl animate-slide-up overflow-hidden max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2.5rem)] overflow-y-auto">
         {/* Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-doge/10 blur-[80px] rounded-full pointer-events-none"></div>
 

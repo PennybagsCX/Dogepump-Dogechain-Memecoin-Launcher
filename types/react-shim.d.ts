@@ -11,8 +11,11 @@ declare module 'react' {
   export function useState<S = any>(initialState: S | (() => S)): [S, (value: S | ((prev: S) => S)) => void];
   export function useEffect(effect: (...args: any[]) => any, deps?: any[]): void;
   export function useRef<T = any>(init: T): { current: T };
+  export function useRef<T = any>(init: T | null): { current: T | null };
   export function useMemo<T = any>(factory: () => T, deps: any[]): T;
   export function useCallback<T extends (...args: any[]) => any>(cb: T, deps: any[]): T;
+  export function lazy<T extends ReactElement = any>(factory: () => Promise<{ default: T }>): any;
+  export const Suspense: any;
   export const Fragment: any;
 }
 

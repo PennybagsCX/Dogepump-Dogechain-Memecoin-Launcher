@@ -1,6 +1,6 @@
 
 // @ts-nocheck
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Rocket, Wallet, Menu, X, Coins, ExternalLink, ChevronRight, User, HelpCircle, LogOut, RefreshCw, Volume2, VolumeX, Trophy, Bell, Check, Trash2, Droplets, Command, Search, Settings, Tv, Keyboard, Crosshair, ArrowLeftRight, Sprout, LayoutGrid, Send, Shield, Award, TrendingUp, MoreHorizontal } from 'lucide-react';
 import { XIcon } from './XIcon';
@@ -10,6 +10,7 @@ import { UserState, AppNotification } from '../types';
 import { DOGECHAIN_ID } from '../constants';
 import { ToastProvider, useToast } from './Toast';
 import { Ticker } from './Ticker';
+import { NewsBanner } from './NewsBanner';
 import { HowItWorksModal } from './HowItWorksModal';
 import { SettingsModal } from './SettingsModal';
 import { WalletModal } from './WalletModal';
@@ -21,7 +22,6 @@ import { Lightbox } from './Lightbox';
 import { CommandPalette } from './CommandPalette';
 import { Trollbox } from './Trollbox';
 import { ShortcutsModal } from './ShortcutsModal';
-import { NewsBanner } from './NewsBanner';
 import { AchievementPopup } from './AchievementPopup';
 import { NetworkStatus } from './NetworkStatus';
 
@@ -38,12 +38,23 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMoreNav, setShowMoreNav] = useState(false);
   const [newsBannerHeight, setNewsBannerHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [navHeight, setNavHeight] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const mainRef = useRef<HTMLElement | null>(null);
+  const navRef = useRef<HTMLDivElement | null>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const mobileNotificationRef = useRef<HTMLDivElement>(null);
   const walletMenuRef = useRef<HTMLDivElement>(null);
   const moreNavRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const mobileWalletMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileWalletButtonRef = useRef<HTMLButtonElement | null>(null);
+  const mobileWalletInlineRef = useRef<HTMLDivElement | null>(null);
+  const mobileHamburgerMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileHamburgerMenuContentRef = useRef<HTMLDivElement | null>(null);
+  const mobileHamburgerButtonRef = useRef<HTMLButtonElement | null>(null);
   const isUpdatingFromFooterRef = useRef(false);
   const { addToast } = useToast();
   const { resetStore, userBalanceDC, notifications, unreadCount, markAllNotificationsRead, clearNotifications, faucet, userProfile, recentlyUnlockedBadge, clearAchievement, settings, updateSettings, setNotifications, marketEvent } = useStore();
@@ -55,48 +66,49 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     isConnected: false
   });
 
-  // Scroll position restoration
+  // Force manual scroll restoration globally (defensive)
   useEffect(() => {
-    // Save current scroll position before navigating
-    const saveScrollPosition = () => {
-      sessionStorage.setItem('scrollPosition_' + location.pathname, window.pageYOffset.toString());
+    const { scrollRestoration } = window.history as History & { scrollRestoration?: ScrollRestoration };
+    if (scrollRestoration !== undefined) {
+      const prev = window.history.scrollRestoration;
+      window.history.scrollRestoration = 'manual';
+      return () => {
+        window.history.scrollRestoration = prev;
+      };
+    }
+  }, []);
+
+  // Force scroll to top on route changes (covers window, document, and main scroll container)
+  useLayoutEffect(() => {
+    const scrollTargets = () => {
+      const targets = [
+        window,
+        document.scrollingElement,
+        document.documentElement,
+        document.body,
+        document.getElementById('root'),
+        mainRef.current
+      ].filter(Boolean) as Array<Window | HTMLElement>;
+
+      targets.forEach((target) => {
+        if ('scrollTo' in target) {
+          // @ts-ignore
+          target.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        } else if ('scrollTop' in target) {
+          // @ts-ignore
+          target.scrollTop = 0;
+        }
+      });
     };
 
-    // Restore scroll position for current path
-    const restoreScrollPosition = () => {
-      const savedPosition = sessionStorage.getItem('scrollPosition_' + location.pathname);
-      if (savedPosition) {
-        setTimeout(() => {
-          window.scrollTo(0, parseInt(savedPosition, 10));
-        }, 0);
-      } else {
-        // Only scroll to top if no saved position
-        window.scrollTo(0, 0);
-      }
-    };
-
-    // Save scroll position when navigating away (on back button)
-    const handleBeforeUnload = () => {
-      saveScrollPosition();
-    };
-
-    // Save position on popstate (back/forward buttons)
-    const handlePopState = () => {
-      saveScrollPosition();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
-
-    // Restore position on mount
-    restoreScrollPosition();
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-      // Save position when component unmounts
-      saveScrollPosition();
-    };
+    // Run immediately, next frame, and after delays to catch late layout shifts
+    scrollTargets();
+    requestAnimationFrame(scrollTargets);
+    setTimeout(scrollTargets, 80);
+    setTimeout(scrollTargets, 180);
+    setTimeout(scrollTargets, 320);
+    setTimeout(scrollTargets, 600);
+    setTimeout(scrollTargets, 1000);
   }, [location.pathname]);
 
   // Load persistence and Onboarding Check
@@ -202,6 +214,59 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
   }, [marketEvent]);
 
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const measured = headerRef.current.getBoundingClientRect().height;
+        setHeaderHeight(measured);
+      }
+      if (navRef.current) {
+        setNavHeight(navRef.current.getBoundingClientRect().height);
+      }
+    };
+
+    updateHeaderHeight();
+
+    // Prefer ResizeObserver when available to catch DOM height changes
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && headerRef.current) {
+      resizeObserver = new ResizeObserver(updateHeaderHeight);
+      resizeObserver.observe(headerRef.current);
+      if (navRef.current) {
+        resizeObserver.observe(navRef.current);
+      }
+    } else {
+      // Fallback for environments without ResizeObserver
+      window.addEventListener('resize', updateHeaderHeight);
+    }
+
+    // Small delay to capture late-rendered elements (icons/images)
+    const timeout = setTimeout(updateHeaderHeight, 100);
+
+    return () => {
+      clearTimeout(timeout);
+      if (resizeObserver && headerRef.current) {
+        resizeObserver.unobserve(headerRef.current);
+        if (navRef.current) resizeObserver.unobserve(navRef.current);
+      } else {
+        window.removeEventListener('resize', updateHeaderHeight);
+      }
+    };
+  }, [newsBannerHeight, isCommandPaletteOpen, showMoreNav, showNotifications, activeMobileMenu]);
+
+  // Expose measured header height as a global CSS variable for downstream sticky elements.
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+    }
+
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.removeProperty('--header-height');
+      }
+    };
+  }, [headerHeight]);
+
   // Debug: Log notifications when they change
   useEffect(() => {
     console.log('[Layout] Notifications updated:', notifications);
@@ -276,6 +341,50 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
   }, [showWalletMenu]);
 
+  // Global outside click + escape to close mobile drawers (wallet + hamburger)
+  useEffect(() => {
+    if (activeMobileMenu === 'none') return;
+
+    const handlePointer = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+
+      const insideMobileWallet =
+        mobileWalletMenuRef.current?.contains(target) ||
+        mobileWalletButtonRef.current?.contains(target) ||
+        mobileWalletInlineRef.current?.contains(target);
+
+      const insideHamburger =
+        mobileHamburgerMenuRef.current?.contains(target) ||
+        mobileHamburgerButtonRef.current?.contains(target) ||
+        mobileHamburgerMenuContentRef.current?.contains(target);
+
+      if (activeMobileMenu === 'wallet' && !insideMobileWallet) {
+        setActiveMobileMenu('none');
+      }
+      if (activeMobileMenu === 'hamburger' && !insideHamburger) {
+        setActiveMobileMenu('none');
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActiveMobileMenu('none');
+        setShowWalletMenu(false);
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointer, true);
+    document.addEventListener('touchstart', handlePointer, true);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointer, true);
+      document.removeEventListener('touchstart', handlePointer, true);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeMobileMenu]);
+
   // Click outside to close more nav menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -301,6 +410,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         balance: '0', 
         isConnected: true
       });
+      setIsWalletModalOpen(false);
       
       // Persist
       if (data.address) {
@@ -330,8 +440,19 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     localStorage.removeItem('dogepump_address');
     localStorage.removeItem('dogepump_chain');
     setShowWalletMenu(false);
+    setActiveMobileMenu('none');
+    setShowNotifications(false);
     addToast('info', 'Wallet disconnected');
   };
+
+  // Close menus when wallet connection is lost (e.g., external disconnect)
+  useEffect(() => {
+    if (!user.isConnected) {
+      setShowWalletMenu(false);
+      setActiveMobileMenu('none');
+      setShowNotifications(false);
+    }
+  }, [user.isConnected]);
 
   const handleMuteToggle = () => {
     const newAudioEnabled = !settings.audioEnabled;
@@ -385,7 +506,6 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Check if current user is an admin
   const isAdminWallet = user.address && user.address.toLowerCase() === '0x22f4194f6706e70abaa14ab352d0baa6c7ced24a';
-
   const primaryNavLinks = [
     { name: 'Board', path: '/', icon: Coins },
     { name: 'Launch', path: '/launch', icon: Rocket },
@@ -398,73 +518,69 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'TV', path: '/tv', icon: Tv },
   ];
 
-  const [headerHeight, setHeaderHeight] = useState(149); // Default: 85 (banner) + 32 (ticker) + 32 (nav approx)
-
-  // Track total header height
-  useEffect(() => {
-    const updateHeaderHeight = () => {
-      const ticker = document.querySelector('.bg-\\[\\#050505\\].border-b'); // Ticker element
-      const navbar = document.querySelector('nav');
-
-      let totalHeight = 0;
-
-      // Use the tracked newsBannerHeight state
-      if (newsBannerHeight > 0) {
-        totalHeight += newsBannerHeight;
-      }
-
-      if (ticker) {
-        totalHeight += (ticker as HTMLElement).offsetHeight;
-      }
-
-      if (navbar) {
-        totalHeight += (navbar as HTMLElement).offsetHeight;
-      }
-
-      setHeaderHeight(totalHeight);
-    };
-
-    // Update initially
-    updateHeaderHeight();
-
-    // Update when banner changes
-    const observer = new MutationObserver(() => {
-      updateHeaderHeight();
-    });
-
-    // Observe body for banner changes
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [newsBannerHeight]);
-
-  // TV uses its own immersive layout
+  // TV uses its own immersive layout but still needs global mobile nav
   if (location.pathname === '/tv') {
     return (
-       <>
-         <ToastProvider>
-           {children}
-         </ToastProvider>
-       </>
+      <ToastProvider>
+        {children}
+        {/* Compact spacer to clear the mobile nav */}
+        <div className="lg:hidden h-6 pb-safe" aria-hidden />
+        <MobileNavBar />
+      </ToastProvider>
     );
   }
+
+  // Uniform content offset to keep breadcrumbs clear of the navbar end across breakpoints
+  // Base spacing on nav height; clamp to avoid large gaps on small screens.
+  const effectiveNavHeight = navHeight || headerHeight || 0;
+  const contentTopOffset = Math.min(
+    Math.max((effectiveNavHeight || 0) - 64, 12),
+    48
+  );
 
   return (
     <>
       {/* Fixed Header Container - All elements together */}
-      <div className="fixed top-0 left-0 right-0 z-50">
+      <div
+        ref={headerRef}
+        className="sticky top-0 left-0 right-0 z-50 relative"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        {/* Background layer to match page and avoid top seams */}
+        <div
+          className="absolute inset-0 -z-10 pointer-events-none"
+          style={{
+            backgroundColor: '#020202',
+            backgroundImage: `
+              radial-gradient(circle at 50% -20%, rgba(147, 51, 234, 0.08) 0%, transparent 40%),
+              radial-gradient(circle at 100% 100%, rgba(147, 51, 234, 0.03) 0%, transparent 30%),
+              radial-gradient(circle at 0% 50%, rgba(30, 30, 30, 0.4) 0%, transparent 50%)
+            `,
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover'
+          }}
+        />
+        {/* Safe-area fill to keep header visible on notched devices */}
+        <div
+          className="w-full"
+          style={{
+            height: 'env(safe-area-inset-top, 0px)',
+            backgroundColor: 'transparent'
+          }}
+        />
         <NewsBanner />
-        <Ticker newsBannerHeight={newsBannerHeight} />
         {/* Navbar */}
-        <nav className={`border-b border-white/[0.08] bg-doge-bg/80 backdrop-blur-xl transition-all duration-300`}
-             style={{ zIndex: 60 }}>
+        <nav className={`border-b border-white/[0.08] bg-doge-bg/80 backdrop-blur-xl relative pb-10 pt-3 md:pt-0`}
+             style={{ zIndex: 60, marginTop: 0 }}
+             ref={navRef}>
+        {/* Ticker anchored to navbar bottom; force full-bleed across viewport */}
+        <div className="absolute -bottom-[1px] z-0 left-0 right-0">
+          <div className="relative left-1/2 -translate-x-1/2 w-full">
+            <Ticker />
+          </div>
+        </div>
         <div className="w-full md:max-w-6xl md:mx-auto lg:max-w-7xl px-4 sm:px-6 tablet:px-8 lg:px-8 relative">
-          <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between md:h-20 pb-4 md:pb-0">
+          <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between md:h-20 pb-2 md:pb-0">
             {/* Logo */}
             <Link to="/" onClick={() => playSound('click')} className="flex items-center gap-3 group relative w-full justify-center md:w-auto md:justify-start">
                <div className="absolute -inset-4 bg-doge/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
@@ -486,6 +602,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {user.isConnected && (
               <div className="md:hidden w-full flex justify-center">
                 <div 
+                  ref={mobileWalletInlineRef}
                   onClick={() => { setActiveMobileMenu(activeMobileMenu === 'wallet' ? 'none' : 'wallet'); playSound('click'); }}
                   className="flex items-center gap-2 px-4 py-2 bg-doge-surface rounded-full border border-doge-border text-xs font-mono text-gray-300 hover:border-doge/50 hover:bg-doge/5 transition-all cursor-pointer group shadow-lg hover:shadow-doge/10"
                 >
@@ -506,7 +623,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   to={link.path}
                   onClick={() => playSound('click')}
                   onMouseEnter={() => playSound('hover')}
-                  className={`flex items-center gap-2 px-3 tablet:px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 relative overflow-hidden group list-none before:content-none after:content-none ${
+                  className={`flex items-center gap-2 px-3 lg:px-4 xl:px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 relative overflow-hidden group list-none before:content-none after:content-none ${
                     location.pathname === link.path
                       ? 'bg-doge text-black shadow-[0_0_20px_rgba(212,175,55,0.3)]'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -516,13 +633,13 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <span className="relative z-10 shrink-0 transition-transform duration-300 group-hover:-translate-y-0.5 flex items-center justify-center" style={{ width: 16, height: 16 }}>
                     <IconComponent size={16} className={location.pathname === link.path ? "animate-bounce-subtle" : ""} />
                   </span>
-                  <span className="relative z-10 hidden tablet:inline">{link.name}</span>
+                  <span className="relative z-10 hidden xl:inline">{link.name}</span>
                 </Link>
                 );
               })}
 
-              {/* More Dropdown - Shows on tablets only when needed */}
-              <div className="tablet:hidden relative" ref={moreNavRef}>
+              {/* More Dropdown - keep available up to xl to save space on tablets */}
+              <div className="xl:hidden relative" ref={moreNavRef}>
                 <button
                   onClick={() => { setShowMoreNav(!showMoreNav); playSound('click'); }}
                   className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-300 relative overflow-hidden group"
@@ -557,7 +674,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 )}
               </div>
 
-              {/* Secondary Nav - Hidden on small tablets */}
+              {/* Secondary Nav - Hidden on tablets to keep space for search/wallet; shown xl+ */}
               {secondaryNavLinks.map((link) => {
                 const IconComponent = link.icon;
                 return (
@@ -566,7 +683,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   to={link.path}
                   onClick={() => playSound('click')}
                   onMouseEnter={() => playSound('hover')}
-                  className={`hidden tablet:flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 relative overflow-hidden group list-none before:content-none after:content-none ${
+                  className={`hidden xl:flex items-center gap-2 px-4 lg:px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 relative overflow-hidden group list-none before:content-none after:content-none ${
                     link.name === 'TV'
                       ? 'text-red-500 hover:text-white hover:bg-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]'
                       : location.pathname === link.path
@@ -577,14 +694,14 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <span className="shrink-0 flex items-center justify-center" style={{ width: 16, height: 16 }}>
                     <IconComponent size={16} />
                   </span>
-                  <span>{link.name}</span>
+                  <span className="hidden xl:inline">{link.name}</span>
                 </Link>
                 );
               })}
             </div>
 
             {/* Wallet & Notifications */}
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4 flex-shrink-0">
               
               {/* Command Palette Trigger */}
               <button
@@ -633,7 +750,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                    
                    {/* Desktop Dropdown */}
                    {showWalletMenu && (
-                     <div className="hidden md:block absolute top-full right-0 mt-2 w-80 max-w-md bg-[#0A0A0A] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-slide-up z-70">
+                     <div className="hidden md:block absolute top-full right-0 mt-2 w-80 max-w-md bg-[#0D0D0D] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-slide-up z-70">
                         <div className="p-1">
                           {isAdminWallet && (
                             <button
@@ -661,7 +778,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             
                             {/* Notification Dropdown */}
                             {showNotifications && (
-                              <div className="mt-1 mx-1 mb-2 bg-white/[0.02] rounded-lg overflow-hidden z-70">
+                              <div className="mt-1 mx-1 mb-2 bg-[#111111] rounded-lg overflow-hidden z-70">
                                   <div className="flex items-center justify-between p-3 border-b border-white/5">
                                      <h4 className="text-sm font-bold text-white">Notifications</h4>
                                      <div className="flex gap-2">
@@ -681,7 +798,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                            <div
                                              key={n.id}
                                              onClick={(e) => handleNotificationClick(n, e)}
-                                             className={`p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer relative ${!n.read ? 'bg-white/[0.02]' : ''}`}
+                                             className={`p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer relative ${!n.read ? 'bg-[#161616]' : ''}`}
                                            >
                                               {!n.read && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 bg-doge rounded-full"></div>}
                                               <div className="flex justify-between items-start mb-1">
@@ -730,9 +847,10 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </div>
 
             {/* Mobile Header Right */}
-            <div className="md:hidden flex items-center gap-2 justify-center">
+            <div className="md:hidden flex items-center gap-2 justify-center" ref={mobileHamburgerMenuRef}>
               {/* Hamburger Menu Button */}
               <button
+                 ref={mobileHamburgerButtonRef}
                  onClick={() => { setActiveMobileMenu(activeMobileMenu === 'hamburger' ? 'none' : 'hamburger'); playSound('click'); }}
                  className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
               >
@@ -746,6 +864,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </button>
               {user.isConnected ? (
                 <button
+                  ref={mobileWalletButtonRef}
                   onClick={() => { setActiveMobileMenu(activeMobileMenu === 'wallet' ? 'none' : 'wallet'); playSound('click'); }}
                   className="w-9 h-9 rounded-full bg-gradient-to-br from-doge to-doge-dark p-0.5 flex items-center justify-center border border-doge-border"
                 >
@@ -778,7 +897,10 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
             {/* Mobile Wallet Dropdown */}
             {activeMobileMenu === 'wallet' && (
-              <div className="md:hidden absolute top-full left-0 right-0 mx-4 mt-2 max-w-md bg-[#0A0A0A] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-70">
+              <div
+                ref={mobileWalletMenuRef}
+                className="md:hidden absolute top-full left-0 right-0 mx-4 mt-2 max-w-md bg-[#0D0D0D] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-70"
+              >
                  <div className="p-1">
                    {isAdminWallet && (
                      <button
@@ -824,7 +946,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                     <div
                                       key={n.id}
                                       onClick={(e) => handleNotificationClick(n, e)}
-                                      className={`p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer relative ${!n.read ? 'bg-white/[0.02]' : ''}`}
+                                      className={`p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer relative ${!n.read ? 'bg-[#161616]' : ''}`}
                                     >
                                        {!n.read && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 bg-doge rounded-full"></div>}
                                        <div className="flex justify-between items-start mb-1">
@@ -868,7 +990,10 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         {/* Mobile Menu Dropdown */}
         {activeMobileMenu === 'hamburger' && (
-           <div className="md:hidden bg-doge-bg/95 backdrop-blur-xl border-b border-white/10">
+           <div
+             ref={mobileHamburgerMenuContentRef}
+             className="md:hidden bg-doge-bg/95 backdrop-blur-xl"
+           >
               <div className="px-4 py-6 space-y-1">
                  {[...primaryNavLinks, ...secondaryNavLinks].map((link) => {
                    const IconComponent = link.icon;
@@ -894,13 +1019,52 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
            </div>
         )}
         </div>
-      </nav>
+        </nav>
+        {/* Inline Command Palette under navbar */}
+        <div className="relative">
+          <CommandPalette
+            isOpen={isCommandPaletteOpen}
+            onClose={() => setIsCommandPaletteOpen(false)}
+          />
+          <WalletModal
+            isOpen={isWalletModalOpen}
+            onClose={() => setIsWalletModalOpen(false)}
+            onConnect={handleConnect}
+          />
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+          <HowItWorksModal
+            isOpen={isHelpOpen}
+            onClose={() => setIsHelpOpen(false)}
+          />
+          <ShortcutsModal
+            isOpen={isShortcutsOpen}
+            onClose={() => setIsShortcutsOpen(false)}
+          />
+        </div>
       </div>
 
       {/* Main Content Container - Add padding for fixed header */}
-      <div className="min-h-[100dvh] flex flex-col font-sans selection:bg-doge/30 relative" style={{ paddingTop: `${headerHeight}px` }}>
+      <div
+        className="flex flex-col font-sans selection:bg-doge/30 relative"
+        style={{
+          paddingTop: `${contentTopOffset}px`,
+          scrollPaddingTop: `${contentTopOffset}px`,
+          minHeight: `calc(100dvh - env(safe-area-inset-bottom, 0px))`,
+          overscrollBehavior: 'contain',
+          // Expose header height as CSS variable for downstream sticky offsets
+          // Includes news banner and nav.
+          ['--header-height' as any]: `${headerHeight}px`,
+          ['--content-top-offset' as any]: `${contentTopOffset}px`,
+        }}
+      >
       {/* Main Content - Full width on mobile, centered on desktop */}
-      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-12 relative z-0 pb-40 md:pb-32 lg:pb-16 min-h-0">
+      <main
+        ref={mainRef}
+        className="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-0 md:pt-0 pb-32 md:pb-32 lg:pb-16 relative z-0 min-h-0"
+      >
         <div className="w-full md:max-w-7xl md:mx-auto">
           {children}
         </div>

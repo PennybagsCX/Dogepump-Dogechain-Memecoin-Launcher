@@ -1,6 +1,6 @@
 
-import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, useEffect, useLayoutEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import Layout from './components/Layout';
 import { StoreProvider } from './contexts/StoreContext';
@@ -53,12 +53,41 @@ const prefetchRoutes = () => {
   }
 };
 
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  // Ensure browser doesn't restore old scroll positions between navigations
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // Use layout effect so scroll resets before paint on navigation, and reinforce after render
+  useLayoutEffect(() => {
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    };
+
+    // Run immediately before paint
+    scrollToTop();
+    // Run again next frame for lazy-loaded content shifts
+    requestAnimationFrame(scrollToTop);
+    // Run once more after a short delay to catch late layout shifts
+    setTimeout(scrollToTop, 60);
+  }, [pathname]);
+
+  return null;
+};
+
 const AppContent: React.FC = () => {
   const { banNoticeModal, closeBanNoticeModal, warningNoticeModal, closeWarningNoticeModal } = useStore();
 
   return (
     <DexProvider>
       <Router>
+        <ScrollToTop />
         <WebVitals />
         <OrganizationSchema />
         <WebSiteSchema />
