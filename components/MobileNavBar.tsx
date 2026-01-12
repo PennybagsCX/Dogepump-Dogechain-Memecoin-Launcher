@@ -4,6 +4,22 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Coins, Rocket, Trophy, User, Sprout, ArrowLeftRight, Tv } from 'lucide-react';
 import { playSound } from '../services/audio';
 
+/**
+ * Mobile Bottom Navigation Bar
+ *
+ * STATUS: CURRENTLY DISABLED (see Layout.tsx line 1077)
+ *
+ * This component provides bottom navigation for mobile devices (< 768px).
+ * It duplicates the navigation available in the top sticky navbar.
+ *
+ * REACTIVATION: To re-enable this component:
+ * 1. Go to components/Layout.tsx
+ * 2. Uncomment line 1077: <MobileNavBar />
+ * 3. Uncomment line 1082: <div className="h-12 lg:hidden" aria-hidden />
+ *
+ * Disabled on: 2025-01-12
+ * Reason: Redundant with top sticky navbar
+ */
 export const MobileNavBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();

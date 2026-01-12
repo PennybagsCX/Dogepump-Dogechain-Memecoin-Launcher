@@ -1070,11 +1070,16 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </main>
 
-      {/* Mobile Nav */}
+      {/* DISABLED: Mobile Bottom Navigation Bar - preserved for future reactivation */}
+      {/* Date: 2025-01-12 | Reason: Redundant with top sticky navbar */}
+      {/* To reactivate: Remove this comment block and uncomment the lines below */}
+      {/*
       <MobileNavBar />
+      */}
 
       {/* Mobile spacer to ensure footer content remains scrollable above the sticky trade bar */}
-      <div className="h-12 lg:hidden" aria-hidden />
+      {/* No longer needed with bottom nav disabled */}
+      {/* <div className="h-12 lg:hidden" aria-hidden /> */}
 
       {/* Footer - visible on all breakpoints; extra bottom padding on small screens to clear the mobile trade bar */}
       <footer className="border-t border-white/[0.05] py-12 pb-32 md:pb-28 lg:pb-20 mt-auto relative z-0 bg-[#0A0A0A] block flex-shrink-0">
