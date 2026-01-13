@@ -40,7 +40,7 @@ export const Ticker: React.FC<TickerProps> = ({ newsBannerHeight = 0 }) => {
 
   return (
     <div
-      className="h-7 min-h-[28px] max-h-[28px] leading-[28px] overflow-hidden flex items-center relative w-[100vw] min-w-[100vw] max-w-none bg-[#0D0D0D] border-t border-white/10 pointer-events-none"
+      className="h-7 min-h-[28px] max-h-[28px] leading-[28px] overflow-hidden flex items-center relative w-full max-w-full bg-[#0D0D0D] border-t border-white/10 pointer-events-none"
       style={{ zIndex: 0 }}
     >
       <div className="absolute left-0 right-0 top-0 bottom-0 overflow-hidden w-full">

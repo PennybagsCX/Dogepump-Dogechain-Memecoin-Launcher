@@ -41,22 +41,14 @@ export const NewsBanner: React.FC = () => {
   return (
     <div
       id="news-banner"
-      className="relative overflow-hidden backdrop-blur-md border-b border-white/10 transition-all duration-500 mb-3"
+      className="relative overflow-hidden backdrop-blur-md border-b border-white/10 transition-all duration-500 mb-3 w-full"
       style={{
-        zIndex: 50,
-        width: '100%',
-        maxWidth: '100%',
-        marginLeft: 0,
-        marginRight: 0
+        zIndex: 50
       }}
     >
       {/* Full-bleed background to avoid right-edge gap */}
       <div
         className={`absolute inset-0 ${config.bg}`}
-        style={{
-          width: '100%',
-          maxWidth: '100%'
-        }}
         aria-hidden
       />
 

@@ -27,6 +27,30 @@ export function validateSearchQuery(query: string): { valid: boolean; sanitized:
   return { valid: true, sanitized };
 }
 
+/**
+ * Human-friendly number formatter that avoids scientific notation.
+ * - Defaults to 4 decimal places for values >= 1, 6 for sub-unit values.
+ * - Falls back to the original value if parsing fails.
+ */
+export function formatNumber(
+  value: string | number,
+  options?: { maximumFractionDigits?: number; minimumFractionDigits?: number }
+): string {
+  if (value === undefined || value === null || value === '') return '0';
+
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num)) return String(value);
+
+  const abs = Math.abs(num);
+  const maximumFractionDigits =
+    options?.maximumFractionDigits ?? (abs >= 1 ? 4 : 6);
+
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits,
+    minimumFractionDigits: options?.minimumFractionDigits ?? 0,
+  }).format(num);
+}
+
 export function timeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
 
@@ -246,27 +270,4 @@ export const generatePseudonym = (address: string): string => {
   const suffix = address.slice(-4).substring(0, 3);
   
   return `${ADJECTIVES[adjIndex]}${NOUNS[nounIndex]}${suffix}`;
-};
-
-/**
- * Format large numbers with comma separators
- * @param value - The number to format (can be string or number)
- * @returns Formatted number with commas (e.g., "1000000" → "1,000,000")
- */
-export const formatNumber = (value: string | number): string => {
-  const numStr = typeof value === 'number' ? value.toString() : value;
-  // Remove any existing formatting
-  const cleanNum = numStr.replace(/,/g, '');
-
-  // Split into integer and decimal parts
-  const parts = cleanNum.split('.');
-  const integerPart = parts[0];
-  const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
-
-  // Add commas to integer part
-  if (integerPart.length <= 3) {
-    return cleanNum;
-  }
-
-  return integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + decimalPart;
 };

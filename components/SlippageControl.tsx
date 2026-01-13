@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Info } from 'lucide-react';
 import { playSound } from '../services/audio';
 
@@ -16,20 +16,29 @@ export const SlippageControl: React.FC<SlippageControlProps> = ({
   inline = true, // Default to inline mode
 }) => {
   const presets = ['0.1', '0.5', '1', '3'] as const;
+  const [selectedValue, setSelectedValue] = useState(value);
   const [customValue, setCustomValue] = useState(value);
 
-  const isHighSlippage = parseFloat(value) > 3;
-  const isCustomValue = !presets.includes(value as any);
+  // keep local selection in sync with incoming value (e.g., parent updates)
+  useEffect(() => {
+    setSelectedValue(value);
+    setCustomValue(value);
+  }, [value]);
+
+  const isHighSlippage = parseFloat(selectedValue) > 3;
+  const isCustomValue = !presets.includes(selectedValue as any);
 
   const handlePresetClick = (preset: string) => {
     playSound('click');
-    onChange(preset);
+    setSelectedValue(preset);
     setCustomValue(preset);
+    onChange(preset);
     onClose?.();
   };
 
-  const handleCustomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCustomChange = (e: any) => {
     const newValue = e.target.value;
+    setSelectedValue(newValue);
     setCustomValue(newValue);
     if (newValue && parseFloat(newValue) >= 0) {
       onChange(newValue);
@@ -50,25 +59,29 @@ export const SlippageControl: React.FC<SlippageControlProps> = ({
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {presets.map((preset) => (
             <button
               key={preset}
               type="button"
               onClick={() => handlePresetClick(preset)}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold border transition-all ${
-                value === preset && !isCustomValue
-                  ? 'bg-doge text-black border-doge shadow-lg shadow-doge/20'
+              className={`flex-1 min-w-[68px] basis-[45%] sm:basis-auto py-2 px-3 rounded-lg text-xs font-bold border transition-all ${
+                selectedValue === preset && !isCustomValue
+                  ? 'bg-purple-500 text-white border-purple-400 shadow-lg shadow-purple-500/25'
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/20'
               }`}
               aria-label={`Set slippage to ${preset}%`}
-              aria-pressed={value === preset && !isCustomValue}
+              aria-pressed={selectedValue === preset && !isCustomValue}
             >
               {preset}%
             </button>
           ))}
 
-          <div className={`flex-1 relative ${isCustomValue ? 'flex-1' : ''}`}>
+          <div
+            className={`flex-1 min-w-[120px] basis-full sm:basis-[45%] relative ${
+              isCustomValue ? 'flex-1' : ''
+            }`}
+          >
             <input
               type="number"
               value={customValue}
@@ -76,13 +89,13 @@ export const SlippageControl: React.FC<SlippageControlProps> = ({
               placeholder="Custom"
               className={`w-full py-2 px-3 rounded-lg text-xs font-bold border bg-white/5 text-white outline-none transition-all text-center ${
                 isCustomValue
-                  ? 'border-doge text-doge'
-                  : 'border-white/10 text-gray-400 focus:border-doge/50'
+                  ? 'border-purple-400 text-purple-200 shadow-lg shadow-purple-500/20'
+                  : 'border-white/10 text-gray-400 focus:border-purple-400/50'
               }`}
               aria-label="Custom slippage percentage"
             />
             {isCustomValue && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-doge font-bold">%</div>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-purple-200 font-bold">%</div>
             )}
           </div>
         </div>

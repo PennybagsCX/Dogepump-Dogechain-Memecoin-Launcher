@@ -904,7 +904,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                  <div className="p-1">
                    {isAdminWallet && (
                      <button
-                       onClick={() => { navigate('/admin'); setShowWalletMenu(false); playSound('click'); }}
+                       onClick={() => { navigate('/admin'); setActiveMobileMenu('none'); playSound('click'); }}
                        className="w-full text-left px-4 py-3 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg flex items-center gap-2 border-b border-white/5 mb-1"
                      >
                       <Shield size={16} /> Admin Dashboard
@@ -965,13 +965,13 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                    </div>
                    
                    <button
-                     onClick={() => { navigate('/profile'); setShowWalletMenu(false); playSound('click'); }}
+                     onClick={() => { navigate('/profile'); setActiveMobileMenu('none'); playSound('click'); }}
                      className="w-full text-left px-4 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-2"
                    >
                       <User size={16} /> Profile
                    </button>
                    <button
-                     onClick={() => { setIsSettingsOpen(true); setShowWalletMenu(false); playSound('click'); }}
+                     onClick={() => { setIsSettingsOpen(true); setActiveMobileMenu('none'); playSound('click'); }}
                      className="w-full text-left px-4 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-2"
                    >
                       <Settings size={16} /> Settings

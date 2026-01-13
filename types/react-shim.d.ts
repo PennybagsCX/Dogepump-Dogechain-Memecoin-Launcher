@@ -5,6 +5,7 @@ declare module 'react' {
   export type ReactNode = any;
   export type ReactElement = any;
   export type JSXElementConstructor<P> = any;
+  export type ChangeEvent<T = any> = { target: { value: any } } & Event;
   export function createElement(...args: any[]): any;
   export function createContext<T = any>(defaultValue: T): any;
   export function useContext<T = any>(context: any): T;
