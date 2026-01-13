@@ -1,8 +1,9 @@
 import React from 'react';
 import { useStore } from '../contexts/StoreContext';
-import { TokenOwnerFarm } from '../types';
+import { TokenOwnerFarm, TokenOwnerFarmPosition } from '../types';
 import { TrendingUp, Users, Clock, Award, Droplets } from 'lucide-react';
 import { formatNumber } from '../utils';
+import { InlineStakingPanel } from './InlineStakingPanel';
 
 interface FarmCardProps {
   farm: TokenOwnerFarm;
@@ -12,6 +13,12 @@ interface FarmCardProps {
   onStake?: () => void;
   onClick?: () => void;
   showManageButton?: boolean;
+  // Inline staking props
+  showInlineStaking?: boolean;
+  userStakingBalance?: number;
+  userPosition?: TokenOwnerFarmPosition;
+  onInlineStakingToggle?: (farmId: string) => void;
+  isInlineStakingExpanded?: boolean;
 }
 
 export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
@@ -21,7 +28,13 @@ export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
   onManage,
   onStake,
   onClick,
-  showManageButton = true
+  showManageButton = true,
+  // Inline staking props
+  showInlineStaking = false,
+  userStakingBalance = 0,
+  userPosition,
+  onInlineStakingToggle,
+  isInlineStakingExpanded = false
 }) => {
   const {
     tokens,
@@ -98,7 +111,7 @@ export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
             <TrendingUp size={14} className="text-doge" />
             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">APY</div>
           </div>
-          <div className="text-lg font-mono font-bold text-doge">
+          <div className="text-lg font-mono font-bold text-doge text-center">
             {currentAPY.toFixed(2)}%
           </div>
         </div>
@@ -109,7 +122,7 @@ export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
             <Droplets size={14} className="text-blue-400" />
             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Staked</div>
           </div>
-          <div className="text-lg font-mono font-bold text-white">
+          <div className="text-lg font-mono font-bold text-white text-center">
             {stats?.totalStaked ? formatNumber(stats.totalStaked) : '0'}
           </div>
         </div>
@@ -120,7 +133,7 @@ export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
             <Award size={14} className="text-green-400" />
             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Available Rewards</div>
           </div>
-          <div className="text-sm font-mono font-bold text-green-400" aria-label={`Available rewards ${farm.pool.availableRewards} ${rewardToken?.ticker || 'DC'}`}>
+          <div className="text-sm font-mono font-bold text-green-400 text-center" aria-label={`Available rewards ${farm.pool.availableRewards} ${rewardToken?.ticker || 'DC'}`}>
             {formatNumber(farm.pool.availableRewards)} <span className="text-xs text-gray-400 ml-1">{rewardToken?.ticker || 'DC'}</span>
           </div>
         </div>
@@ -131,7 +144,7 @@ export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
             <Clock size={14} className="text-purple-400" />
             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Distributed</div>
           </div>
-          <div className="text-sm font-mono font-bold text-gray-300" aria-label={`Total distributed ${farm.pool.totalDistributed} ${rewardToken?.ticker || 'DC'}`}>
+          <div className="text-sm font-mono font-bold text-gray-300 text-center" aria-label={`Total distributed ${farm.pool.totalDistributed} ${rewardToken?.ticker || 'DC'}`}>
             {formatNumber(farm.pool.totalDistributed)} <span className="text-xs text-gray-400 ml-1">{rewardToken?.ticker || 'DC'}</span>
           </div>
         </div>
@@ -199,6 +212,18 @@ export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
           </div>
         </div>
       )}
+
+      {/* Inline Staking Panel */}
+      {showInlineStaking && (
+        <InlineStakingPanel
+          farm={farm}
+          stakingToken={stakingToken}
+          rewardToken={rewardToken}
+          userBalance={userStakingBalance}
+          initialPosition={userPosition}
+          onStakeComplete={() => onInlineStakingToggle?.(farm.id)}
+        />
+      )}
     </div>
   );
 }, (prevProps, nextProps) => {
@@ -211,6 +236,10 @@ export const FarmCard: React.FC<FarmCardProps> = React.memo<FarmCardProps>(({
     prevProps.farm.stats.totalStaked === nextProps.farm.stats.totalStaked &&
     prevProps.farm.stats.currentAPY === nextProps.farm.stats.currentAPY &&
     prevProps.farm.pool.totalDistributed === nextProps.farm.pool.totalDistributed &&
-    prevProps.showManageButton === nextProps.showManageButton
+    prevProps.showManageButton === nextProps.showManageButton &&
+    prevProps.showInlineStaking === nextProps.showInlineStaking &&
+    prevProps.userStakingBalance === nextProps.userStakingBalance &&
+    prevProps.userPosition?.stakedAmount === nextProps.userPosition?.stakedAmount &&
+    prevProps.isInlineStakingExpanded === nextProps.isInlineStakingExpanded
   );
 });

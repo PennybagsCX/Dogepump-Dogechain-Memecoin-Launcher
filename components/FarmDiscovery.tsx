@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Sprout, TrendingUp, Users, Clock, Award, Search, Filter } from 'lucide-react';
-import { TokenOwnerFarm, Token } from '../types';
+import { TokenOwnerFarm, Token, TokenOwnerFarmPosition } from '../types';
 import { useStore } from '../contexts/StoreContext';
 import { FarmCard } from './FarmCard';
 import { Button } from './Button';
+import { ButtonGroup } from './ButtonGroup';
 import { formatNumber } from '../services/web3Service';
 
 interface FarmDiscoveryProps {
@@ -12,12 +13,14 @@ interface FarmDiscoveryProps {
 }
 
 export const FarmDiscovery: React.FC<FarmDiscoveryProps> = ({ onFarmClick, activeTab: propActiveTab }) => {
-  const { tokenOwnerFarms, tokens } = useStore();
+  const { tokenOwnerFarms, tokens, myHoldings, getFarmPositions } = useStore();
   const [internalActiveTab, setInternalActiveTab] = useState<'core' | 'community'>('core');
   const activeTab = propActiveTab || internalActiveTab;
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'apy' | 'tvl' | 'newest'>('apy');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('active');
+  const [expandedStakingFarmId, setExpandedStakingFarmId] = useState<string | null>(null);
 
   // Get token details
   const getToken = (tokenId: string): Token | undefined => {
@@ -30,6 +33,28 @@ export const FarmDiscovery: React.FC<FarmDiscoveryProps> = ({ onFarmClick, activ
     if (totalStaked === 0) return 0;
     const currentAPY = (farm.config.rewardRate * 86400 * 365 * 100) / totalStaked;
     return Math.min(currentAPY, 50000); // Cap at 50,000%
+  };
+
+  // Check if user can stake in a farm (has staking tokens)
+  const canUserStakeInFarm = (farm: TokenOwnerFarm): boolean => {
+    const balance = myHoldings.find(h => h.tokenId === farm.stakingTokenId)?.balance || 0;
+    return balance > 0;
+  };
+
+  // Get user's staking token balance for a farm
+  const getUserStakingBalance = (farm: TokenOwnerFarm): number => {
+    return myHoldings.find(h => h.tokenId === farm.stakingTokenId)?.balance || 0;
+  };
+
+  // Get user's position for a farm
+  const getUserFarmPosition = (farmId: string): TokenOwnerFarmPosition | undefined => {
+    const positions = getFarmPositions(farmId);
+    return positions.find(p => p.farmId === farmId);
+  };
+
+  // Toggle inline staking panel
+  const handleInlineStakingToggle = (farmId: string) => {
+    setExpandedStakingFarmId(prev => prev === farmId ? null : farmId);
   };
 
   // Filter and sort farms
@@ -64,20 +89,21 @@ export const FarmDiscovery: React.FC<FarmDiscoveryProps> = ({ onFarmClick, activ
 
     // Sort farms
     farms.sort((a, b) => {
+      const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortBy) {
         case 'apy':
-          return calculateCurrentAPY(b) - calculateCurrentAPY(a);
+          return direction * (calculateCurrentAPY(b) - calculateCurrentAPY(a));
         case 'tvl':
-          return b.stats.totalStaked - a.stats.totalStaked;
+          return direction * (b.stats.totalStaked - a.stats.totalStaked);
         case 'newest':
-          return b.config.createdAt - a.config.createdAt;
+          return direction * (b.config.createdAt - a.config.createdAt);
         default:
           return 0;
       }
     });
 
     return farms;
-  }, [tokenOwnerFarms, activeTab, filterStatus, searchQuery, sortBy, tokens]);
+  }, [tokenOwnerFarms, activeTab, filterStatus, searchQuery, sortBy, sortDirection, tokens]);
 
   // Stats
   const stats = React.useMemo(() => {
@@ -115,15 +141,15 @@ export const FarmDiscovery: React.FC<FarmDiscoveryProps> = ({ onFarmClick, activ
         <div className="flex gap-3">
           <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
             <div className="text-xs text-gray-500 uppercase tracking-wider">Active Farms</div>
-            <div className="text-lg font-bold text-white">{stats.activeFarms}</div>
+            <div className="text-lg font-bold text-white text-center">{stats.activeFarms}</div>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
             <div className="text-xs text-gray-500 uppercase tracking-wider">Total TVL</div>
-            <div className="text-lg font-bold text-white">{formatNumber(stats.totalTVL)}</div>
+            <div className="text-lg font-bold text-white text-center">{formatNumber(stats.totalTVL)}</div>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
             <div className="text-xs text-gray-500 uppercase tracking-wider">Rewards Distributed</div>
-            <div className="text-lg font-bold text-white">{formatNumber(stats.totalRewards)}</div>
+            <div className="text-lg font-bold text-white text-center">{formatNumber(stats.totalRewards)}</div>
           </div>
         </div>
       </div>
@@ -171,30 +197,33 @@ export const FarmDiscovery: React.FC<FarmDiscoveryProps> = ({ onFarmClick, activ
           />
         </div>
 
-        <div className="flex gap-2">
-          <select
-            id="farm-discovery-sort"
-            name="farmSortBy"
+        <div className="flex flex-wrap gap-2">
+          <ButtonGroup
+            variant="sort"
+            options={[
+              { value: 'apy', label: 'APY' },
+              { value: 'tvl', label: 'TVL' },
+              { value: 'newest', label: 'Newest' }
+            ]}
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-doge/50 outline-none cursor-pointer"
-          >
-            <option value="apy">Sort by APY</option>
-            <option value="tvl">Sort by TVL</option>
-            <option value="newest">Sort by Newest</option>
-          </select>
+            onChange={(val) => setSortBy(val as 'apy' | 'tvl' | 'newest')}
+            sortDirection={sortDirection}
+            onSortDirectionChange={setSortDirection}
+            showDirectionIndicator
+            ariaLabel="Sort farms"
+          />
 
-          <select
-            id="farm-discovery-filter"
-            name="farmFilterStatus"
+          <ButtonGroup
+            variant="filter"
+            options={[
+              { value: 'active', label: 'Active' },
+              { value: 'all', label: 'All' },
+              { value: 'paused', label: 'Paused' }
+            ]}
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-doge/50 outline-none cursor-pointer"
-          >
-            <option value="active">Active</option>
-            <option value="all">All Status</option>
-            <option value="paused">Paused</option>
-          </select>
+            onChange={(val) => setFilterStatus(val as 'all' | 'active' | 'paused')}
+            ariaLabel="Filter farms by status"
+          />
         </div>
       </div>
 
@@ -209,6 +238,12 @@ export const FarmDiscovery: React.FC<FarmDiscoveryProps> = ({ onFarmClick, activ
               stakingToken={getToken(farm.stakingTokenId)}
               onClick={() => onFarmClick?.(farm)}
               showManageButton={false}
+              // Inline staking props
+              showInlineStaking={canUserStakeInFarm(farm)}
+              userStakingBalance={getUserStakingBalance(farm)}
+              userPosition={getUserFarmPosition(farm.id)}
+              onInlineStakingToggle={handleInlineStakingToggle}
+              isInlineStakingExpanded={expandedStakingFarmId === farm.id}
             />
           ))}
         </div>

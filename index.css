@@ -50,7 +50,7 @@ body {
 /* Backdrop layer to ensure continuous gradient behind fixed header */
 body::before {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   background-color: #020202;
   z-index: 0;
@@ -186,6 +186,18 @@ input:-webkit-autofill:active{
   70% { transform: translateY(0); }
 }
 
+/* Fade In Animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Apply shake animation - plays once when triggered */
 .animate-shake-rocket {
   animation: shake-rocket 0.8s ease-in-out;
@@ -193,4 +205,8 @@ input:-webkit-autofill:active{
 
 .animate-shake-vertical {
   animation: shake-vertical 0.8s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
 }
