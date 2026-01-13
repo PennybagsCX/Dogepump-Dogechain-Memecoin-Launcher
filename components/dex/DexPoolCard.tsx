@@ -140,21 +140,21 @@ const DexPoolCard: React.FC<DexPoolCardProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <div className="bg-white/5 rounded-xl p-3">
           <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">TVL</div>
-          <div className="text-sm font-mono font-bold text-white" aria-label={`Total value locked ${formatTVL(pool.tvl)}`}>
+          <div className="text-sm font-mono font-bold text-white text-center" aria-label={`Total value locked ${formatTVL(pool.tvl)}`}>
             {formatTVL(pool.tvl)}
           </div>
         </div>
 
         <div className="bg-white/5 rounded-xl p-3">
           <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Vol 24h</div>
-          <div className="text-sm font-mono font-bold text-white" aria-label={`24 hour volume ${formatVolume(pool.volume24h)}`}>
+          <div className="text-sm font-mono font-bold text-white text-center" aria-label={`24 hour volume ${formatVolume(pool.volume24h)}`}>
             {formatVolume(pool.volume24h)}
           </div>
         </div>
 
         <div className="bg-white/5 rounded-xl p-3">
           <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">APY</div>
-          <div className={`text-sm font-mono font-bold ${pool.apy > 50 ? 'text-doge' : 'text-white'}`} aria-label={`Annual percentage yield ${formatAPY(pool.apy)}`}>
+          <div className={`text-sm font-mono font-bold ${pool.apy > 50 ? 'text-doge' : 'text-white'} text-center`} aria-label={`Annual percentage yield ${formatAPY(pool.apy)}`}>
             {formatAPY(pool.apy)}
           </div>
         </div>

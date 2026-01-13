@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, type ChangeEvent } from 'react';
 import { Pool } from '../../contexts/DexContext';
 import { TrendingUp, AlertCircle } from 'lucide-react';
 import { Button } from '../Button';
@@ -91,7 +91,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({
           <input
             type="number"
             value={stakeAmount}
-            onChange={(e) => setStakeAmount(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setStakeAmount(e.target.value)}
             placeholder="0.0"
             className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 pr-20 text-white font-mono focus:border-doge/50 focus:ring-1 focus:ring-doge/50 outline-none transition-all"
             aria-label="Stake amount"
@@ -105,9 +105,11 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({
             </button>
           </div>
         </div>
-        <div className="flex items-center justify-between mt-2 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 text-sm gap-1">
           <span className="text-gray-400">Available:</span>
-          <span className="text-white font-mono">{formatNumber(lpBalance)} LP</span>
+          <span className="text-white font-mono break-words max-w-full text-right sm:text-left">
+            {formatNumber(lpBalance)} LP
+          </span>
         </div>
       </div>
 
@@ -126,7 +128,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({
         disabled={!isValidAmount || isStaking}
         aria-label="Stake LP tokens"
       >
-        {isStaking ? 'Staking...' : `Stake ${formatNumber(stakeAmount)} LP Tokens`}
+        {isStaking ? 'Staking...' : 'Stake LP Tokens'}
       </Button>
     </div>
   );

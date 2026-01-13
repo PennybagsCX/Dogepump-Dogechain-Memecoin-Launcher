@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { X, Plus, Droplets, AlertCircle, Check } from 'lucide-react';
 import { Pool, Token } from '../../contexts/DexContext';
 import AmountInput from '../AmountInput';
 import Button from '../Button';
 import { formatNumber } from '../../utils';
+import TokenSelectList from './TokenSelectList';
 
 interface CreatePoolModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CreatePoolModalProps {
   onCreatePool: (token0: string, token1: string, amount0: string, amount1: string) => void;
   tokens: Token[];
   soundsEnabled?: boolean;
+  inline?: boolean;
 }
 
 const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
@@ -19,6 +21,7 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
   onCreatePool,
   tokens,
   soundsEnabled = true,
+  inline = false,
 }) => {
   const [step, setStep] = useState<'select' | 'amounts' | 'confirm'>('select');
   const [token0, setToken0] = useState<Token | null>(null);
@@ -102,18 +105,63 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
     }, 2000);
   }, [token0, token1, amount0, amount1, onCreatePool, onClose, playSound]);
 
-  // Filter out selected tokens
-  const availableTokens0 = tokens;
-  const availableTokens1 = tokens.filter(t => !token0 || t.address !== token0.address);
+  // Preselect DC (or KARMA fallback) when opened
+  useEffect(() => {
+    if (isOpen && !token0) {
+      const dc = tokens.find(t => t.symbol === 'DC' || t.address === 'dc');
+      const karma = tokens.find(t => t.symbol === 'KARMA' || t.address === 'karma');
+      setToken0(dc || karma || null);
+    }
+  }, [isOpen, token0, tokens]);
+
+  // Enforce base token rule: only DC or KARMA allowed as first token
+  const baseTokens = tokens.filter(
+    t => t.symbol === 'DC' || t.address === 'dc' || t.symbol === 'KARMA' || t.address === 'karma'
+  );
+  const availableTokens0 = baseTokens;
+
+  // Second token: only platform tokens, excluding the selected base and excluding DC to enforce DC-paired pools
+  const availableTokens1 = tokens.filter(
+    t =>
+      (!token0 || t.address !== token0.address) &&
+      !(t.symbol === 'DC' || t.address === 'dc')
+  );
 
   if (!isOpen) return null;
 
+  // Use full-height standard buttons on mobile inline and modal for consistency
+  const actionButtonSize: 'sm' | 'md' | 'lg' = 'lg';
+  const actionButtonClass = inline ? '!h-12 !px-5 !text-base w-full rounded-xl' : '';
+
+  const containerClass = inline
+    ? 'relative w-full'
+    : 'fixed inset-0 bg-black/80 backdrop-blur-sm flex items-stretch sm:items-center justify-center z-50 p-2 sm:p-6 overflow-y-auto';
+
+  const cardClass = inline
+    ? 'relative bg-[#0A0A0A] border border-white/10 rounded-xl sm:rounded-2xl w-full animate-fade-in shadow-2xl flex flex-col overflow-hidden'
+    : 'relative bg-[#0A0A0A] border border-white/10 rounded-xl sm:rounded-2xl w-full max-w-xl sm:max-w-2xl animate-fade-in shadow-2xl flex flex-col max-h-[calc(100vh-0.5rem)] sm:max-h-[92vh] overflow-hidden';
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl w-full max-w-lg animate-fade-in">
+    <div
+      className={containerClass}
+      onClick={() => {
+        if (!inline) {
+          playSound('click');
+          onClose();
+        }
+      }}
+      role="presentation"
+    >
+      {!inline && <div className="absolute inset-0" aria-hidden />}
+      <div
+        className={cardClass}
+        onClick={(e: any) => e.stopPropagation()}
+        role="dialog"
+        aria-modal={!inline}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <h2 className="text-2xl font-comic font-bold text-white">
+        <div className={`flex items-center justify-between p-4 sm:p-6 border-b border-white/10 ${inline ? '' : 'sticky top-0'} bg-[#0A0A0A] z-10`}>
+          <h2 className="text-lg sm:text-2xl font-comic font-bold text-white">
             {step === 'select' && 'Select Tokens'}
             {step === 'amounts' && 'Add Liquidity'}
             {step === 'confirm' && 'Confirm Creation'}
@@ -131,63 +179,32 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div className={`p-4 sm:p-6 space-y-4 ${inline ? '' : 'overflow-y-auto flex-1 min-h-0'}`}>
           {step === 'select' && (
-            <>
-              <div>
-                <label className="block text-sm font-bold text-white mb-3">
-                  First Token
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                  {availableTokens0.map(token => (
-                    <button
-                      key={token.address}
-                      onClick={() => handleSelectToken0(token)}
-                      className={`p-3 rounded-xl border transition-all ${
-                        token0?.address === token.address
-                          ? 'bg-doge/20 border-doge text-doge'
-                          : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-doge/30'
-                      }`}
-                    >
-                      <div className="text-sm font-bold">{token.symbol}</div>
-                      <div className="text-xs text-gray-400 mt-1">{token.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-3">
-                  Second Token
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                  {availableTokens1.map(token => (
-                    <button
-                      key={token.address}
-                      onClick={() => handleSelectToken1(token)}
-                      disabled={token0?.address === token.address}
-                      className={`p-3 rounded-xl border transition-all ${
-                        token1?.address === token.address
-                          ? 'bg-purple-500/20 border-purple-500/30 text-purple-400'
-                          : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-purple-500/30'
-                      } ${token0?.address === token.address ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <div className="text-sm font-bold">{token.symbol}</div>
-                      <div className="text-xs text-gray-400 mt-1">{token.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TokenSelectList
+                tokens={availableTokens0}
+                selectedToken={token0}
+                label="First Token (Base)"
+                onSelect={handleSelectToken0}
+                emptyState="No base tokens available."
+              />
+              <TokenSelectList
+                tokens={availableTokens1}
+                selectedToken={token1}
+                label="Second Token (Pair)"
+                onSelect={handleSelectToken1}
+                emptyState="Search to find a token to pair."
+              />
               {token0 && token1 && (
-                <div className="bg-doge/5 border border-doge/20 rounded-xl p-3 flex gap-2">
+                <div className="sm:col-span-2 bg-doge/5 border border-doge/20 rounded-xl p-3 flex gap-2">
                   <Check size={16} className="text-doge flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-doge">
                     Selected pair: <span className="font-bold">{token0.symbol}/{token1.symbol}</span>
                   </p>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {step === 'amounts' && (
@@ -293,11 +310,13 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-white/10 flex gap-3">
+        <div className="p-5 sm:p-6 border-t border-white/10 flex flex-col sm:flex-row gap-3 sticky bottom-0 bg-[#0A0A0A]">
           {step === 'select' && (
-            <>
+            <div className={`gap-3 ${inline ? 'grid grid-cols-2' : 'flex flex-col sm:flex-row'}`}>
               <Button
-                className="flex-1 bg-white/5 border border-white/10 text-white hover:bg-white/10"
+                variant="ghost"
+                size={actionButtonSize}
+                className={`flex-1 border border-white/10 text-white hover:border-white/20 ${actionButtonClass} !bg-transparent !text-white`}
                 onClick={() => {
                   playSound('click');
                   onClose();
@@ -306,19 +325,23 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
                 Cancel
               </Button>
               <Button
-                className="flex-1 bg-doge text-black hover:bg-doge-light"
+                variant="primary"
+                size={actionButtonSize}
+                className={`flex-1 ${actionButtonClass} !bg-doge hover:!bg-doge-light !text-black !shadow-lg !shadow-doge/20`}
                 onClick={handleProceedToAmounts}
                 disabled={!token0 || !token1}
               >
                 Next
               </Button>
-            </>
+            </div>
           )}
 
           {step === 'amounts' && (
-            <>
+            <div className={`gap-3 ${inline ? 'grid grid-cols-2' : 'flex flex-col sm:flex-row'}`}>
               <Button
-                className="flex-1 bg-white/5 border border-white/10 text-white hover:bg-white/10"
+                variant="ghost"
+                size={actionButtonSize}
+                className={`flex-1 border border-white/10 text-white hover:border-white/20 ${actionButtonClass} !bg-transparent !text-white`}
                 onClick={() => {
                   playSound('click');
                   setStep('select');
@@ -327,19 +350,23 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
                 Back
               </Button>
               <Button
-                className="flex-1 bg-doge text-black hover:bg-doge-light"
+                variant="primary"
+                size={actionButtonSize}
+                className={`flex-1 ${actionButtonClass} !bg-doge hover:!bg-doge-light !text-black !shadow-lg !shadow-doge/20`}
                 onClick={handleProceedToConfirm}
                 disabled={!amount0 || !amount1}
               >
                 Review
               </Button>
-            </>
+            </div>
           )}
 
           {step === 'confirm' && (
-            <>
+            <div className={`gap-3 ${inline ? 'grid grid-cols-2' : 'flex flex-col sm:flex-row'}`}>
               <Button
-                className="flex-1 bg-white/5 border border-white/10 text-white hover:bg-white/10"
+                variant="ghost"
+                size={actionButtonSize}
+                className={`flex-1 border border-white/10 text-white hover:border-white/20 ${actionButtonClass} !bg-transparent !text-white`}
                 onClick={() => {
                   playSound('click');
                   setStep('amounts');
@@ -348,14 +375,16 @@ const CreatePoolModal: React.FC<CreatePoolModalProps> = ({
                 Back
               </Button>
               <Button
-                className="flex-1 bg-doge text-black hover:bg-doge-light"
+                variant="primary"
+                size={actionButtonSize}
+                className={`flex-1 ${actionButtonClass} !bg-doge hover:!bg-doge-light !text-black !shadow-lg !shadow-doge/20`}
                 onClick={handleCreatePool}
                 disabled={isCreating}
                 isLoading={isCreating}
               >
                 {isCreating ? 'Creating...' : 'Create Pool'}
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>

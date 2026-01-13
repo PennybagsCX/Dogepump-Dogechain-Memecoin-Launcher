@@ -128,8 +128,12 @@ const DexLiquidityPositions: React.FC<DexLiquidityPositionsProps> = ({
     <section className={`space-y-4 overflow-x-hidden ${className}`} role="region" aria-label="Liquidity positions">
       <header className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-comic font-bold text-white">Your Liquidity Positions</h2>
-        <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg" role="status" aria-live="polite">
-          <span className="text-sm text-gray-400 font-medium">
+        <div
+          className="inline-flex items-center justify-center px-3 py-1 bg-purple-500/15 border border-purple-400/30 rounded-lg whitespace-nowrap text-sm font-semibold text-purple-100 shadow-[0_0_0_1px_rgba(147,51,234,0.08)]"
+          role="status"
+          aria-live="polite"
+        >
+          <span>
             {positions.length} position{positions.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -195,25 +199,25 @@ const DexLiquidityPositions: React.FC<DexLiquidityPositionsProps> = ({
                     </div>
                   </div>
 
-                  {/* Stats Grid - Stacked on mobile, side-by-side on desktop */}
-                  <div className="grid grid-cols-3 gap-3 mb-3">
+                  {/* Stats Grid - Stack on mobile, side-by-side on wider screens */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                     <div className="bg-white/5 rounded-xl p-3">
                       <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Value</div>
-                      <div className="text-sm font-mono font-bold text-white" aria-label={`Position value ${formatUSD(position.valueUSD)}`}>
+                      <div className="text-sm font-mono font-bold text-white text-center" aria-label={`Position value ${formatUSD(position.valueUSD)}`}>
                         {formatUSD(position.valueUSD)}
                       </div>
                     </div>
 
                     <div className="bg-white/5 rounded-xl p-3">
                       <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Share</div>
-                      <div className="text-sm font-mono font-bold text-doge" aria-label={`Pool share ${position.poolShare.toFixed(2)}%`}>
+                      <div className="text-sm font-mono font-bold text-doge text-center" aria-label={`Pool share ${position.poolShare.toFixed(2)}%`}>
                         {position.poolShare.toFixed(2)}%
                       </div>
                     </div>
 
                     <div className="bg-white/5 rounded-xl p-3 min-w-0">
                       <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">LP Tokens</div>
-                      <div className="text-sm font-mono font-bold text-white break-all" aria-label={`LP tokens balance ${position.lpBalance}`}>
+                      <div className="text-sm font-mono font-bold text-white whitespace-nowrap overflow-x-auto pr-1 text-center" aria-label={`LP tokens balance ${position.lpBalance}`}>
                         {formatNumber(position.lpBalance)}
                       </div>
                     </div>
@@ -254,35 +258,35 @@ const DexLiquidityPositions: React.FC<DexLiquidityPositionsProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                       <div className="bg-white/5 rounded-xl p-4 min-w-0">
                         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Token A Amount</div>
-                        <div className="text-sm font-mono font-bold text-white break-all" aria-label={`${position.tokenAAmount} ${position.pool.tokenA.symbol}`}>
+                        <div className="text-sm font-mono font-bold text-white whitespace-nowrap overflow-x-auto pr-1 text-center" aria-label={`${position.tokenAAmount} ${position.pool.tokenA.symbol}`}>
                           {formatNumber(position.tokenAAmount)} {position.pool.tokenA.symbol}
                         </div>
                       </div>
 
                       <div className="bg-white/5 rounded-xl p-4 min-w-0">
                         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Token B Amount</div>
-                        <div className="text-sm font-mono font-bold text-white break-all" aria-label={`${position.tokenBAmount} ${position.pool.tokenB.symbol}`}>
+                        <div className="text-sm font-mono font-bold text-white whitespace-nowrap overflow-x-auto pr-1 text-center" aria-label={`${position.tokenBAmount} ${position.pool.tokenB.symbol}`}>
                           {formatNumber(position.tokenBAmount)} {position.pool.tokenB.symbol}
                         </div>
                       </div>
 
                       <div className="bg-white/5 rounded-xl p-4 min-w-0">
                         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">LP Token Balance</div>
-                        <div className="text-sm font-mono font-bold text-white break-all" aria-label={`LP tokens ${position.lpBalance}`}>
+                        <div className="text-sm font-mono font-bold text-white whitespace-nowrap overflow-x-auto pr-1 text-center" aria-label={`LP tokens ${position.lpBalance}`}>
                           {formatNumber(position.lpBalance)}
                         </div>
                       </div>
 
                       <div className="bg-white/5 rounded-xl p-4 min-w-0">
                         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Pool Share</div>
-                        <div className="text-sm font-mono font-bold text-doge break-all" aria-label={`${position.poolShare.toFixed(2)}%`}>
+                        <div className="text-sm font-mono font-bold text-doge break-all text-center" aria-label={`${position.poolShare.toFixed(2)}%`}>
                           {position.poolShare.toFixed(2)}%
                         </div>
                       </div>
 
                       <div className="bg-white/5 rounded-xl p-4 sm:col-span-2 min-w-0">
                         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Total Value</div>
-                        <div className="text-lg font-mono font-bold text-white break-all" aria-label={`Total value ${formatUSD(position.valueUSD)}`}>
+                        <div className="text-lg font-mono font-bold text-white break-all text-center" aria-label={`Total value ${formatUSD(position.valueUSD)}`}>
                           {formatUSD(position.valueUSD)}
                         </div>
                       </div>
@@ -290,7 +294,7 @@ const DexLiquidityPositions: React.FC<DexLiquidityPositionsProps> = ({
                       {position.farmRewards && (
                         <div className="bg-doge/5 border border-doge/20 rounded-xl p-4 sm:col-span-2 min-w-0">
                           <div className="text-[10px] text-doge font-bold uppercase tracking-wider mb-1">Farm Rewards</div>
-                          <div className="text-lg font-mono font-bold text-doge break-all" aria-label={`Farm rewards ${position.farmRewards}`}>
+                          <div className="text-lg font-mono font-bold text-doge break-all text-center" aria-label={`Farm rewards ${position.farmRewards}`}>
                             {formatNumber(position.farmRewards)}
                           </div>
                         </div>

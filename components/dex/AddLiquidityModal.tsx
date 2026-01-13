@@ -146,8 +146,20 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-      <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl animate-slide-up">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+      onClick={() => {
+        playSound('click');
+        onClose();
+      }}
+      role="presentation"
+    >
+      <div
+        className="bg-[#0A0A0A] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl animate-slide-up"
+        onClick={(e: any) => e.stopPropagation()}
+        role="dialog"
+        aria-modal
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -190,7 +202,7 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
               <input
                 type="number"
                 value={amountA}
-                onChange={(e) => setAmountA(e.target.value)}
+                onChange={(e: any) => setAmountA(e.target.value)}
                 placeholder="0.0"
                 className="flex-1 bg-transparent text-2xl font-bold text-white outline-none"
               />
@@ -228,7 +240,7 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
               <input
                 type="number"
                 value={amountB}
-                onChange={(e) => setAmountB(e.target.value)}
+                onChange={(e: any) => setAmountB(e.target.value)}
                 placeholder="0.0"
                 className="flex-1 bg-transparent text-2xl font-bold text-white outline-none"
                 disabled={!!pool}
@@ -286,7 +298,7 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
                   <span className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 block">
                     Slippage Tolerance
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {['0.1', '0.5', '1.0'].map((value) => (
                       <button
                         key={value}
@@ -294,7 +306,7 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
                           playSound('click');
                           setSlippage(value);
                         }}
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-colors ${
+                        className={`flex-1 min-w-[80px] py-2 px-3 rounded-lg text-xs font-bold transition-colors ${
                           slippage === value
                             ? 'bg-doge text-black'
                             : 'bg-white/5 text-gray-400 hover:text-white'
@@ -307,7 +319,7 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
                       type="number"
                       value={slippage}
                       onChange={(e) => setSlippage(e.target.value)}
-                      className="flex-1 py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-white outline-none focus:border-doge/50"
+                      className="flex-1 min-w-[90px] py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-white outline-none focus:border-doge/50"
                       placeholder="Custom"
                     />
                   </div>

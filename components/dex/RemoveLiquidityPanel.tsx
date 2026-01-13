@@ -144,15 +144,15 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="border-t border-white/10 p-4 space-y-4 animate-fade-in">
+        <div className="border-t border-white/10 p-4 space-y-4 animate-fade-in overflow-hidden">
           {/* LP Token Input */}
           <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
             <div className="text-sm text-gray-400 mb-2">LP Tokens to Remove</div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <input
                 type="number"
                 value={lpAmount}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setLpAmount(e.target.value);
                   // Calculate percentage based on input
                   if (lpBalance) {
@@ -161,14 +161,14 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
                   }
                 }}
                 placeholder="0.0"
-                className="flex-1 bg-transparent text-2xl font-bold text-white outline-none"
+                className="flex-1 min-w-0 bg-transparent text-2xl font-bold text-white outline-none"
               />
-              <div className="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg">
+              <div className="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg flex-shrink-0">
                 <Droplets size={16} className="text-purple-400" />
                 <span className="text-sm font-bold text-white">LP</span>
               </div>
             </div>
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-xs text-gray-500 break-all">
               Balance: {formatNumber(lpBalance)} LP tokens
             </div>
           </div>
@@ -195,19 +195,14 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
             <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4 animate-fade-in">
               <div className="text-sm font-bold text-green-400 mb-3">You Will Receive</div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 min-w-0">
                   <div className="flex items-center gap-2">
                     {pool.tokenA.logoURI ? (
                       <img
                         src={pool.tokenA.logoURI}
                         alt={pool.tokenA.symbol}
                         className="w-6 h-6 rounded-full"
-                        onError={(e) => {
-                          // Fallback to initial if image fails to load
-                          e.currentTarget.style.display = 'none';
-                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
-                        }}
+                        onError={() => {}}
                       />
                     ) : null}
                     <div
@@ -218,21 +213,18 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
                     </div>
                     <span className="text-white font-bold">{pool.tokenA.symbol}</span>
                   </div>
-                  <span className="text-white font-mono text-sm">{formatNumber(tokenAAmount)}</span>
+                  <span className="text-white font-mono text-sm text-right break-all min-w-0">
+                    {formatNumber(tokenAAmount)}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 min-w-0">
                   <div className="flex items-center gap-2">
                     {pool.tokenB.logoURI ? (
                       <img
                         src={pool.tokenB.logoURI}
                         alt={pool.tokenB.symbol}
                         className="w-6 h-6 rounded-full"
-                        onError={(e) => {
-                          // Fallback to initial if image fails to load
-                          e.currentTarget.style.display = 'none';
-                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
-                        }}
+                        onError={() => {}}
                       />
                     ) : null}
                     <div
@@ -243,7 +235,9 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
                     </div>
                     <span className="text-white font-bold">{pool.tokenB.symbol}</span>
                   </div>
-                  <span className="text-white font-mono text-sm">{formatNumber(tokenBAmount)}</span>
+                  <span className="text-white font-mono text-sm text-right break-all min-w-0">
+                    {formatNumber(tokenBAmount)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -278,7 +272,7 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
               <span className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 block">
                 Slippage Tolerance
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {['0.1', '0.5', '1.0'].map((value) => (
                   <button
                     key={value}
@@ -286,7 +280,7 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
                       playSound('click');
                       setSlippage(value);
                     }}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-colors ${
+                    className={`flex-1 min-w-[80px] py-2 px-3 rounded-lg text-xs font-bold transition-colors ${
                       slippage === value
                         ? 'bg-doge text-black'
                         : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
@@ -298,8 +292,8 @@ const RemoveLiquidityPanel: React.FC<RemoveLiquidityPanelProps> = ({
                 <input
                   type="number"
                   value={slippage}
-                  onChange={(e) => setSlippage(e.target.value)}
-                  className="flex-1 py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-white outline-none focus:border-doge/50"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSlippage(e.target.value)}
+                  className="flex-1 min-w-[90px] py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-white outline-none focus:border-doge/50"
                   placeholder="Custom"
                 />
               </div>

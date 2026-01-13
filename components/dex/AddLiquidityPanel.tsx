@@ -26,6 +26,7 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
 
   const [amountA, setAmountA] = useState('');
   const [amountB, setAmountB] = useState('');
+  const [amountPercentage, setAmountPercentage] = useState(0);
   const [slippage, setSlippage] = useState('0.5');
   const [deadline, setDeadline] = useState('20');
   const [isApprovedA, setIsApprovedA] = useState(false);
@@ -96,9 +97,22 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
   const handleMaxA = useCallback(() => {
     playSound('click');
     if (tokenA?.balance) {
+      setAmountPercentage(99);
       setAmountA((parseFloat(tokenA.balance) * 0.99).toFixed(6));
     }
   }, [tokenA, playSound]);
+
+  const handlePercentageSelect = useCallback(
+    (pct: number) => {
+      playSound('click');
+      setAmountPercentage(pct);
+      if (tokenA?.balance) {
+        const value = (parseFloat(tokenA.balance) * pct) / 100;
+        setAmountA(value.toFixed(6));
+      }
+    },
+    [tokenA, playSound]
+  );
 
   // Handle approve token A
   const handleApproveA = useCallback(async () => {
@@ -185,7 +199,10 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
             <input
               type="number"
               value={amountA}
-              onChange={(e) => setAmountA(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setAmountA(e.target.value);
+                setAmountPercentage(0);
+              }}
               placeholder="0.0"
               className="w-full bg-transparent text-xl sm:text-2xl font-bold text-white outline-none mb-3"
             />
@@ -216,6 +233,23 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
             </div>
           </div>
 
+          {/* Quick Percentage Buttons */}
+          <div className="grid grid-cols-4 gap-2">
+            {[25, 50, 75, 100].map((pct) => (
+              <button
+                key={pct}
+                onClick={() => handlePercentageSelect(pct)}
+                className={`py-2 rounded-lg text-sm font-bold transition-all ${
+                  amountPercentage === pct
+                    ? 'bg-doge text-black'
+                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {pct}%
+              </button>
+            ))}
+          </div>
+
           {/* Plus Icon */}
           <div className="flex justify-center -my-2">
             <div className="w-8 h-8 rounded-full bg-[#0A0A0A] border-2 border-white/10 flex items-center justify-center z-10">
@@ -231,7 +265,10 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
             <input
               type="number"
               value={amountB}
-              onChange={(e) => setAmountB(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setAmountB(e.target.value);
+                setAmountPercentage(0);
+              }}
               placeholder="0.0"
               className="w-full bg-transparent text-xl sm:text-2xl font-bold text-white outline-none mb-3"
               disabled={!!pool}
@@ -297,7 +334,7 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
                 <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 block">
                   Slippage Tolerance
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {['0.1', '0.5', '1.0'].map((value) => (
                     <button
                       key={value}
@@ -305,7 +342,7 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
                         playSound('click');
                         setSlippage(value);
                       }}
-                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-colors ${
+                      className={`flex-1 min-w-[80px] py-2 px-3 rounded-lg text-xs font-bold transition-colors ${
                         slippage === value
                           ? 'bg-doge text-black'
                           : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
@@ -317,8 +354,8 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
                   <input
                     type="number"
                     value={slippage}
-                    onChange={(e) => setSlippage(e.target.value)}
-                    className="flex-1 min-w-0 py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-white outline-none focus:border-doge/50 overflow-hidden truncate"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSlippage(e.target.value)}
+                    className="flex-1 min-w-[90px] py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-white outline-none focus:border-doge/50 overflow-hidden truncate"
                     placeholder="Custom"
                   />
                 </div>
@@ -331,7 +368,7 @@ const AddLiquidityPanel: React.FC<AddLiquidityPanelProps> = ({
                 <input
                   type="number"
                   value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeadline(e.target.value)}
                   className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-sm font-bold text-white outline-none focus:border-doge/50"
                 />
               </div>
