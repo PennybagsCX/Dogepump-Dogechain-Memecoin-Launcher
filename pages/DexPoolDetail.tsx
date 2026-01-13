@@ -85,7 +85,7 @@ const DexPoolDetailPage: React.FC = () => {
         <meta name="twitter:description" content={`View detailed information about the ${pool.tokenA.symbol}/${pool.tokenB.symbol} liquidity pool.`} />
       </Helmet>
 
-      <div className="space-y-8 animate-fade-in relative overflow-x-hidden pt-2 md:pt-4">
+      <div className="animate-fade-in relative overflow-x-hidden">
         {/* Breadcrumb */}
         <Breadcrumb items={[
           { name: 'Home', url: '/' },
@@ -95,7 +95,7 @@ const DexPoolDetailPage: React.FC = () => {
         ]} />
 
         {/* Back Button */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-8">
           <Link
             to="/dex/pools"
             onClick={handleNavClick}
@@ -113,10 +113,11 @@ const DexPoolDetailPage: React.FC = () => {
           topProviders={topProviders}
           onSwap={handleSwap}
           soundsEnabled={true}
+          className="mt-8"
         />
 
         {/* Info Section */}
-        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-8">
+        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 mt-8">
           <h2 className="text-2xl font-bold text-white mb-4">About This Pool</h2>
           <div className="space-y-4 text-gray-300 leading-relaxed">
             <p>

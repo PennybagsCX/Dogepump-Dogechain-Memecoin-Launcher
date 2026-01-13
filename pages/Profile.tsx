@@ -150,7 +150,7 @@ const Profile: React.FC = () => {
   const managingToken = managingTokenId ? tokens.find(t => t.id === managingTokenId) : null;
 
   return (
-    <div className="space-y-12 animate-fade-in pb-12">
+    <div className="animate-fade-in pb-12">
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <Breadcrumb items={[
         { name: 'Home', url: '/' },
@@ -158,7 +158,7 @@ const Profile: React.FC = () => {
       ]} />
 
       {/* Profile Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-[#0A0A0A] border border-white/10 shadow-2xl p-8 md:p-12">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-[#0A0A0A] border border-white/10 shadow-2xl p-8 md:p-12 mt-12">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-doge/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
         
         <div className="relative z-10 grid lg:grid-cols-2 gap-10">
@@ -232,7 +232,7 @@ const Profile: React.FC = () => {
       
       {/* Achievement Showcase */}
       {isSelf && badges.length > 0 && (
-          <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6">
+          <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 mt-12">
               <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-4 mb-4">
                   <Trophy size={18} className="text-doge" /> Achievements Unlocked
               </h3>
@@ -253,7 +253,7 @@ const Profile: React.FC = () => {
       )}
 
       {/* Content Tabs */}
-      <div className="space-y-6">
+      <div className="space-y-6 mt-12">
          <div className="flex gap-4 border-b border-white/10 pb-1 overflow-x-auto">
             <button 
               onClick={() => setActiveTab('held')}

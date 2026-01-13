@@ -5,3 +5,71 @@
 
 *No recent activity*
 </claude-mem-context>
+
+---
+
+# Breadcrumb Standardization (Completed January 12, 2026)
+
+## Overview
+Standardized breadcrumb positioning and spacing across all pages in the application to match the Launch page reference standard.
+
+## Reference Standard
+- **File**: `pages/Launch.tsx:388-392`
+- **Breadcrumb margin-top**: `0px`
+- **Breadcrumb position from top**: `266px`
+- **Parent container**: No `space-y-*` utilities that affect first child
+- **Component**: `components/Breadcrumb.tsx` with `className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm text-gray-400 mb-4 w-full leading-tight"`
+
+## Root Cause
+Tailwind CSS `space-y-*` utilities on parent containers add `margin-top` to the first child element (breadcrumb), causing inconsistent positioning across pages:
+- `space-y-4` = 16px margin-top
+- `space-y-8` = 32px margin-top
+- `space-y-12` = 48px margin-top
+- `space-y-16` = 64px margin-top
+
+## Solution Pattern
+1. Remove `space-y-*` from parent containers
+2. Add `mt-*` utilities to individual child sections to maintain content spacing
+3. This ensures breadcrumb has 0px margin-top and consistent 266px position from viewport top
+
+## Files Modified
+
+### Phase 1: DEX Pages (January 9, 2026)
+1. **pages/DexSwap.tsx** - Removed `pt-2 md:pt-4` from line 48
+2. **pages/DexPools.tsx** - Removed `pt-2 md:pt-4` from line 125
+3. **pages/DexPoolDetail.tsx** - Removed `pt-2 md:pt-4` from line 88
+
+### Phase 2: Home Page (January 9, 2026)
+4. **pages/Home.tsx** - Moved breadcrumb from line 200 to inside container at line 202
+
+### Phase 3: Leaderboard Page (January 9, 2026)
+5. **pages/Leaderboard.tsx** - Moved breadcrumb from line 313 to inside container at line 319
+
+### Phase 4: Remaining Pages (January 12, 2026)
+6. **pages/Earn.tsx** - Removed `space-y-12` from parent (line 97), added `mt-12` to 4 child sections (lines 103, 148, 239, 524)
+7. **pages/Profile.tsx** - Removed `space-y-12` from parent (line 153), added `mt-12` to 3 child sections (lines 161, 235, 256)
+8. **pages/Admin.tsx** - Removed `space-y-4` from unauthenticated view parent (line 67), added `mt-8` to auth card (line 72) and dashboard header (line 152)
+
+## Verification Results
+All pages now show consistent metrics:
+```javascript
+{
+  "breadcrumbMarginTop": "0px",
+  "breadcrumbTop": 266,
+  "breadcrumbMarginBottom": "16px",
+  "parentClasses": "animate-fade-in pb-12" // or equivalent
+}
+```
+
+## Testing Notes
+- Used Playwright browser automation for visual verification
+- Measured computed styles via `window.getComputedStyle()`
+- Tested on mobile viewport (375x667px) and desktop viewport (1920x1080px)
+- Verified breadcrumb links work correctly on all pages
+- Confirmed no layout shifts or console errors
+
+## Key Learning
+When using Tailwind's `space-y-*` utilities, be aware that they add margin to ALL children including the first one. For consistent breadcrumb positioning:
+- Avoid `space-y-*` on containers that hold breadcrumbs as the first child
+- Use `mt-*` on individual sections instead for spacing between content areas
+- Place breadcrumb inside the main content container without wrapper divs

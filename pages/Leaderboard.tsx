@@ -310,16 +310,16 @@ const Leaderboard: React.FC = () => {
           <meta name="twitter:title" content="Leaderboard | DogePump Dogechain" />
           <meta name="twitter:description" content="View top traders, creators, and token burners on DogePump. Track rankings, trading volume, and achievements on Dogechain." />
         </Helmet>
+      <div className="w-full animate-fade-in pb-12">
         <Breadcrumb
           items={[
             { name: 'Home', url: '/' },
             { name: 'Leaderboard', url: '/leaderboard' }
           ]}
         />
-      <div className="w-full space-y-12 animate-fade-in pb-12">
-       
+
        {/* Hero */}
-      <div className="text-center relative py-8">
+      <div className="text-center relative py-8 mt-12">
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-doge/10 blur-[80px] rounded-full pointer-events-none"></div>
          <div className="inline-flex items-center justify-center w-20 h-20 bg-[#0A0A0A] border border-doge/20 rounded-3xl mb-6 shadow-[0_0_40px_rgba(212,175,55,0.2)] relative z-10 animate-float">
             <Trophy size={40} className="text-doge drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
@@ -333,7 +333,7 @@ const Leaderboard: React.FC = () => {
       </div>
 
      {/* Tabs & Search */}
-     <div className="flex flex-col items-center gap-8 mb-48 w-full">
+     <div className="flex flex-col items-center gap-8 mb-48 w-full mt-12">
          <div className="flex p-1.5 rounded-2xl justify-center w-full flex-wrap">
             <button
               onClick={() => handleTabChange('traders')}

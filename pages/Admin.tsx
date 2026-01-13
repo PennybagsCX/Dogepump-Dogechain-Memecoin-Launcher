@@ -64,12 +64,12 @@ export const Admin: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-4">
+        <div className="w-full max-w-md">
           <Breadcrumb items={[
             { name: 'Home', url: '/' },
             { name: 'Admin', url: '/admin' }
           ]} />
-          <div className="bg-[#050505] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
+          <div className="bg-[#050505] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl mt-8">
           <div className="text-center mb-6 sm:mb-8">
             <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-4">
               <Shield size={28} className="sm:hidden text-red-500" />
@@ -149,7 +149,7 @@ export const Admin: React.FC = () => {
           { name: 'Home', url: '/' },
           { name: 'Admin', url: '/admin' }
         ]} />
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8 mt-8">
           <div className="flex items-center gap-3">
             <Shield size={28} className="sm:hidden text-red-500" />
             <Shield size={32} className="hidden sm:block text-red-500" />

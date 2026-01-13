@@ -197,13 +197,12 @@ const Home: React.FC = () => {
           'query-input': 'required'
         }
       }} />
-      <Breadcrumb items={[{ name: 'Home', url: '/' }]} />
+      <div className="animate-fade-in pb-12">
+        <Breadcrumb items={[{ name: 'Home', url: '/' }]} />
 
-      <div className="space-y-16 animate-fade-in pb-12">
-        
         {/* Hero Section */}
         {(filter === 'trending' || filter === 'new') && currentHeroToken && (
-          <section aria-labelledby="hero-heading" className="px-3 sm:px-4 md:px-0">
+          <section aria-labelledby="hero-heading" className="px-3 sm:px-4 md:px-0 mt-16">
             <h2 id="hero-heading" className="sr-only">Featured Token</h2>
           <div className="relative group perspective-1000">
             {/* Ambient Glow */}
@@ -315,7 +314,7 @@ const Home: React.FC = () => {
         )}
 
         {/* Controls Container - Transparent background fix */}
-        <div className="space-y-6 sticky z-40 backdrop-blur-xl py-2 rounded-2xl"
+        <div className="space-y-6 sticky z-40 backdrop-blur-xl py-2 rounded-2xl mt-16"
              style={{ top: stickyControlsTop }}>
             {/* Tabs Row */}
             <div className="relative flex justify-center">
@@ -384,9 +383,9 @@ const Home: React.FC = () => {
             </div>
 
             {/* Search & View Toggle Row */}
-            <div className="relative flex flex-col gap-4 items-center px-4">
-                {/* Search - Centered */}
-                <div className="relative w-full md:w-[400px] group">
+            <div className="relative flex items-center w-full gap-3 px-4 flex-nowrap">
+                {/* Search */}
+                <div className="relative flex-1 min-w-0 max-w-[640px] group">
                     <div className="absolute inset-0 bg-doge/5 rounded-2xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-doge transition-colors" size={18} />
                     <input
@@ -421,25 +420,40 @@ const Home: React.FC = () => {
                     )}
                 </div>
 
-                {/* View Toggle - Centered below search */}
-                <div className="bg-black/60 border border-white/10 rounded-2xl p-1 flex shrink-0 backdrop-blur-md">
+                {/* View Toggle (single set beside search) */}
+                <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+                        aria-pressed={viewMode === 'grid'}
+                        className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'bg-white/10 text-white/80 hover:text-white'}`}
                     >
-                        <LayoutGrid size={18} />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-layout-grid" aria-hidden="true">
+                            <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                            <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                            <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+                            <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+                        </svg>
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
+                        aria-pressed={viewMode === 'list'}
                         className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
                     >
-                        <List size={18} />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list" aria-hidden="true">
+                            <path d="M3 5h.01"></path>
+                            <path d="M3 12h.01"></path>
+                            <path d="M3 19h.01"></path>
+                            <path d="M8 5h13"></path>
+                            <path d="M8 12h13"></path>
+                            <path d="M8 19h13"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
         </div>
 
         {/* Token Grid / List */}
+        <div className="mt-16">
         {viewMode === 'grid' ? (
           <section aria-labelledby="tokens-heading">
             <h2 id="tokens-heading" className="sr-only">Token List</h2>
@@ -461,10 +475,11 @@ const Home: React.FC = () => {
             </div>
           </section>
         )}
+        </div>
 
         {/* Load More Pagination - Only for list view, not needed for virtualized grid */}
         {viewMode === 'list' && !isLoading && hasMore && (
-            <div className="flex justify-center pt-8 pb-12">
+            <div className="flex justify-center pt-8 pb-12 mt-16">
                 <Button
                     onClick={handleLoadMore}
                     variant="secondary"
@@ -476,7 +491,7 @@ const Home: React.FC = () => {
         )}
 
         {!isLoading && sortedTokens.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-32 text-center space-y-6 border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.02]">
+          <div className="flex flex-col items-center justify-center py-32 text-center space-y-6 border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.02] mt-16">
               <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center text-gray-600 shadow-inner animate-pulse">
                 {filter === 'watchlist' ? <Star size={48} /> : filter === 'live' ? <Radio size={48} /> : <Search size={48} />}
               </div>

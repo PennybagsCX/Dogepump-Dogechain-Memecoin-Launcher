@@ -45,7 +45,7 @@ const DexSwapPage: React.FC = () => {
         <meta name="twitter:description" content="Swap tokens on Dogepump DEX. Trade DC, wDOGE, and all memecoins launched on the platform." />
       </Helmet>
 
-      <div className="space-y-8 animate-fade-in relative overflow-x-hidden pt-2 md:pt-4">
+      <div className="animate-fade-in relative overflow-x-hidden">
         {/* Breadcrumb */}
         <Breadcrumb items={[
           { name: 'Home', url: '/' },
@@ -54,7 +54,7 @@ const DexSwapPage: React.FC = () => {
         ]} />
 
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-8">
           <div>
             <h1 className="text-4xl md:text-5xl font-comic font-bold text-white mb-2">
               Swap Tokens
@@ -76,43 +76,43 @@ const DexSwapPage: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center gap-3 mb-3 text-center">
               <div className="w-10 h-10 rounded-xl bg-doge/20 flex items-center justify-center">
                 <Coins size={20} className="text-doge" />
               </div>
               <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Total Pools</span>
             </div>
-            <div className="text-3xl font-mono font-bold text-white">8</div>
+            <div className="text-3xl font-mono font-bold text-white text-center">8</div>
           </div>
           <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center gap-3 mb-3 text-center">
               <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                 <ArrowLeftRight size={20} className="text-green-400" />
               </div>
               <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">24h Volume</span>
             </div>
-            <div className="text-3xl font-mono font-bold text-white">$401K</div>
+            <div className="text-3xl font-mono font-bold text-white text-center">$401K</div>
           </div>
           <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center gap-3 mb-3 text-center">
               <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
                 <TrendingUp size={20} className="text-purple-400" />
               </div>
               <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Best APY</span>
             </div>
-            <div className="text-3xl font-mono font-bold text-doge">73.5%</div>
+            <div className="text-3xl font-mono font-bold text-doge text-center">73.5%</div>
           </div>
         </div>
 
         {/* Swap Component */}
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto mt-8">
           <DexSwap />
         </div>
 
         {/* Info Section */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl mt-8">
           <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-doge/10 blur-3xl" />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-doge/10 to-transparent" />
           <div className="relative px-6 py-7 md:px-8 md:py-10 flex flex-col gap-6">

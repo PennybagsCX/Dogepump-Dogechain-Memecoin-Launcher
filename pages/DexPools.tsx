@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useDex, Pool, Token } from '../contexts/DexContext';
 import { DUMMY_POOLS, DUMMY_RECENT_SWAPS, DUMMY_LIQUIDITY_POSITIONS } from '../services/dex/dummyData';
@@ -26,6 +26,15 @@ const DexPoolsPage: React.FC = () => {
   const [positions, setPositions] = useState(DUMMY_LIQUIDITY_POSITIONS);
   const [showPositions, setShowPositions] = useState(DUMMY_LIQUIDITY_POSITIONS.length > 0);
   const [showCreatePoolModal, setShowCreatePoolModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const createPoolInlineRef = useRef<HTMLDivElement | null>(null);
+  const platformTokens: Token[] = [
+    { address: 'dc', symbol: 'DC', name: 'DogeChain', decimals: 18, balance: '10000' },
+    { address: 'karma', symbol: 'KARMA', name: 'Karma', decimals: 18, balance: '5000' },
+    { address: 'moon', symbol: 'MOON', name: 'Moon Token', decimals: 18, balance: '2500' },
+    { address: 'pump', symbol: 'PUMP', name: 'Pump Token', decimals: 18, balance: '8000' },
+    { address: 'wow', symbol: 'WOW', name: 'Wow Token', decimals: 18, balance: '4200' },
+  ];
 
   // Load pools on mount
   useEffect(() => {
@@ -33,6 +42,15 @@ const DexPoolsPage: React.FC = () => {
       loadPools();
     }
   }, [pools.length, loadPools]);
+
+  // Track mobile breakpoint for inline create panel
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const handle = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+    handle(mq);
+    mq.addEventListener('change', handle as EventListener);
+    return () => mq.removeEventListener('change', handle as EventListener);
+  }, []);
 
   // Handle pool click
   const handlePoolClick = useCallback((pool: any) => {
@@ -122,7 +140,7 @@ const DexPoolsPage: React.FC = () => {
         <meta name="twitter:description" content="Browse and discover liquidity pools on Dogepump DEX. Add liquidity and earn rewards." />
       </Helmet>
 
-      <div className="space-y-8 animate-fade-in relative overflow-x-hidden pt-2 md:pt-4">
+      <div className="animate-fade-in relative overflow-x-hidden">
         {/* Breadcrumb */}
         <Breadcrumb items={[
           { name: 'Home', url: '/' },
@@ -131,7 +149,7 @@ const DexPoolsPage: React.FC = () => {
         ]} />
 
         {/* Your Positions - Collapsible Section */}
-        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden">
+        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden mt-8">
           <button
             onClick={handleTogglePositions}
             className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors"
@@ -167,68 +185,87 @@ const DexPoolsPage: React.FC = () => {
         </div>
 
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-8 mb-8 md:mb-10">
+          <div className="space-y-2 md:space-y-3">
             <h1 className="text-4xl md:text-5xl font-comic font-bold text-white mb-2">
               Liquidity Pools
             </h1>
-            <p className="text-gray-400 text-lg">
+            <p className="text-gray-400 text-lg leading-relaxed">
               Discover pools and add liquidity to earn trading fees
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
             <Link
               to="/dex/swap"
               onClick={handleNavClick}
-              className="flex items-center gap-2 px-4 py-2 bg-doge/10 border border-doge/30 rounded-xl text-doge hover:bg-doge/20 transition-all"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 h-11 sm:h-12 px-3 sm:px-4 bg-doge/10 border border-doge/30 rounded-xl text-doge hover:bg-doge/20 transition-all font-bold text-sm"
             >
               <ArrowLeftRight size={16} />
               <span className="text-sm font-bold">Swap</span>
             </Link>
-            <button
-              onClick={() => {
-                playSound('click');
-                setShowCreatePoolModal(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 hover:bg-green-500/20 transition-all"
-            >
-              <Plus size={16} />
-              <span className="text-sm font-bold">Create Pool</span>
-            </button>
+            <div className="w-full md:w-auto" ref={createPoolInlineRef}>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setShowCreatePoolModal(prev => {
+                    const next = !prev;
+                    return next;
+                  });
+                }}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 h-11 sm:h-12 px-3 sm:px-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 hover:bg-green-500/20 transition-all font-bold text-sm"
+              >
+                <Plus size={16} />
+                <span className="text-sm font-bold">{showCreatePoolModal && isMobile ? 'Hide' : 'Create Pool'}</span>
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Inline Create Pool (mobile) full width below header actions */}
+        {isMobile && showCreatePoolModal && (
+          <div className="mt-3 mb-6 md:mb-8">
+            <CreatePoolModal
+              isOpen={showCreatePoolModal}
+              onClose={() => setShowCreatePoolModal(false)}
+              onCreatePool={handleCreatePool}
+              tokens={platformTokens}
+              soundsEnabled={true}
+              inline
+            />
+          </div>
+        )}
+
         {/* Stats Cards - Dynamic based on view */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 md:mb-10">
           {!showPositions ? (
             <>
               {/* Pool Stats */}
               <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center justify-center gap-3 mb-3 text-center">
                   <div className="w-10 h-10 rounded-xl bg-doge/20 flex items-center justify-center">
                     <Droplets size={20} className="text-doge" />
                   </div>
                   <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Total TVL</span>
                 </div>
-                <div className="text-3xl font-mono font-bold text-white">{formatUSDValue(totalTVL)}</div>
+                <div className="text-3xl font-mono font-bold text-white text-center">{formatUSDValue(totalTVL)}</div>
               </div>
               <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center justify-center gap-3 mb-3 text-center">
                   <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                     <ArrowLeftRight size={20} className="text-green-400" />
                   </div>
                   <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">24h Volume</span>
                 </div>
-                <div className="text-3xl font-mono font-bold text-white">{formatUSDValue(totalVolume)}</div>
+                <div className="text-3xl font-mono font-bold text-white text-center">{formatUSDValue(totalVolume)}</div>
               </div>
               <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center justify-center gap-3 mb-3 text-center">
                   <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
                     <Coins size={20} className="text-purple-400" />
                   </div>
                   <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Total Pools</span>
                 </div>
-                <div className="text-3xl font-mono font-bold text-white">{localPools.length}</div>
+                <div className="text-3xl font-mono font-bold text-white text-center">{localPools.length}</div>
               </div>
             </>
           ) : (
@@ -241,7 +278,7 @@ const DexPoolsPage: React.FC = () => {
                   </div>
                   <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Your Value</span>
                 </div>
-                <div className="text-3xl font-mono font-bold text-white">{formatUSDValue(totalValue)}</div>
+                <div className="text-3xl font-mono font-bold text-white text-center">{formatUSDValue(totalValue)}</div>
               </div>
               <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-2">
@@ -250,7 +287,7 @@ const DexPoolsPage: React.FC = () => {
                   </div>
                   <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Staked</span>
                 </div>
-                <div className="text-3xl font-mono font-bold text-white">{formatUSDValue(stakedValue)}</div>
+                <div className="text-3xl font-mono font-bold text-white text-center">{formatUSDValue(stakedValue)}</div>
               </div>
               <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-2">
@@ -259,7 +296,7 @@ const DexPoolsPage: React.FC = () => {
                   </div>
                   <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Pending Rewards</span>
                 </div>
-                <div className="text-3xl font-mono font-bold text-doge">{totalRewards.toFixed(2)} DC</div>
+                <div className="text-3xl font-mono font-bold text-doge text-center">{totalRewards.toFixed(2)} DC</div>
               </div>
             </>
           )}
@@ -275,7 +312,7 @@ const DexPoolsPage: React.FC = () => {
         </div>
 
         {/* Recent Pool Activity Toggle */}
-        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl">
+        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl mt-8 md:mt-10 mb-8 md:mb-10">
           <button
             onClick={handleToggleSwaps}
             className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors"
@@ -399,7 +436,7 @@ const DexPoolsPage: React.FC = () => {
         </div>
 
         {/* CTA */}
-        <div className="bg-gradient-to-r from-doge/10 to-purple-500/10 border border-doge/30 rounded-2xl p-8 text-center">
+        <div className="bg-gradient-to-r from-doge/10 to-purple-500/10 border border-doge/30 rounded-2xl p-8 text-center mt-8 md:mt-10">
           <h2 className="text-2xl font-bold text-white mb-2">Ready to Provide Liquidity?</h2>
           <p className="text-gray-300 mb-6">Browse pools and add liquidity to start earning fees</p>
           <button
@@ -419,18 +456,15 @@ const DexPoolsPage: React.FC = () => {
       </div>
 
       {/* Create Pool Modal */}
-      <CreatePoolModal
-        isOpen={showCreatePoolModal}
-        onClose={() => setShowCreatePoolModal(false)}
-        onCreatePool={handleCreatePool}
-        tokens={[
-          { address: 'doge', symbol: 'DC', name: 'DogeChain', decimals: 18, balance: '10000' },
-          { address: 'usdc', symbol: 'USDC', name: 'USD Coin', decimals: 6, balance: '5000' },
-          { address: 'eth', symbol: 'ETH', name: 'Ethereum', decimals: 18, balance: '2500' },
-          { address: 'wdoge', symbol: 'wDOGE', name: 'Wrapped DOGE', decimals: 18, balance: '8000' },
-        ]}
-        soundsEnabled={true}
-      />
+      {!isMobile && (
+        <CreatePoolModal
+          isOpen={showCreatePoolModal}
+          onClose={() => setShowCreatePoolModal(false)}
+          onCreatePool={handleCreatePool}
+          tokens={platformTokens}
+          soundsEnabled={true}
+        />
+      )}
     </>
   );
 };

@@ -94,13 +94,13 @@ const Earn: React.FC = () => {
         <meta name="twitter:title" content="Earn Rewards | DogePump Dogechain" />
         <meta name="twitter:description" content="Stake your graduated tokens on DogePump to earn passive $DC rewards. High APY yield farming with auto-compound rewards." />
       </Helmet>
-    <div className="space-y-12 animate-fade-in pb-12">
+    <div className="animate-fade-in pb-12">
       <Breadcrumb items={[
         { name: 'Home', url: '/' },
         { name: 'Earn', url: '/earn' }
       ]} />
        {/* Hero */}
-       <div className="text-center relative py-8">
+       <div className="text-center relative py-8 mt-12">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-green-500/10 blur-[80px] rounded-full pointer-events-none"></div>
           <div className="inline-flex items-center justify-center w-20 h-20 bg-[#0A0A0A] border border-green-500/20 rounded-3xl mb-6 shadow-[0_0_40px_rgba(34,197,94,0.2)] relative z-10 animate-float">
              <Tractor size={40} className="text-green-500" />
@@ -145,7 +145,7 @@ const Earn: React.FC = () => {
 
        {/* My Farms Section - Only visible if user has farms */}
        {isAuthenticated && myFarms.length > 0 && (
-         <div className="bg-gradient-to-br from-doge/5 to-doge/10 border border-doge/30 rounded-3xl p-8 relative overflow-hidden">
+         <div className="bg-gradient-to-br from-doge/5 to-doge/10 border border-doge/30 rounded-3xl p-8 relative overflow-hidden mt-12">
             <div className="absolute top-0 right-0 w-64 h-64 bg-doge/20 blur-[80px] rounded-full pointer-events-none"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
@@ -236,7 +236,7 @@ const Earn: React.FC = () => {
        )}
 
        {/* Tabs */}
-       <div className="flex gap-2 mb-8">
+       <div className="flex gap-2 mb-8 mt-12">
           <button
             onClick={() => { setActiveTab('core'); playSound('click'); }}
             className={`flex-1 md:flex-none px-6 py-3 rounded-xl font-bold transition-all ${
@@ -521,7 +521,7 @@ const Earn: React.FC = () => {
          </FarmErrorBoundary>
        )}
        
-       <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-2xl p-4 flex items-start gap-3 max-w-2xl mx-auto">
+       <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-2xl p-4 flex items-start gap-3 max-w-2xl mx-auto mt-12">
           <AlertTriangle size={20} className="text-yellow-500 shrink-0 mt-0.5" />
           <div className="text-sm text-yellow-200/80">
              <strong>Risk Warning:</strong> Yield farming involves risks including smart contract bugs and impermanent loss. APY rates are dynamic and can change at any time.
