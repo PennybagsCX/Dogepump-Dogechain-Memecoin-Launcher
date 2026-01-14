@@ -361,8 +361,8 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ trades, tokens, 
     <div className="h-full w-full flex flex-col">
       {/* Main Analytics Grid - Compact */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
-        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5">
-          <div className="flex items-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
+        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5 text-center flex flex-col items-center">
+          <div className="flex items-center justify-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
             {isProfit ? <TrendingUp size={10} className="text-green-500" /> : <TrendingDown size={10} className="text-red-500" />}
             Total Return
           </div>
@@ -374,8 +374,8 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ trades, tokens, 
           </div>
         </div>
 
-        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5">
-          <div className="flex items-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
+        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5 text-center flex flex-col items-center">
+          <div className="flex items-center justify-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
             <Activity size={10} className="text-blue-400" />
             Win Rate
           </div>
@@ -387,8 +387,8 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ trades, tokens, 
           </div>
         </div>
 
-        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5">
-          <div className="flex items-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
+        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5 text-center flex flex-col items-center">
+          <div className="flex items-center justify-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
             <Zap size={10} className="text-yellow-400" />
             Sharpe
           </div>
@@ -400,8 +400,8 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ trades, tokens, 
           </div>
         </div>
 
-        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5">
-          <div className="flex items-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
+        <div className="bg-white/[0.03] p-2 rounded-lg border border-white/5 text-center flex flex-col items-center">
+          <div className="flex items-center justify-center gap-1 text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">
             <AlertTriangle size={10} className="text-orange-400" />
             Max Drawdown
           </div>
@@ -453,7 +453,7 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ trades, tokens, 
                   stroke="rgba(255,255,255,0.1)"
                   fontSize={9}
                   tickLine={false}
-                  tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
+                  tickFormatter={(value: number) => `$${(value/1000).toFixed(0)}k`}
                   domain={['dataMin - 500', 'dataMax + 500']}
                 />
                 <Tooltip

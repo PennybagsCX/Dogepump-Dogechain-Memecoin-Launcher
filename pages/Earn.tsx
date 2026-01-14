@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Sprout, Wheat, Tractor, Lock, ArrowRight, Info, AlertTriangle, Plus, Award, Users, Crown, Sparkles, TrendingUp, Wallet, Settings2 } from 'lucide-react';
+import { Sprout, Wheat, Tractor, Lock, ArrowRight, Info, AlertTriangle, Plus, Award, Users, Crown, Sparkles, TrendingUp, Wallet, Settings2, Search } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { formatCurrency, formatNumber } from '../services/web3Service';
 import { Button } from '../components/Button';
@@ -10,6 +10,7 @@ import { useToast } from '../components/Toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { FarmDiscovery } from '../components/FarmDiscovery';
 import { CreateFarmModal } from '../components/CreateFarmModal';
+import { ButtonGroup } from '../components/ButtonGroup';
 import { useAuth } from '../contexts/AuthContext';
 import { FarmErrorBoundary } from '../components/error/FarmErrorBoundary';
 import { Breadcrumb } from '../components/Breadcrumb';
@@ -23,6 +24,9 @@ const Earn: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'core' | 'community' | 'my-farms'>('core');
   const [isCreateFarmModalOpen, setIsCreateFarmModalOpen] = useState(false);
   const [selectedTokenForFarm, setSelectedTokenForFarm] = useState<any>(null);
+  const [coreFarmsSearchQuery, setCoreFarmsSearchQuery] = useState('');
+  const [coreFarmsSortBy, setCoreFarmsSortBy] = useState<'apy' | 'tvl' | 'newest'>('apy');
+  const [coreFarmsSortDirection, setCoreFarmsSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Get farms owned by current user
   const myFarms = useMemo(() => {
@@ -32,6 +36,45 @@ const Earn: React.FC = () => {
 
   // Only graduated tokens can have farms
   const farmableTokens = tokens.filter(t => t.progress >= 100);
+
+  // Filtered and sorted core farms
+  const filteredCoreFarms = useMemo(() => {
+    let farms = [...farmableTokens];
+
+    // Filter by search
+    if (coreFarmsSearchQuery) {
+      const query = coreFarmsSearchQuery.toLowerCase();
+      farms = farms.filter(t =>
+        t.name.toLowerCase().includes(query) ||
+        t.ticker.toLowerCase().includes(query) ||
+        t.contractAddress?.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort farms
+    farms.sort((a, b) => {
+      const direction = coreFarmsSortDirection === 'asc' ? 1 : -1;
+      switch (coreFarmsSortBy) {
+        case 'apy':
+          const apyA = (a.id.split('').reduce((x, y) => x + y.charCodeAt(0), 0) % 5000) + 100;
+          const apyB = (b.id.split('').reduce((x, y) => x + y.charCodeAt(0), 0) % 5000) + 100;
+          return direction * (apyA - apyB);
+        case 'tvl':
+          const tvlA = farmPositions.find(f => f.tokenId === a.id)?.stakedAmount || 0;
+          const tvlB = farmPositions.find(f => f.tokenId === b.id)?.stakedAmount || 0;
+          return direction * (tvlA - tvlB);
+        case 'newest':
+          // Sort by token ID number (higher ID = newer token)
+          const idNumA = parseInt(a.id.replace('token-', ''));
+          const idNumB = parseInt(b.id.replace('token-', ''));
+          return direction * (idNumA - idNumB);
+        default:
+          return 0;
+      }
+    });
+
+    return farms;
+  }, [farmableTokens, coreFarmsSearchQuery, coreFarmsSortBy, coreFarmsSortDirection, farmPositions]);
 
   const handleStake = useCallback((tokenId: string) => {
     const amount = parseFloat(stakeAmounts[tokenId] || '0');
@@ -278,19 +321,67 @@ const Earn: React.FC = () => {
        {activeTab === 'core' && (
           <FarmErrorBoundary>
             <>
+            {/* Search and Filters */}
+            <div className="flex flex-col gap-4 md:flex-row mb-8">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search farms by token name or symbol..."
+                  value={coreFarmsSearchQuery}
+                  onChange={(e) => setCoreFarmsSearchQuery(e.target.value)}
+                  className="w-full bg-[#050505] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:border-doge/50 outline-none transition-all"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <ButtonGroup
+                  variant="sort"
+                  options={[
+                    { value: 'apy', label: 'APY' },
+                    { value: 'tvl', label: 'TVL' },
+                    { value: 'newest', label: 'Newest' }
+                  ]}
+                  value={coreFarmsSortBy}
+                  onChange={(val) => setCoreFarmsSortBy(val as 'apy' | 'tvl' | 'newest')}
+                  sortDirection={coreFarmsSortDirection}
+                  onSortDirectionChange={setCoreFarmsSortDirection}
+                  showDirectionIndicator
+                  ariaLabel="Sort core farms"
+                />
+              </div>
+            </div>
+
             {/* Farm Grid */}
-            {farmableTokens.length === 0 ? (
+            {filteredCoreFarms.length === 0 ? (
                <div className="text-center py-16 border border-dashed border-white/10 rounded-[2.5rem]">
                   <Sprout size={48} className="mx-auto text-gray-600 mb-4 opacity-50" />
-                  <h3 className="text-2xl font-bold text-white mb-2">No Active Farms</h3>
-                  <p className="text-gray-500">Wait for a token to graduate to start farming.</p>
-                  <Link to="/">
-                     <Button className="mt-6 rounded-full" variant="secondary">Find Gems</Button>
-                  </Link>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {coreFarmsSearchQuery ? 'No Farms Found' : 'No Active Farms'}
+                  </h3>
+                  <p className="text-gray-500">
+                    {coreFarmsSearchQuery
+                      ? 'Try a different search term'
+                      : 'Wait for a token to graduate to start farming.'
+                    }
+                  </p>
+                  {coreFarmsSearchQuery && (
+                    <button
+                      onClick={() => setCoreFarmsSearchQuery('')}
+                      className="mt-4 text-doge hover:underline font-semibold"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                  {!coreFarmsSearchQuery && (
+                    <Link to="/">
+                      <Button className="mt-6 rounded-full" variant="secondary">Find Gems</Button>
+                    </Link>
+                  )}
                </div>
             ) : (
                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-             {farmableTokens.map(token => {
+             {filteredCoreFarms.map(token => {
                 const farm = farmPositions.find(f => f.tokenId === token.id);
                 const isStaking = farm && farm.stakedAmount > 0;
                 const balance = myHoldings.find(h => h.tokenId === token.id)?.balance || 0;

@@ -1004,7 +1004,7 @@ const TokenDetail: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-center md:text-right flex flex-col items-center md:items-end gap-2">
-                    <div className="text-5xl font-mono text-white font-medium tracking-tighter text-glow flex items-center justify-center md:justify-end">$<AnimatedNumber value={currentPrice} /></div>
+                    <div className="text-[clamp(1.75rem,6vw,3.25rem)] sm:text-5xl font-mono text-white font-medium tracking-tighter leading-tight text-glow flex items-center justify-center md:justify-end px-2 break-words">$<AnimatedNumber value={currentPrice} /></div>
                     <div className={`text-sm font-bold inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded ${
                       priceChange24h >= 0
                         ? 'bg-green-900/20 text-green-400'
@@ -1021,13 +1021,14 @@ const TokenDetail: React.FC = () => {
              <div className="mt-8 pt-8 border-t border-white/5">
                 <div className="space-y-6">
                    {/* Bonding Curve Progress */}
-                   <div>
-                      <div className="flex justify-between items-end mb-4">
+                   <div className="flex flex-col gap-3 items-center sm:items-stretch">
+                      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between items-center text-center sm:text-left gap-2 sm:gap-0 w-full">
                           <div>
-                            <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-gray-500 mb-2 flex items-center gap-2"><BarChart3 size={14}/> Bonding Curve</h3>
+                            <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-gray-500 mb-2 flex items-center justify-center sm:justify-start gap-2"><BarChart3 size={14}/> Bonding Curve</h3>
                             {isGraduated ? <div className="text-3xl font-mono text-doge font-bold">100% - COMPLETED</div> : <div className="text-3xl font-mono text-white font-medium">{token.progress.toFixed(2)}%</div>}
                           </div>
-                          <div className="text-right">
+                          {/* Desktop/Tablet: keep goal inline */}
+                          <div className="hidden sm:block text-right">
                              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Graduation Goal</div>
                              <div className="font-mono text-doge font-bold text-xl">{formatCurrency(GRADUATION_MARKETCAP_USD)}</div>
                           </div>
@@ -1038,6 +1039,12 @@ const TokenDetail: React.FC = () => {
                           <div className={`h-full rounded-full transition-all duration-1000 relative shadow-[0_0_20px_rgba(212,175,55,0.3)] ${isGraduated ? 'bg-doge w-full' : 'bg-gradient-to-r from-doge-dark to-doge'}`} style={{ width: `${Math.min(100, token.progress)}%` }}>
                              <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:10px_10px] animate-shimmer"></div>
                           </div>
+                      </div>
+
+                      {/* Mobile: place goal below progress bar */}
+                      <div className="sm:hidden text-center">
+                         <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Graduation Goal</div>
+                         <div className="font-mono text-doge font-bold text-xl">{formatCurrency(GRADUATION_MARKETCAP_USD)}</div>
                       </div>
                    </div>
 

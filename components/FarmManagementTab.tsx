@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useStore } from '../contexts/StoreContext';
 import { Token, TokenOwnerFarm } from '../types';
 import { FarmCard } from './FarmCard';
+import { RewardDropdown } from './RewardDropdown';
+import { Search, X } from 'lucide-react';
 
 interface FarmManagementTabProps {
   token?: Token;
@@ -14,21 +16,37 @@ const CreateFarmForm: React.FC<{
 }> = ({ token, onCancel }) => {
   const { createFarm, myHoldings, tokens } = useStore();
 
+  const dcToken = tokens.find((t: Token) => t.ticker === 'DC');
+  const karmaToken = tokens.find((t: Token) => t.ticker === 'KARMA');
+
+  // Memoize reward options to prevent unnecessary re-renders
+  const rewardOptions = useMemo(
+    () => tokens.filter(Boolean) as Token[],
+    [tokens]
+  );
+
+  const defaultStakingId = token.id;
+
   const [formData, setFormData] = useState({
-    stakingTokenId: token.id,
+    stakingTokenId: defaultStakingId,
     rewardTokenId: token.id,
     rewardRate: 0.0001,
     duration: 30,
     lockPeriod: 0,
     maxStakeAmount: 1000000,
     minStakeAmount: 1,
-    description: `Stake ${token.ticker} to earn ${token.ticker} rewards`,
+    description: '',
     initialDeposit: 100000
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Stable onChange callback to prevent unnecessary re-renders
+  const handleRewardTokenChange = useCallback((id: string) => {
+    setFormData((prev) => ({ ...prev, rewardTokenId: id }));
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -55,7 +73,7 @@ const CreateFarmForm: React.FC<{
 
   const getTokenBalance = (tokenId: string): number => {
     if (tokenId === token.id) {
-      return myHoldings.find(h => h.tokenId === tokenId)?.balance || 0;
+      return myHoldings.find((holding: { tokenId: string; balance: number }) => holding.tokenId === tokenId)?.balance || 0;
     }
     return 0;
   };
@@ -71,39 +89,21 @@ const CreateFarmForm: React.FC<{
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Staking Token
           </label>
-          <select
-            value={formData.stakingTokenId}
-            onChange={(e) => setFormData({ ...formData, stakingTokenId: e.target.value })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-          >
-            {myHoldings.filter(h => h.balance > 0).map(holding => {
-              const t = tokens.find(t => t.id === holding.tokenId);
-              return t ? (
-                <option key={t.id} value={t.id}>
-                  {t.name} ({t.ticker})
-                </option>
-              ) : null;
-            })}
-          </select>
+          <input
+            value={`${token.name} (${token.ticker})`}
+            disabled
+            className="w-full rounded-xl bg-black/50 border border-white/10 px-4 py-3 text-white placeholder-gray-500 cursor-not-allowed shadow-inner shadow-purple-900/10"
+          />
         </div>
-        <div>
+        <div className="relative">
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Reward Token
           </label>
-          <select
+          <RewardDropdown
             value={formData.rewardTokenId}
-            onChange={(e) => setFormData({ ...formData, rewardTokenId: e.target.value })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-          >
-            {myHoldings.filter(h => h.balance > 0).map(holding => {
-              const t = tokens.find(t => t.id === holding.tokenId);
-              return t ? (
-                <option key={t.id} value={t.id}>
-                  {t.name} ({t.ticker})
-                </option>
-              ) : null;
-            })}
-          </select>
+            onChange={handleRewardTokenChange}
+            options={rewardOptions}
+          />
         </div>
       </div>
 
@@ -120,8 +120,10 @@ const CreateFarmForm: React.FC<{
           min="0.00001"
           max="0.001"
           value={formData.rewardRate}
-          onChange={(e) => setFormData({ ...formData, rewardRate: parseFloat(e.target.value) })}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setFormData({ ...formData, rewardRate: parseFloat(e.target.value) })
+          }
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
           placeholder="0.0001"
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -141,8 +143,10 @@ const CreateFarmForm: React.FC<{
           min="1"
           max="365"
           value={formData.duration}
-          onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setFormData({ ...formData, duration: parseInt(e.target.value, 10) || 0 })
+          }
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
           placeholder="30"
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -162,8 +166,10 @@ const CreateFarmForm: React.FC<{
           min="0"
           max="365"
           value={formData.lockPeriod}
-          onChange={(e) => setFormData({ ...formData, lockPeriod: parseInt(e.target.value) })}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setFormData({ ...formData, lockPeriod: parseInt(e.target.value, 10) || 0 })
+          }
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
           placeholder="0"
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -183,8 +189,10 @@ const CreateFarmForm: React.FC<{
             type="number"
             min="1"
             value={formData.minStakeAmount}
-            onChange={(e) => setFormData({ ...formData, minStakeAmount: parseInt(e.target.value) })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setFormData({ ...formData, minStakeAmount: parseInt(e.target.value, 10) || 0 })
+            }
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
             placeholder="1"
           />
         </div>
@@ -198,8 +206,10 @@ const CreateFarmForm: React.FC<{
             type="number"
             min="1"
             value={formData.maxStakeAmount}
-            onChange={(e) => setFormData({ ...formData, maxStakeAmount: parseInt(e.target.value) })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setFormData({ ...formData, maxStakeAmount: parseInt(e.target.value, 10) || 0 })
+            }
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
             placeholder="1000000"
           />
         </div>
@@ -217,8 +227,10 @@ const CreateFarmForm: React.FC<{
             type="number"
             min="1"
             value={formData.initialDeposit}
-            onChange={(e) => setFormData({ ...formData, initialDeposit: parseInt(e.target.value) })}
-            className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 ${!canAffordDeposit ? 'border-red-500' : 'border-gray-700'}`}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setFormData({ ...formData, initialDeposit: parseInt(e.target.value, 10) || 0 })
+            }
+            className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 ${!canAffordDeposit ? 'border-red-500' : 'border-white/10'}`}
             placeholder="100000"
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
@@ -242,20 +254,22 @@ const CreateFarmForm: React.FC<{
         </label>
         <textarea
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           rows={3}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white text-center focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white text-center focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
           placeholder="Describe your farm..."
         />
       </div>
 
       {/* APY Preview */}
-      <div className="bg-gray-800/50 rounded-lg p-4 border border-purple-500/20">
-        <h3 className="text-lg font-semibold text-purple-400 mb-2">Estimated APY</h3>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+      <div className="rounded-xl p-4 border border-white/10 bg-black/40 backdrop-blur-sm shadow-inner shadow-purple-900/20">
+        <h3 className="text-lg font-semibold text-white mb-2">Estimated APY</h3>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-200">
           <div className="inline-flex items-center gap-1">
             <span className="text-gray-400">Reward Rate:</span>
-            <span className="text-white">{(formData.rewardRate * 86400 * 365 * 100).toFixed(2)}%</span>
+            <span className="text-doge">{(formData.rewardRate * 86400 * 365 * 100).toFixed(2)}%</span>
           </div>
           <div className="inline-flex items-center gap-1">
             <span className="text-gray-400">Duration:</span>
@@ -269,18 +283,18 @@ const CreateFarmForm: React.FC<{
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
+      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/10">
         <button
           type="button"
           onClick={onCancel}
-          className="w-full sm:flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+          className="w-full sm:flex-1 px-6 py-3 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium rounded-lg transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting || !canAffordDeposit}
-          className="w-full sm:flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:flex-1 px-6 py-3 bg-gradient-to-r from-doge to-doge-light hover:brightness-110 text-black font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Creating...' : 'Create Farm'}
         </button>
@@ -301,14 +315,65 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [activeFarmsSearchQuery, setActiveFarmsSearchQuery] = useState('');
+  const [pausedFarmsSearchQuery, setPausedFarmsSearchQuery] = useState('');
 
   // Filter farms by specific token if provided, otherwise show all user's farms
   const allMyFarms = getMyFarms();
-  const myFarms = token
-    ? allMyFarms.filter(f => f.ownerTokenId === token.id)
+  const myFarms: TokenOwnerFarm[] = token
+    ? allMyFarms.filter((f: TokenOwnerFarm) => f.ownerTokenId === token.id)
     : allMyFarms;
-  const activeFarms = myFarms.filter(f => f.status === 'active');
-  const pausedFarms = myFarms.filter(f => f.status === 'paused');
+
+  // Filter farms helper function
+  const filterFarms = (
+    farms: TokenOwnerFarm[],
+    query: string,
+    tokens: Token[]
+  ): TokenOwnerFarm[] => {
+    if (!query) return farms;
+
+    const q = query.toLowerCase();
+
+    return farms.filter((farm) => {
+      const stakingToken = tokens.find(t => t.id === farm.stakingTokenId);
+      const rewardToken = tokens.find(t => t.id === farm.rewardTokenId);
+      const ownerToken = tokens.find(t => t.id === farm.ownerTokenId);
+
+      return (
+        (rewardToken?.name?.toLowerCase() || '').includes(q) ||
+        (rewardToken?.ticker?.toLowerCase() || '').includes(q) ||
+        (rewardToken?.contractAddress?.toLowerCase() || '').includes(q) ||
+        (stakingToken?.name?.toLowerCase() || '').includes(q) ||
+        (stakingToken?.ticker?.toLowerCase() || '').includes(q) ||
+        (stakingToken?.contractAddress?.toLowerCase() || '').includes(q) ||
+        (ownerToken?.name?.toLowerCase() || '').includes(q) ||
+        (ownerToken?.ticker?.toLowerCase() || '').includes(q) ||
+        (ownerToken?.contractAddress?.toLowerCase() || '').includes(q) ||
+        (farm.description?.toLowerCase() || '').includes(q)
+      );
+    });
+  };
+
+  // Apply search filtering using useMemo for performance
+  const activeFarms = useMemo(
+    () => filterFarms(
+      myFarms.filter((f: TokenOwnerFarm) => f.status === 'active'),
+      activeFarmsSearchQuery,
+      tokens
+    ),
+    [myFarms, activeFarmsSearchQuery, tokens]
+  );
+
+  const pausedFarms = useMemo(
+    () => filterFarms(
+      myFarms.filter((f: TokenOwnerFarm) => f.status === 'paused'),
+      pausedFarmsSearchQuery,
+      tokens
+    ),
+    [myFarms, pausedFarmsSearchQuery, tokens]
+  );
+
+  const shouldHideHeader = myFarms.length === 0 && !showCreateForm;
 
   const handleManageFarm = (farm: TokenOwnerFarm) => {
     setSelectedFarm(farm);
@@ -328,37 +393,76 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
   };
 
   // Get user's created tokens
-  const myCreatedTokens = tokens.filter(t => t.creator === 'You');
+  const myCreatedTokens = tokens.filter((t: Token) => t.creator === 'You');
+
+  // FarmSearchInput component
+  const FarmSearchInput: React.FC<{
+    query: string;
+    onChange: (query: string) => void;
+    label: string;
+    count: number;
+  }> = ({ query, onChange, label, count }) => (
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-sm font-bold text-white">{label}</label>
+        <span className="text-[11px] text-gray-500">{count} farms</span>
+      </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+        <input
+          type="text"
+          value={query}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          placeholder="Search by token name, symbol, address, or description"
+          className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-gray-500 focus:border-doge/50 outline-none transition-colors"
+          aria-label={`Search ${label}`}
+        />
+        {query && (
+          <button
+            onClick={() => onChange('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            aria-label="Clear search"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center">
-        <div>
-          <h2 className="text-2xl font-bold text-white">
-            {token ? `${token.name} Farms` : 'My Farms'}
-          </h2>
-          <p className="text-gray-400 text-sm mt-1">
-            {token
-              ? `Create and manage staking farms for ${token.name}`
-              : 'Create and manage staking farms for your tokens'
-            }
-          </p>
+      {!shouldHideHeader && (
+        <div className="text-center">
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              {token ? `${token.name} Farms` : 'My Farms'}
+            </h2>
+            <p className="text-gray-400 text-sm mt-1">
+              {token
+                ? `Create and manage staking farms for ${token.name}`
+                : 'Create and manage staking farms for your tokens'
+              }
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="mt-4 mx-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l6-6M12 20V4m0 0l-6 6" />
+            </svg>
+            {token ? `Create Farm for ${token.ticker}` : 'Create New Farm'}
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="mt-4 mx-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l6-6M12 20V4m0 0l-6 6" />
-          </svg>
-          {token ? `Create Farm for ${token.ticker}` : 'Create New Farm'}
-        </button>
-      </div>
+      )}
 
       {/* Inline Create Farm Form */}
       {showCreateForm && (token || myCreatedTokens.length > 0) && (
-        <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-6 relative">
+        <div className="relative overflow-hidden rounded-2xl border border-purple-500/25 bg-gradient-to-br from-[#080808] via-[#0c0c12] to-[#120c1c] shadow-2xl">
+          <div className="pointer-events-none absolute -top-20 -right-10 h-48 w-48 rounded-full bg-purple-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-emerald-400/15 blur-3xl" />
           <button
             onClick={() => setShowCreateForm(false)}
             className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
@@ -367,16 +471,22 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white text-center">Create Farm</h2>
-            <p className="text-gray-400 text-sm mt-1 text-center">
-              Create a staking farm for {token ? `${token.name} (${token.ticker})` : 'your token'}
+          <div className="px-6 pt-6 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-black/40 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-purple-100">
+              <span className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-400 to-emerald-400 animate-pulse" />
+              Farm Studio
+            </div>
+            <h2 className="mt-4 text-2xl font-bold text-white">Create Farm</h2>
+            <p className="text-sm text-gray-300/90 mt-1">
+              Launch a staking farm for {token ? `${token.name} (${token.ticker})` : 'your token'}
             </p>
           </div>
-          <CreateFarmForm
-            token={token || myCreatedTokens[0]}
-            onCancel={() => setShowCreateForm(false)}
-          />
+          <div className="p-6">
+            <CreateFarmForm
+              token={token || myCreatedTokens[0]}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          </div>
         </div>
       )}
 
@@ -413,12 +523,20 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
           {/* Active Farms */}
           {activeFarms.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                Active Farms ({activeFarms.length})
-              </h3>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  <h3 className="text-lg font-semibold text-white">Active Farms</h3>
+                </div>
+                <FarmSearchInput
+                  query={activeFarmsSearchQuery}
+                  onChange={setActiveFarmsSearchQuery}
+                  label="Active Farms"
+                  count={myFarms.filter((f: TokenOwnerFarm) => f.status === 'active').length}
+                />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {activeFarms.map(farm => (
+                {activeFarms.map((farm: TokenOwnerFarm) => (
                   <FarmCard
                     key={farm.id}
                     farm={farm}
@@ -427,6 +545,17 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
                     showManageButton={true}
                   />
                 ))}
+                {activeFarms.length === 0 && activeFarmsSearchQuery && (
+                  <div className="col-span-full py-8 text-center">
+                    <p className="text-gray-500 text-sm">No active farms match your search.</p>
+                    <button
+                      onClick={() => setActiveFarmsSearchQuery('')}
+                      className="mt-2 text-doge text-sm hover:underline"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -434,12 +563,20 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
           {/* Paused Farms */}
           {pausedFarms.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                Paused Farms ({pausedFarms.length})
-              </h3>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                  <h3 className="text-lg font-semibold text-white">Paused Farms</h3>
+                </div>
+                <FarmSearchInput
+                  query={pausedFarmsSearchQuery}
+                  onChange={setPausedFarmsSearchQuery}
+                  label="Paused Farms"
+                  count={myFarms.filter((f: TokenOwnerFarm) => f.status === 'paused').length}
+                />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pausedFarms.map(farm => (
+                {pausedFarms.map((farm: TokenOwnerFarm) => (
                   <FarmCard
                     key={farm.id}
                     farm={farm}
@@ -447,33 +584,66 @@ export const FarmManagementTab: React.FC<FarmManagementTabProps> = ({ token }) =
                     showManageButton={true}
                   />
                 ))}
+                {pausedFarms.length === 0 && pausedFarmsSearchQuery && (
+                  <div className="col-span-full py-8 text-center">
+                    <p className="text-gray-500 text-sm">No paused farms match your search.</p>
+                    <button
+                      onClick={() => setPausedFarmsSearchQuery('')}
+                      className="mt-2 text-doge text-sm hover:underline"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {/* Farm Stats Summary */}
-          <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-6 mt-8">
+          <div className="relative overflow-hidden rounded-2xl border border-purple-500/25 bg-gradient-to-br from-[#080808] via-[#0c0c12] to-[#120c1c] p-6 mt-8 shadow-2xl">
+            <div className="pointer-events-none absolute -top-12 right-8 h-24 w-24 rounded-full bg-purple-500/20 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-16 left-4 h-28 w-28 rounded-full bg-emerald-500/15 blur-3xl" />
             <h3 className="text-lg font-semibold text-white mb-4 text-center">
               {token ? `${token.name} Farm Summary` : 'Farm Summary'}
             </h3>
-            <div className="space-y-3">
-              <div className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
-                <p className="text-gray-400 text-sm">Total Farms</p>
-                <p className="text-2xl font-bold text-white">{myFarms.length}</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="group rounded-xl border border-white/5 bg-black/40 p-4 backdrop-blur-sm transition hover:border-purple-400/60 hover:-translate-y-0.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-300">
+                    <span className="h-2 w-2 rounded-full bg-purple-400" />
+                    Total Farms
+                  </div>
+                  <p className="text-2xl font-bold text-white">{myFarms.length}</p>
+                </div>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
-                <p className="text-gray-400 text-sm">Active</p>
-                <p className="text-2xl font-bold text-green-400">{activeFarms.length}</p>
+              <div className="group rounded-xl border border-white/5 bg-black/40 p-4 backdrop-blur-sm transition hover:border-emerald-400/60 hover:-translate-y-0.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-300">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    Active
+                  </div>
+                  <p className="text-2xl font-bold text-emerald-200">{activeFarms.length}</p>
+                </div>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
-                <p className="text-gray-400 text-sm">Paused</p>
-                <p className="text-2xl font-bold text-yellow-400">{pausedFarms.length}</p>
+              <div className="group rounded-xl border border-white/5 bg-black/40 p-4 backdrop-blur-sm transition hover:border-amber-300/70 hover:-translate-y-0.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-300">
+                    <span className="h-2 w-2 rounded-full bg-amber-300" />
+                    Paused
+                  </div>
+                  <p className="text-2xl font-bold text-amber-200">{pausedFarms.length}</p>
+                </div>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
-                <p className="text-gray-400 text-sm">Total Staked</p>
-                <p className="text-2xl font-bold text-purple-400">
-                  {myFarms.reduce((sum, f) => sum + (f.stats?.totalStaked || 0), 0).toLocaleString()}
-                </p>
+              <div className="group rounded-xl border border-white/5 bg-black/40 p-4 backdrop-blur-sm transition hover:border-purple-300/70 hover:-translate-y-0.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-300">
+                    <span className="h-2 w-2 rounded-full bg-purple-300" />
+                    Total Staked
+                  </div>
+                  <p className="text-2xl font-bold text-purple-200">
+                    {myFarms.reduce((sum: number, f: TokenOwnerFarm) => sum + (f.stats?.totalStaked || 0), 0).toLocaleString()}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -512,10 +682,10 @@ const DepositRewardsModal: React.FC<{
   const [amount, setAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const rewardToken = tokens.find(t => t.id === farm.rewardTokenId);
-  const userBalance = myHoldings.find(h => h.tokenId === farm.rewardTokenId)?.balance || 0;
+  const rewardToken = tokens.find((t: Token) => t.id === farm.rewardTokenId);
+  const userBalance = myHoldings.find((h: { tokenId: string; balance: number }) => h.tokenId === farm.rewardTokenId)?.balance || 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -575,7 +745,7 @@ const DepositRewardsModal: React.FC<{
                 name="depositAmount"
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 placeholder="Enter amount..."
               />
@@ -642,7 +812,7 @@ const EditFarmConfigModal: React.FC<{
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -716,7 +886,9 @@ const EditFarmConfigModal: React.FC<{
               min="0.00001"
               max="0.001"
               value={formData.rewardRate}
-              onChange={(e) => setFormData({ ...formData, rewardRate: parseFloat(e.target.value) })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, rewardRate: parseFloat(e.target.value) })
+              }
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -736,7 +908,9 @@ const EditFarmConfigModal: React.FC<{
               min="1"
               max="365"
               value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, duration: parseInt(e.target.value, 10) || 0 })
+              }
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
             />
           </div>
@@ -753,7 +927,9 @@ const EditFarmConfigModal: React.FC<{
               min="0"
               max="365"
               value={formData.lockPeriod}
-              onChange={(e) => setFormData({ ...formData, lockPeriod: parseInt(e.target.value) })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, lockPeriod: parseInt(e.target.value, 10) || 0 })
+              }
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
             />
           </div>
@@ -770,7 +946,9 @@ const EditFarmConfigModal: React.FC<{
                 type="number"
                 min="1"
                 value={formData.minStakeAmount}
-                onChange={(e) => setFormData({ ...formData, minStakeAmount: parseInt(e.target.value) })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, minStakeAmount: parseInt(e.target.value, 10) || 0 })
+                }
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               />
             </div>
@@ -784,7 +962,9 @@ const EditFarmConfigModal: React.FC<{
                 type="number"
                 min="1"
                 value={formData.maxStakeAmount}
-                onChange={(e) => setFormData({ ...formData, maxStakeAmount: parseInt(e.target.value) })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, maxStakeAmount: parseInt(e.target.value, 10) || 0 })
+                }
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               />
             </div>

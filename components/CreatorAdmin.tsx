@@ -442,32 +442,32 @@ Alternative (Screen Sharing):
             </div>
           </div>
 
-          <div className="flex bg-white/5 p-1 rounded-lg overflow-x-auto md:mt-0">
+          <div className="inline-flex items-center justify-start bg-white/5 px-1 py-1 rounded-lg overflow-x-auto scrollbar-none md:mt-0 gap-1 whitespace-nowrap max-w-full self-start">
              <button 
                onClick={() => setActiveTab('security')}
-               className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'security' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+               className={`px-3 py-1.5 rounded-md text-xs font-bold leading-none transition-colors shrink-0 ${activeTab === 'security' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
              >
                 Security
              </button>
              <button 
                onClick={() => setActiveTab('info')}
-               className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'info' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+               className={`px-3 py-1.5 rounded-md text-xs font-bold leading-none transition-colors shrink-0 ${activeTab === 'info' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
              >
                 Info
              </button>
              <button 
                onClick={() => setActiveTab('stream')}
-               className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center gap-1 ${activeTab === 'stream' ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-white'}`}
+               className={`px-3 py-1.5 rounded-md text-xs font-bold leading-none transition-colors flex items-center gap-1 shrink-0 ${activeTab === 'stream' ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-white'}`}
              >
                 <Video size={10}/> Stream
              </button>
              <button
                onClick={() => setActiveTab('farms')}
-               className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'farms' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+               className={`px-3 py-1.5 rounded-md text-xs font-bold leading-none transition-colors shrink-0 ${activeTab === 'farms' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
              >
                Farms
              </button>
-          </div>
+         </div>
       </div>
 
       {activeTab === 'security' && (

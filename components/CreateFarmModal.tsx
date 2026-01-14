@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useStore } from '../contexts/StoreContext';
 import { Token } from '../types';
+import { RewardDropdown } from './RewardDropdown';
 
 interface CreateFarmModalProps {
   isOpen: boolean;
@@ -11,6 +12,9 @@ interface CreateFarmModalProps {
 export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClose, token }) => {
   const { createFarm, myHoldings, userBalanceDC, tokens } = useStore();
 
+  const dcToken = tokens.find((t: Token) => t.ticker === 'DC');
+  const karmaToken = tokens.find((t: Token) => t.ticker === 'KARMA');
+
   const [formData, setFormData] = useState({
     stakingTokenId: token.id,
     rewardTokenId: token.id,
@@ -19,13 +23,13 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
     lockPeriod: 0, // 0 days (no lock)
     maxStakeAmount: 1000000,
     minStakeAmount: 1,
-    description: `Stake ${token.ticker} to earn ${token.ticker} rewards`,
+    description: '',
     initialDeposit: 100000
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -50,10 +54,21 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
     }
   };
 
+  // Memoize reward options to prevent unnecessary re-renders
+  const rewardOptions = useMemo(
+    () => tokens.filter(Boolean) as Token[],
+    [tokens]
+  );
+
+  // Stable onChange callback to prevent unnecessary re-renders
+  const handleRewardTokenChange = useCallback((id: string) => {
+    setFormData((prev) => ({ ...prev, rewardTokenId: id }));
+  }, []);
+
   // Get user's balance of the reward token
   const getTokenBalance = (tokenId: string): number => {
     if (tokenId === token.id) {
-      return myHoldings.find(h => h.tokenId === tokenId)?.balance || 0;
+      return myHoldings.find((holding: { tokenId: string; balance: number }) => holding.tokenId === tokenId)?.balance || 0;
     }
     return 0;
   };
@@ -64,14 +79,20 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-purple-500/30 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-purple-500/25 bg-gradient-to-br from-[#080808] via-[#0c0c12] to-[#120c1c] shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-purple-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-emerald-400/15 blur-3xl" />
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-purple-500/20">
+        <div className="flex items-start justify-between p-6 border-b border-purple-500/20">
           <div>
-            <h2 className="text-2xl font-bold text-white">Create Farm</h2>
-            <p className="text-gray-400 text-sm mt-1">
-              Create a staking farm for {token.name} ({token.ticker})
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-black/40 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-purple-100">
+              <span className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-400 to-emerald-400 animate-pulse" />
+              Farm Studio
+            </div>
+            <h2 className="text-2xl font-bold text-white mt-3">Create Farm</h2>
+            <p className="text-gray-300/90 text-sm mt-1">
+              Launch a staking farm for {token.name} ({token.ticker})
             </p>
           </div>
           <button
@@ -92,39 +113,21 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Staking Token
               </label>
-              <select
-                value={formData.stakingTokenId}
-                onChange={(e) => setFormData({ ...formData, stakingTokenId: e.target.value })}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-              >
-                {myHoldings.filter(h => h.balance > 0).map(holding => {
-                  const t = tokens.find(t => t.id === holding.tokenId);
-                  return t ? (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.ticker})
-                    </option>
-                  ) : null;
-                })}
-              </select>
+              <input
+                value={`${token.name} (${token.ticker})`}
+                disabled
+                className="w-full rounded-xl bg-black/50 border border-white/10 px-4 py-3 text-white placeholder-gray-500 cursor-not-allowed shadow-inner shadow-purple-900/10"
+              />
             </div>
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Reward Token
               </label>
-              <select
+              <RewardDropdown
                 value={formData.rewardTokenId}
-                onChange={(e) => setFormData({ ...formData, rewardTokenId: e.target.value })}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-              >
-                {myHoldings.filter(h => h.balance > 0).map(holding => {
-                  const t = tokens.find(t => t.id === holding.tokenId);
-                  return t ? (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.ticker})
-                    </option>
-                  ) : null;
-                })}
-              </select>
+                onChange={handleRewardTokenChange}
+                options={rewardOptions}
+              />
             </div>
           </div>
 
@@ -141,7 +144,9 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
               min="0.00001"
               max="0.001"
               value={formData.rewardRate}
-              onChange={(e) => setFormData({ ...formData, rewardRate: parseFloat(e.target.value) })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, rewardRate: parseFloat(e.target.value) })
+              }
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               placeholder="0.0001"
             />
@@ -162,7 +167,9 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
               min="1"
               max="365"
               value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, duration: parseInt(e.target.value, 10) || 0 })
+              }
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               placeholder="30"
             />
@@ -183,7 +190,9 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
               min="0"
               max="365"
               value={formData.lockPeriod}
-              onChange={(e) => setFormData({ ...formData, lockPeriod: parseInt(e.target.value) })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, lockPeriod: parseInt(e.target.value, 10) || 0 })
+              }
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               placeholder="0"
             />
@@ -204,7 +213,9 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
                 type="number"
                 min="1"
                 value={formData.minStakeAmount}
-                onChange={(e) => setFormData({ ...formData, minStakeAmount: parseInt(e.target.value) })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, minStakeAmount: parseInt(e.target.value, 10) || 0 })
+                }
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 placeholder="1"
               />
@@ -219,7 +230,9 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
                 type="number"
                 min="1"
                 value={formData.maxStakeAmount}
-                onChange={(e) => setFormData({ ...formData, maxStakeAmount: parseInt(e.target.value) })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, maxStakeAmount: parseInt(e.target.value, 10) || 0 })
+                }
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 placeholder="1000000"
               />
@@ -238,8 +251,10 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
                 type="number"
                 min="1"
                 value={formData.initialDeposit}
-                onChange={(e) => setFormData({ ...formData, initialDeposit: parseInt(e.target.value) })}
-                className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 ${!canAffordDeposit ? 'border-red-500' : 'border-gray-700'}`}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, initialDeposit: parseInt(e.target.value, 10) || 0 })
+                }
+                className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 ${!canAffordDeposit ? 'border-red-500' : 'border-white/10'}`}
                 placeholder="100000"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
@@ -263,20 +278,22 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               rows={3}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
+              className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
               placeholder="Describe your farm..."
             />
           </div>
 
           {/* APY Preview */}
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-purple-500/20">
-            <h3 className="text-lg font-semibold text-purple-400 mb-2">Estimated APY</h3>
-            <div className="space-y-1 text-sm">
+          <div className="rounded-xl p-4 border border-white/10 bg-black/40 backdrop-blur-sm shadow-inner shadow-purple-900/20">
+            <h3 className="text-lg font-semibold text-white mb-2">Estimated APY</h3>
+            <div className="space-y-1 text-sm text-gray-200">
               <div className="flex justify-between">
                 <span className="text-gray-400">Reward Rate:</span>
-                <span className="text-white">{(formData.rewardRate * 86400 * 365 * 100).toFixed(2)}%</span>
+                <span className="text-doge">{(formData.rewardRate * 86400 * 365 * 100).toFixed(2)}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Duration:</span>
@@ -290,18 +307,18 @@ export const CreateFarmModal: React.FC<CreateFarmModalProps> = ({ isOpen, onClos
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-gray-700">
+          <div className="flex gap-3 pt-4 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+              className="flex-1 px-6 py-3 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !canAffordDeposit}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-doge to-doge-light hover:brightness-110 text-black font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Creating...' : 'Create Farm'}
             </button>

@@ -41,17 +41,17 @@ const Profile: React.FC = () => {
   let displayedHoldings: any[] = [];
   
   if (isSelf) {
-     displayedHoldings = myHoldings.map(h => {
-        const token = tokens.find(t => t.id === h.tokenId);
+     displayedHoldings = myHoldings.map((h: any) => {
+        const token = tokens.find((t: any) => t.id === h.tokenId);
         if (!token) return null;
         
         const currentValue = h.balance * token.price;
-        const myBuys = trades.filter(t => t.tokenId === token.id && t.type === 'buy' && t.user === 'You');
+        const myBuys = trades.filter((t: any) => t.tokenId === token.id && t.type === 'buy' && t.user === 'You');
         
         let totalCost = 0;
         let totalTokensBought = 0;
         
-        myBuys.forEach(trade => {
+        myBuys.forEach((trade: any) => {
            totalCost += trade.amountDC;
            totalTokensBought += trade.amountToken;
         });
@@ -60,12 +60,12 @@ const Profile: React.FC = () => {
         const pnlPercent = avgBuyPrice > 0 ? ((token.price - avgBuyPrice) / avgBuyPrice) * 100 : 0;
    
         return { ...token, balance: h.balance, value: currentValue, pnl: pnlPercent, avgBuyPrice };
-     }).filter(t => t !== null);
+     }).filter((t: any) => t !== null);
   } else {
      // Mock holdings for public profiles based on created tokens
      displayedHoldings = tokens
-        .filter(t => t.creator === profileAddress)
-        .map(t => ({
+        .filter((t: any) => t.creator === profileAddress)
+        .map((t: any) => ({
            ...t,
            balance: t.supply * 0.05,
            value: (t.supply * 0.05) * t.price,
@@ -74,17 +74,17 @@ const Profile: React.FC = () => {
         }));
   }
 
-  const watchlistTokens = tokens.filter(t => watchlist.includes(t.id));
-  const totalPortfolioValue = displayedHoldings.reduce((acc, curr) => acc + curr.value, 0) + (isSelf ? userBalanceDC : 0);
-  const createdTokens = tokens.filter(t => isSelf ? t.creator === 'You' : t.creator === profileAddress);
-  const activityData = trades.filter(t => isSelf ? t.user === 'You' : t.user === profileAddress).sort((a, b) => b.timestamp - a.timestamp);
+  const watchlistTokens = tokens.filter((t: any) => watchlist.includes(t.id));
+  const totalPortfolioValue = displayedHoldings.reduce((acc: number, curr: any) => acc + curr.value, 0) + (isSelf ? userBalanceDC : 0);
+  const createdTokens = tokens.filter((t: any) => isSelf ? t.creator === 'You' : t.creator === profileAddress);
+  const activityData = trades.filter((t: any) => isSelf ? t.user === 'You' : t.user === profileAddress).sort((a: any, b: any) => b.timestamp - a.timestamp);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(profileAddress);
     addToast('success', 'Address copied to clipboard');
   };
 
-  const handleSharePnL = async (token: any, e: React.MouseEvent) => {
+  const handleSharePnL = async (token: any, e: any) => {
     e.preventDefault();
     e.stopPropagation();
     playSound('click');
@@ -128,8 +128,8 @@ const Profile: React.FC = () => {
   };
 
   const handleExportCSV = () => {
-     const data = activityData.map(t => {
-        const token = tokens.find(tk => tk.id === t.tokenId);
+     const data = activityData.map((t: any) => {
+        const token = tokens.find((tk: any) => tk.id === t.tokenId);
         return {
            Type: t.type.toUpperCase(),
            Token: token ? token.name : 'Unknown',
@@ -147,7 +147,7 @@ const Profile: React.FC = () => {
      addToast('success', 'Exported activity to CSV');
   };
 
-  const managingToken = managingTokenId ? tokens.find(t => t.id === managingTokenId) : null;
+  const managingToken = managingTokenId ? tokens.find((t: any) => t.id === managingTokenId) : null;
 
   return (
     <div className="animate-fade-in pb-12">
@@ -203,11 +203,11 @@ const Profile: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+                    <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 text-center flex flex-col items-center">
                         <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">Portfolio Value</div>
                         <div className="text-2xl font-mono text-white font-bold">{formatCurrency(totalPortfolioValue)}</div>
                     </div>
-                    <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+                    <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 text-center flex flex-col items-center">
                         <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">Launched</div>
                         <div className="text-2xl font-mono text-doge font-bold">{createdTokens.length}</div>
                     </div>
@@ -325,7 +325,7 @@ const Profile: React.FC = () => {
                        {isSelf ? "You don't own any coins yet." : "This user holds no tokens."}
                     </div>
                 ) : (
-                    displayedHoldings.map((token, idx) => (
+                    displayedHoldings.map((token: any, idx: number) => (
                     <Link to={`/token/${token.id}`} key={idx} className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 flex items-center justify-between hover:border-doge/30 transition-all group hover:bg-white/[0.02]">
                         <div className="flex items-center gap-4">
                             <OptimizedImage src={token.imageUrl} className="w-12 h-12 rounded-xl bg-gray-800 object-cover" alt={token.name} loading="lazy" fetchPriority="low" />
@@ -357,8 +357,8 @@ const Profile: React.FC = () => {
                                 {token.pnl >= 0 ? '+' : ''}{token.pnl.toFixed(2)}%
                             </div>
                             <div className="flex items-center gap-2">
-                                <button onClick={(e) => handleSharePnL(token, e)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 hover:text-white text-gray-500" title="Share PnL">
-                                   <Share2 size={16} />
+                                <button onClick={(e: any) => handleSharePnL(token, e)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 hover:text-white text-gray-500" title="Share PnL">
+                                    <Share2 size={16} />
                                 </button>
                                 <ArrowUpRight size={16} className="text-gray-600 group-hover:text-white" />
                             </div>
@@ -377,7 +377,7 @@ const Profile: React.FC = () => {
                        No favorites yet. Star tokens on the board!
                     </div>
                 ) : (
-                    watchlistTokens.map((token) => (
+                    watchlistTokens.map((token: any) => (
                     <Link to={`/token/${token.id}`} key={token.id} className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 flex items-center justify-between hover:border-doge/30 transition-all group hover:bg-white/[0.02]">
                         <div className="flex items-center gap-4">
                             <OptimizedImage src={token.imageUrl} className="w-12 h-12 rounded-xl bg-gray-800 object-cover" alt={token.name} loading="lazy" fetchPriority="low" />
@@ -398,7 +398,7 @@ const Profile: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button 
-                                    onClick={(e) => { e.preventDefault(); toggleWatchlist(token.id); }} 
+                                    onClick={(e: any) => { e.preventDefault(); toggleWatchlist(token.id); }} 
                                     className="p-2 rounded-full bg-doge/10 text-doge hover:bg-doge/20 transition-colors"
                                 >
                                    <Star size={16} fill="currentColor" />
@@ -430,7 +430,7 @@ const Profile: React.FC = () => {
                             </div>
                         ) : (
                             <div className="grid gap-3">
-                                {createdTokens.map(token => (
+                                {createdTokens.map((token: any) => (
                                     <Link
                                         to={`/token/${token.id}`}
                                         key={token.id}
@@ -470,7 +470,7 @@ const Profile: React.FC = () => {
                             </div>
                         ) : (
                             <div className="grid gap-3">
-                                {copyTargets.map(target => (
+                                {copyTargets.map((target: any) => (
                                     <div key={target.address} className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-blue-500/30 transition-colors relative overflow-hidden">
                                         {target.active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
                                         <div className="flex items-center gap-4 pl-2">
@@ -509,7 +509,7 @@ const Profile: React.FC = () => {
                  {activeOrders.length === 0 ? (
                     <div className="text-center text-gray-500 py-10">No open orders.</div>
                  ) : (
-                    activeOrders.map(order => (
+                    activeOrders.map((order: any) => (
                        <div key={order.id} className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-4 flex items-center justify-between hover:border-white/10 transition-colors">
                           <div className="flex items-center gap-4">
                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${order.type === 'buy' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
@@ -556,8 +556,8 @@ const Profile: React.FC = () => {
                 {activityData.length === 0 ? (
                   <div className="text-center text-gray-500 py-10">No recent activity.</div>
                 ) : (
-                  activityData.map((trade, idx) => {
-                    const token = tokens.find(t => t.id === trade.tokenId);
+                  activityData.map((trade: any, idx: number) => {
+                    const token = tokens.find((t: any) => t.id === trade.tokenId);
                     return (
                       <div key={trade.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex items-center justify-between animate-slide-up">
                          <div className="flex items-center gap-4">
@@ -595,14 +595,14 @@ const Profile: React.FC = () => {
                   <AlertTriangle size={20} className="text-yellow-500" />
                   Warnings
                 </h3>
-                {warnedUsers.filter(w => w.isActive).length === 0 ? (
+                {warnedUsers.filter((w: any) => w.isActive).length === 0 ? (
                   <div className="text-center text-gray-500 py-8">
                     <AlertTriangle size={32} className="mx-auto mb-2 text-gray-600" />
                     No active warnings
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {warnedUsers.filter(w => w.isActive).map((warning, idx) => (
+                    {warnedUsers.filter((w: any) => w.isActive).map((warning: any, idx: number) => (
                       <div key={idx} className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
@@ -645,7 +645,7 @@ const Profile: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {bannedUsers.map((ban, idx) => (
+                    {bannedUsers.map((ban: any, idx: number) => (
                       <div key={idx} className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">

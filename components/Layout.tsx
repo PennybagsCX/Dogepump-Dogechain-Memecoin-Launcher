@@ -51,7 +51,6 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const headerRef = useRef<HTMLDivElement | null>(null);
   const mobileWalletMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileWalletButtonRef = useRef<HTMLButtonElement | null>(null);
-  const mobileWalletInlineRef = useRef<HTMLDivElement | null>(null);
   const mobileHamburgerMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileHamburgerMenuContentRef = useRef<HTMLDivElement | null>(null);
   const mobileHamburgerButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -350,8 +349,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
       const insideMobileWallet =
         mobileWalletMenuRef.current?.contains(target) ||
-        mobileWalletButtonRef.current?.contains(target) ||
-        mobileWalletInlineRef.current?.contains(target);
+        mobileWalletButtonRef.current?.contains(target);
 
       const insideHamburger =
         mobileHamburgerMenuRef.current?.contains(target) ||
@@ -580,9 +578,9 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
         </div>
         <div className="w-full md:max-w-6xl md:mx-auto lg:max-w-7xl px-4 sm:px-6 tablet:px-8 lg:px-8 relative">
-          <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between md:h-20 pb-2 md:pb-0">
+          <div className="flex items-center justify-between gap-3 md:flex-row md:justify-between md:h-20 pb-2 md:pb-0">
             {/* Logo */}
-            <Link to="/" onClick={() => playSound('click')} className="flex items-center gap-3 group relative w-full justify-center md:w-auto md:justify-start">
+            <Link to="/" onClick={() => playSound('click')} className="flex items-center gap-3 group relative flex-shrink-0">
                <div className="absolute -inset-4 bg-doge/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                <div className="relative w-10 h-10 perspective-1000">
                  <div className="absolute inset-0 bg-doge rounded-xl rotate-6 group-hover:rotate-12 transition-transform duration-500 opacity-20 blur-[2px]"></div>
@@ -597,21 +595,6 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                  <span className="text-[9px] text-doge/60 font-mono tracking-[0.3em] uppercase group-hover:text-doge/80 transition-colors">Fair Launch</span>
                </div>
             </Link>
-
-            {/* Mobile Balance/Address (always visible on mobile) */}
-            {user.isConnected && (
-              <div className="md:hidden w-full flex justify-center">
-                <div 
-                  ref={mobileWalletInlineRef}
-                  onClick={() => { setActiveMobileMenu(activeMobileMenu === 'wallet' ? 'none' : 'wallet'); playSound('click'); }}
-                  className="flex items-center gap-2 px-4 py-2 bg-doge-surface rounded-full border border-doge-border text-xs font-mono text-gray-300 hover:border-doge/50 hover:bg-doge/5 transition-all cursor-pointer group shadow-lg hover:shadow-doge/10"
-                >
-                  <span className="text-doge font-bold">{formatNumber(userBalanceDC)} DC</span>
-                  <span className="text-gray-700">|</span>
-                  <span className="max-w-[140px] truncate text-gray-200">{formatAddress(user.address || '')}</span>
-                </div>
-              </div>
-            )}
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-1 bg-white/[0.03] p-1.5 rounded-full border border-white/[0.05] backdrop-blur-md shadow-inner [&_a]:list-none [&_a]:before:content-none [&_a]:after:content-none">
@@ -862,37 +845,43 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               >
                  <Search size={20} />
               </button>
-              {user.isConnected ? (
-                <button
-                  ref={mobileWalletButtonRef}
-                  onClick={() => { setActiveMobileMenu(activeMobileMenu === 'wallet' ? 'none' : 'wallet'); playSound('click'); }}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-doge to-doge-dark p-0.5 flex items-center justify-center border border-doge-border"
-                >
-                   {userProfile.avatarUrl ? (
-                      <img
-                        src={userProfile.avatarUrl}
-                        alt="User"
-                        className="w-full h-full rounded-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                   ) : null}
-                   {(!userProfile.avatarUrl || userProfile.avatarUrl === '') && (
-                      <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-                         <User size={14} className="text-doge"/>
-                      </div>
-                   )}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setIsWalletModalOpen(true)}
-                  className="p-2 text-doge hover:bg-white/5 rounded-xl transition-colors"
-                >
-                  <Wallet size={24} />
-                </button>
-              )}
+              <button
+                ref={mobileWalletButtonRef}
+                onClick={() => {
+                  playSound('click');
+                  if (user.isConnected) {
+                    setActiveMobileMenu(activeMobileMenu === 'wallet' ? 'none' : 'wallet');
+                  } else {
+                    setIsWalletModalOpen(true);
+                  }
+                }}
+                className={`w-9 h-9 rounded-full flex items-center justify-center border transition-colors ${
+                  user.isConnected
+                    ? 'bg-gradient-to-br from-doge to-doge-dark border-doge-border p-0.5'
+                    : 'bg-white/[0.04] border-white/10 text-gray-200 hover:bg-white/[0.07]'
+                }`}
+                aria-label={user.isConnected ? 'Open wallet menu' : 'Connect wallet'}
+              >
+                {user.isConnected ? (
+                  userProfile.avatarUrl ? (
+                    <img
+                      src={userProfile.avatarUrl}
+                      alt="User"
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
+                      <User size={14} className="text-doge" />
+                    </div>
+                  )
+                ) : (
+                  <Wallet size={18} className="text-doge" />
+                )}
+              </button>
             </div>
 
             {/* Mobile Wallet Dropdown */}

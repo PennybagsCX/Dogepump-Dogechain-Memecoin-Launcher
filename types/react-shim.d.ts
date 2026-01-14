@@ -1,11 +1,17 @@
 // Minimal React/JSX shims to satisfy TS in this project.
 // For full typing coverage, install @types/react and @types/react-dom instead.
 declare module 'react' {
-  export type FC<P = {}> = (props: P & { children?: ReactNode }) => JSX.Element | null;
+  export type FC<P = {}> = (props: P & { children?: ReactNode; key?: any }) => JSX.Element | null;
   export type ReactNode = any;
   export type ReactElement = any;
   export type JSXElementConstructor<P> = any;
+  export type MouseEvent<T = any> = { preventDefault(): void; stopPropagation(): void; target: T } & Event;
   export type ChangeEvent<T = any> = { target: { value: any } } & Event;
+  export type FormEvent<T = any> = { preventDefault(): void; stopPropagation(): void; target: T } & Event;
+  export type WheelEvent<T = any> = { preventDefault(): void; stopPropagation(): void; deltaX?: number; deltaY?: number; target: T } & Event;
+  export type UIEvent<T = any> = { preventDefault(): void; stopPropagation(): void; target: T } & Event;
+  export type TouchEvent<T = any> = { preventDefault(): void; stopPropagation(): void; target: T; touches: { clientX: number; clientY: number }[] } & Event;
+  export type PointerEvent<T = any> = { preventDefault(): void; stopPropagation(): void; target: T } & Event;
   export function createElement(...args: any[]): any;
   export function createContext<T = any>(defaultValue: T): any;
   export function useContext<T = any>(context: any): T;
