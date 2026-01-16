@@ -102,7 +102,7 @@ jobs:
     name: Deploy to Production
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
       - name: Checkout code
@@ -140,7 +140,7 @@ jobs:
     name: Health Check
     needs: deploy-production
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
       - name: Wait for deployment
