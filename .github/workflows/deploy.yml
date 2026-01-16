@@ -18,7 +18,7 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,6 +32,19 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Set environment variables for build
+        run: |
+          echo "VITE_API_URL=https://api.dogepump.com" >> $GITHUB_ENV
+          echo "VITE_PUBLIC_RPC_URL=https://rpc.dogechain.dog" >> $GITHUB_ENV
+          echo "VITE_PUBLIC_EXPLORER_URL=https://explorer.dogechain.dog" >> $GITHUB_ENV
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.dogepump.com
+          VITE_PUBLIC_RPC_URL: https://rpc.dogechain.dog
+          VITE_PUBLIC_EXPLORER_URL: https://explorer.dogechain.dog
+
       - name: Run linter
         run: npm run lint || echo "No lint script configured"
 
@@ -40,9 +53,6 @@ jobs:
 
       - name: Run tests
         run: npm run test || echo "No test script configured"
-
-      - name: Build frontend
-        run: npm run build
 
       # Skip server build for now - has pre-existing TypeScript issues
       # - name: Build server
