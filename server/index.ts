@@ -10,6 +10,9 @@ import imageRoutes from './routes/images.js';
 import authRoutes from './routes/auth.js';
 import commentRoutes from './routes/comments.js';
 import healthRoutes from './routes/health.js';
+import reputationRoutes from './routes/reputation.js';
+import karmaRoutes from './routes/karma.js';
+import stakeRoutes from './routes/stake.js';
 import sitemapRoutes from './routes/sitemap.js';
 import { moderationRoutes } from './routes/moderation.js';
 import { reportsRoutes } from './routes/reports.js';
@@ -17,6 +20,7 @@ import blockchainRoutes from './routes/blockchain.js';
 import { logger } from './utils/logger.js';
 import { closePool } from './database/db.js';
 import { sentryService } from './services/sentryService.js';
+import { registerSwagger } from './swagger.js';
 
 const fastify = Fastify({
   logger: {
@@ -90,14 +94,20 @@ fastify.register(multipart, {
 // Register rate limiting
 fastify.register(rateLimitPlugin);
 
+// Register Swagger documentation
+await registerSwagger(fastify);
+
 // Register routes
 fastify.register(imageRoutes, { prefix: '/api/images' });
 fastify.register(authRoutes, { prefix: '/api/auth' });
 fastify.register(commentRoutes, { prefix: '/api/comments' });
+fastify.register(reputationRoutes, { prefix: '/api/reputation' });
+fastify.register(karmaRoutes, { prefix: '/api/karma' });
+fastify.register(stakeRoutes, { prefix: '/api/stake' });
 fastify.register(moderationRoutes, { prefix: '/api/moderation' });
 fastify.register(reportsRoutes, { prefix: '/api/reports' });
 fastify.register(blockchainRoutes, { prefix: '/api/blockchain' });
-fastify.register(healthRoutes, { prefix: '/health' });
+fastify.register(healthRoutes);
 
 // Global error handler
 fastify.setErrorHandler(errorHandler);
@@ -105,9 +115,9 @@ fastify.setErrorHandler(errorHandler);
 // Start server
 const start = async () => {
   try {
-    const address = await fastify.listen({ 
+    const address = await fastify.listen({
       port: config.PORT,
-      host: config.HOST 
+      host: config.HOST
     });
     logger.info(`🚀 Server running at ${address}`);
     logger.info(`📝 Environment: ${config.NODE_ENV}`);

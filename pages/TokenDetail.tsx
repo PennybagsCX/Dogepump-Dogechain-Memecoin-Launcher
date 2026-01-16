@@ -49,6 +49,8 @@ import { AuthModal } from '../components/AuthModal';
 import type { ChartEmoji } from '../types';
 import { StructuredData } from '../components/StructuredData';
 import { Breadcrumb } from '../components/Breadcrumb';
+import { MemecoinStakingTile } from '../components/MemecoinStakingTile';
+import { FarmTab } from '../components/FarmTab';
 import { sanitizeText, isValidUrl } from '../lib/security';
 import { validateImageUpload } from '../lib/validation';
 import { createLogger } from '../lib/logger';
@@ -89,7 +91,7 @@ const TokenDetail: React.FC = () => {
   const isCreator = token?.creator === 'You';
 
   // Check if token creator is banned
-  const isCreatorBanned = token ? bannedUsers.some((b: any) => b.address.toLowerCase() === token.creator.toLowerCase()) : false;
+  const isCreatorBanned = token ? bannedUsers.some((b: any) => b.address.toLowerCase() === token!.creator.toLowerCase()) : false;
   logger.debug('Checking ban status', { creator: token?.creator, isCreatorBanned });
 
   // Calculate 24h price change from price history (must be before any early returns to avoid hook violations)
@@ -115,7 +117,7 @@ const TokenDetail: React.FC = () => {
 
   // Redirect or show warning if token is delisted
   if (token?.delisted) {
-    logger.warn('Access denied to delisted token', { name: token.name, delisted: token.delisted, reason: token.delistedReason });
+    logger.warn('Access denied to delisted token', { name: token!.name, delisted: token.delisted, reason: token.delistedReason });
     return (
       <>
         <Helmet>
@@ -129,7 +131,7 @@ const TokenDetail: React.FC = () => {
               <Ghost size={64} className="mx-auto mb-4 text-red-400" />
               <h1 className="text-3xl font-bold text-red-400 mb-4">Token Delisted</h1>
               <p className="text-gray-300 mb-2">
-                This token (<strong>{token.name}</strong> / ${token.ticker}) has been delisted by platform administrators.
+                This token (<strong>{token!.name}</strong> / ${token!.ticker}) has been delisted by platform administrators.
               </p>
               {token.delistedReason && (
                 <p className="text-gray-400 mb-4">
@@ -152,8 +154,8 @@ const TokenDetail: React.FC = () => {
 
   // Show warning if token creator is banned (only to visitors, not the creator themselves)
   if (isCreatorBanned && !isCreator) {
-    const bannedUser = bannedUsers.find((b: any) => b.address.toLowerCase() === token.creator.toLowerCase());
-    logger.warn('Access denied to token with banned creator', { name: token.name, reason: bannedUser?.reason });
+    const bannedUser = bannedUsers.find((b: any) => b.address.toLowerCase() === token!.creator.toLowerCase());
+    logger.warn('Access denied to token with banned creator', { name: token!.name, reason: bannedUser?.reason });
     return (
       <>
         <Helmet>
@@ -167,7 +169,7 @@ const TokenDetail: React.FC = () => {
               <Ban size={64} className="mx-auto mb-4 text-red-400" />
               <h1 className="text-3xl font-bold text-red-400 mb-4">Creator Banned</h1>
               <p className="text-gray-300 mb-2">
-                The creator of this token (<strong>{token.name}</strong> / ${token.ticker}) has been banned from DogePump for violating our community guidelines.
+                The creator of this token (<strong>{token!.name}</strong> / ${token!.ticker}) has been banned from DogePump for violating our community guidelines.
               </p>
               {bannedUser?.reason && (
                 <p className="text-gray-400 mb-4">
@@ -274,7 +276,7 @@ const TokenDetail: React.FC = () => {
     if (!token || !isCreator) return;
 
     const bannedUserRecord = bannedUsers.find((b: any) =>
-      b.address.toLowerCase() === token.creator.toLowerCase()
+      b.address.toLowerCase() === token!.creator.toLowerCase()
     );
 
     if (bannedUserRecord && !banNoticeModal.isOpen) {
@@ -722,7 +724,7 @@ const TokenDetail: React.FC = () => {
 
   const handleCopyContract = () => {
     playSound('click');
-    navigator.clipboard.writeText(token.contractAddress || '0x0000000000000000000000000000000000000'); 
+    navigator.clipboard.writeText(token?.contractAddress || '0x0000000000000000000000000000000000000'); 
     setCopiedContract(true);
     addToast('success', 'Contract address copied');
     setTimeout(() => setCopiedContract(false), 2000);
@@ -991,7 +993,7 @@ const TokenDetail: React.FC = () => {
                         <span className="group-hover/creator:text-white transition-colors">Creator: {resolveUsername(token.creator)}</span>
                       </Link>
                       <div className="flex items-center justify-center gap-2 bg-white/[0.02] px-3 py-1.5 rounded-lg border border-white/5 hover:border-doge/30 transition-colors cursor-pointer select-none active:scale-95" onClick={handleCopyContract}>
-                        <span>CA: {token.contractAddress ? `${token.contractAddress.slice(0, 10)}...${token.contractAddress.slice(-4)}` : '0x0000000000...0000'}</span>
+                        <span>CA: {token?.contractAddress ? `${token.contractAddress.slice(0, 10)}...${token.contractAddress.slice(-4)}` : '0x0000000000...0000'}</span>
                         {copiedContract ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                       </div>
                       <div className="flex items-center justify-center gap-2">
@@ -1246,6 +1248,13 @@ const TokenDetail: React.FC = () => {
           >
               {isGraduated ? <DogeSwap token={token} /> : <TradeForm token={token} initialAmount={copyTradeAmount} />}
           </div>
+
+          {/* Farm Tab - Reputation, Farm Memecoins, Farm $KARMA */}
+          <FarmTab
+            token={token}
+            userTokenBalance={userTokenBalance}
+            userKarmaBalance={0}
+          />
 
           {tokenOrders.length > 0 && (
              <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-lg animate-fade-in">

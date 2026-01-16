@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../contexts/StoreContext';
-import { TrendingUp, TrendingDown, Lock, Unlock, Gift, Clock, Award, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, Lock, Unlock, Gift, Clock, Award, DollarSign, Droplets, ArrowRight, Zap } from 'lucide-react';
+import { KarmaHeroTile } from './KarmaHeroTile';
+import { Breadcrumb } from './Breadcrumb';
 
 interface KarmaStats {
   token: {
@@ -280,252 +282,373 @@ const KarmaDashboard: React.FC = () => {
   const apyTrend = apyHistory.length > 1 ? apyHistory[apyHistory.length - 1].apy - apyHistory[apyHistory.length - 2].apy : 0;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">$KARMA Staking Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400">Stake $KARMA tokens to earn rewards and support the Dogepump ecosystem</p>
+    <div className="animate-slide-up pb-12">
+      <Breadcrumb items={[
+        { name: 'Home', url: '/' },
+        { name: '$KARMA', url: '/karma' }
+      ]} />
+
+      {/* Page Header */}
+      <div className="text-center relative py-8">
+        {/* Glow behind header */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-doge/10 blur-[80px] rounded-full pointer-events-none"></div>
+
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-[#0A0A0A] border border-doge/20 rounded-3xl mb-6 shadow-[0_0_40px_rgba(212,175,55,0.2)] relative z-10 animate-float">
+          <Award className="text-doge drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" size={40} />
+        </div>
+        <h1 className="text-5xl md:text-6xl font-comic font-bold text-white mb-4 tracking-tight drop-shadow-xl relative z-10">$KARMA Staking</h1>
+        <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">
+          Stake <span className="text-doge">$KARMA</span> to earn more $KARMA. Early adopters get <span className="text-white font-semibold">bonus multipliers</span>!
+        </p>
       </div>
 
-      {/* Global Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Current APY */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              <span className="text-sm font-medium opacity-90">Current APY</span>
-            </div>
-            {apyTrend > 0 ? (
-              <TrendingUp className="w-5 h-5 text-green-300" />
-            ) : apyTrend < 0 ? (
-              <TrendingDown className="w-5 h-5 text-red-300" />
-            ) : null}
-          </div>
-          <div className="text-3xl font-bold mb-1">{currentAPY}</div>
-          <div className="text-sm opacity-75">Dynamic APY based on market conditions</div>
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Hero Tile */}
+        <div className="lg:col-span-2">
+          <KarmaHeroTile
+            karmaPrice={stats?.token.price || 0.0000000001}
+            karmaTVL={parseFloat(stats?.staking.totalStaked || '0') * (stats?.token.price || 0.0000000001)}
+            karmaAPY={parseFloat(stats?.staking.currentAPY || '0')}
+            karmaSupply={parseFloat(stats?.token.totalSupply || '0')}
+            karmaMarketCap={parseFloat(stats?.token.totalSupply || '0') * (stats?.token.price || 0.0000000001)}
+            totalStakers={parseInt(stats?.staking.totalStakers || '0')}
+            stakedPercentage={parseFloat(stats?.staking.totalStaked || '0') / parseFloat(stats?.token.totalSupply || '1') * 100}
+            lastUpdateTime={new Date().toISOString()}
+          />
         </div>
 
-        {/* Total Staked */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Lock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Staked</span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-            {stats?.staking.formattedTotalStaked || '0'}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {stats?.staking.totalStakers || '0'} stakers
-          </div>
-        </div>
+        {/* Staking Interface Tile */}
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+          {/* Decorative elements */}
+          <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-doge/10 blur-3xl"></div>
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-doge/10 to-transparent"></div>
 
-        {/* Rewards Distributed */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Gift className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Rewards Distributed</span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-            {stats?.staking.formattedTotalRewardsDistributed || '0'}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">$KARMA tokens</div>
-        </div>
-
-        {/* Token Price */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Token Price</span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-            ${stats?.token.price?.toFixed(10) || '0.0000000001'}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">USD per $KARMA</div>
-        </div>
-      </div>
-
-      {/* User Staking Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* User Balance */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Your $KARMA</h2>
-          <div className="space-y-4">
-            <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Available Balance</div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {userStakeInfo?.formattedAvailableBalance || '0'}
+          <div className="relative px-5 py-6 sm:px-6 sm:py-7 md:px-8 md:py-9 flex flex-col gap-5">
+            {/* Header */}
+            <div className="flex items-center gap-4 sm:gap-5">
+              <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-doge/30 text-doge shadow-lg">
+                <Droplets size={28} className="fill-doge/30" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-doge/80 font-semibold">Stake $KARMA</p>
+                    <p className="text-lg sm:text-xl font-black text-white leading-tight">Earn Rewards</p>
+                  </div>
+                  <span className="text-[10px] sm:text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 font-semibold uppercase tracking-widest">Active</span>
+                </div>
+                <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
+                  {currentAPY} <span className="text-doge">APY</span>
+                </p>
               </div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Staked Amount</div>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {userStakeInfo?.formattedStakedAmount || '0'}
+
+            {/* User Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white/5 rounded-xl px-3 py-3 border border-white/5 text-center">
+                <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Balance</div>
+                <div className="text-sm font-mono font-bold text-white">
+                  {userStakeInfo?.formattedAvailableBalance || '0'}
+                </div>
+              </div>
+              <div className="bg-white/5 rounded-xl px-3 py-3 border border-white/5 text-center">
+                <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Staked</div>
+                <div className="text-sm font-mono font-bold text-doge">
+                  {userStakeInfo?.formattedStakedAmount || '0'}
+                </div>
+              </div>
+              <div className="bg-white/5 rounded-xl px-3 py-3 border border-white/5 text-center">
+                <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Pending</div>
+                <div className="text-sm font-mono font-bold text-green-400">
+                  {userStakeInfo?.formattedPendingRewards || '0'}
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pending Rewards</div>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {userStakeInfo?.formattedPendingRewards || '0'}
+
+            {/* Stake Input */}
+            <div className="space-y-3">
+              <label className="text-[10px] text-gray-400 uppercase font-bold tracking-wider ml-1">Stake Amount</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={stakeAmount}
+                  onChange={(e) => setStakeAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full bg-[#050505] border border-white/10 rounded-2xl px-6 py-5 text-white text-lg focus:border-doge focus:ring-1 focus:ring-doge/50 outline-none transition-all placeholder:text-gray-800 font-mono"
+                />
+                <button
+                  onClick={() => setStakeAmount(userStakeInfo?.formattedAvailableBalance || '0')}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-xs text-doge font-bold uppercase tracking-wider hover:underline"
+                >
+                  Max
+                </button>
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleStake}
+                disabled={staking || !stakeAmount}
+                className="w-full h-14 text-lg font-bold rounded-full bg-gradient-to-r from-doge to-doge-dark shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-white/20 relative overflow-hidden group-hover/btn:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center gap-2"
+              >
+                {staking ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Staking...
+                  </>
+                ) : (
+                  <>
+                    Stake $KARMA <ArrowRight size={20} />
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleApprove}
+                className="w-full h-12 text-sm font-bold rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-gray-300"
+              >
+                Approve $KARMA
+              </button>
+            </div>
+
+            {/* Bonus Badge */}
             {userStakeInfo?.bonusMultiplier && userStakeInfo.bonusMultiplier > 100 && (
-              <div className="bg-yellow-100 dark:bg-yellow-900 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
-                  <Award className="w-4 h-4" />
-                  <span className="font-semibold">{userStakeInfo.bonusLabel}</span>
-                </div>
-                <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                  You earn {userStakeInfo.bonusMultiplier / 100}x rewards!
-                </div>
+              <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-doge/5 border border-doge/20">
+                <Zap size={16} className="text-doge" />
+                <span className="text-xs text-gray-300">
+                  <span className="text-doge font-bold">{userStakeInfo.bonusLabel}</span> - You earn {userStakeInfo.bonusMultiplier / 100}x rewards!
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Stake */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Stake $KARMA</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Amount to Stake
-              </label>
-              <input
-                type="number"
-                value={stakeAmount}
-                onChange={(e) => setStakeAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <div className="flex justify-between mt-2 text-sm text-gray-600 dark:text-gray-400">
-                <span>Available: {userStakeInfo?.formattedAvailableBalance || '0'}</span>
-                <button
-                  onClick={() => setStakeAmount(userStakeInfo?.formattedAvailableBalance || '0')}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  MAX
-                </button>
+        {/* Unstake & Claim Tile */}
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+          {/* Decorative elements */}
+          <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-green-500/10 blur-3xl"></div>
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-green-500/10 to-transparent"></div>
+
+          <div className="relative px-5 py-6 sm:px-6 sm:py-7 md:px-8 md:py-9 flex flex-col gap-5">
+            {/* Header */}
+            <div className="flex items-center gap-4 sm:gap-5">
+              <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-green-500/30 text-green-400 shadow-lg">
+                <Unlock size={28} className="fill-green-400/30" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-green-400/80 font-semibold">Manage Stake</p>
+                    <p className="text-lg sm:text-xl font-black text-white leading-tight">Unstake & Claim</p>
+                  </div>
+                  <span className="text-[10px] sm:text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 font-semibold uppercase tracking-widest">Flexible</span>
+                </div>
+                <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
+                  {userStakeInfo?.formattedPendingRewards || '0'} <span className="text-green-400">Pending</span>
+                </p>
               </div>
             </div>
-            <button
-              onClick={handleStake}
-              disabled={staking || !stakeAmount}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-            >
-              {staking ? 'Staking...' : 'Stake $KARMA'}
-            </button>
-            <button
-              onClick={handleApprove}
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-            >
-              Approve $KARMA
-            </button>
-          </div>
-        </div>
 
-        {/* Unstake & Claim */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Unstake & Claim</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Amount to Unstake
-              </label>
-              <input
-                type="number"
-                value={unstakeAmount}
-                onChange={(e) => setUnstakeAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <div className="flex justify-between mt-2 text-sm text-gray-600 dark:text-gray-400">
-                <span>Staked: {userStakeInfo?.formattedStakedAmount || '0'}</span>
+            {/* Info Section */}
+            <div className="space-y-3 text-sm sm:text-base leading-relaxed text-gray-200">
+              <p className="text-gray-300">
+                Unstake your $KARMA tokens anytime or claim your accumulated rewards. Staking continues to earn rewards even after claiming.
+              </p>
+            </div>
+
+            {/* Unstake Input */}
+            <div className="space-y-3">
+              <label className="text-[10px] text-gray-400 uppercase font-bold tracking-wider ml-1">Unstake Amount</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={unstakeAmount}
+                  onChange={(e) => setUnstakeAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full bg-[#050505] border border-white/10 rounded-2xl px-6 py-5 text-white text-lg focus:border-red-500 focus:ring-1 focus:ring-red-500/50 outline-none transition-all placeholder:text-gray-800 font-mono"
+                />
                 <button
                   onClick={() => setUnstakeAmount(userStakeInfo?.formattedStakedAmount || '0')}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-xs text-red-400 font-bold uppercase tracking-wider hover:underline"
                 >
-                  MAX
+                  Max
                 </button>
               </div>
             </div>
-            <button
-              onClick={handleUnstake}
-              disabled={unstaking || !unstakeAmount}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-            >
-              {unstaking ? 'Unstaking...' : 'Unstake $KARMA'}
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Pending Rewards</span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {userStakeInfo?.formattedPendingRewards || '0'}
-                </span>
-              </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleUnstake}
+                disabled={unstaking || !unstakeAmount}
+                className="w-full h-12 text-sm font-bold rounded-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 transition-all text-red-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {unstaking ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400"></div>
+                    Unstaking...
+                  </>
+                ) : (
+                  <>
+                    Unstake $KARMA <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+
               <button
                 onClick={handleClaimRewards}
                 disabled={claiming || !userStakeInfo?.pendingRewards || parseFloat(userStakeInfo.pendingRewards) === 0}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                className="w-full h-14 text-lg font-bold rounded-full bg-gradient-to-r from-green-500 to-green-600 shadow-[0_0_30px_rgba(34,197,94,0.3)] border border-white/20 relative overflow-hidden group-hover/btn:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center gap-2"
               >
-                {claiming ? 'Claiming...' : 'Claim Rewards'}
+                {claiming ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Claiming...
+                  </>
+                ) : (
+                  <>
+                    Claim Rewards <Gift size={20} />
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* APY History Chart */}
-      {apyHistory.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg mb-8">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">APY History (30 Days)</h2>
-          <div className="h-64 flex items-end justify-between gap-1">
-            {apyHistory.map((point, index) => (
-              <div
-                key={index}
-                className="flex-1 flex flex-col items-center group"
-              >
-                <div
-                  className="w-full bg-blue-500 hover:bg-blue-600 transition-colors rounded-t relative"
-                  style={{ height: `${(point.apy / 100) * 100}%` }}
-                >
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    {point.apy.toFixed(2)}%
+        {/* Bonus Periods Tile */}
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+          {/* Decorative elements */}
+          <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-yellow-500/10 blur-3xl"></div>
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-yellow-500/10 to-transparent"></div>
+
+          <div className="relative px-5 py-6 sm:px-6 sm:py-7 md:px-8 md:py-9 flex flex-col gap-5">
+            {/* Header */}
+            <div className="flex items-center gap-4 sm:gap-5">
+              <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-yellow-500/30 text-yellow-400 shadow-lg">
+                <Clock size={28} className="fill-yellow-400/30" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-yellow-400/80 font-semibold">Limited Time</p>
+                    <p className="text-lg sm:text-xl font-black text-white leading-tight">Bonus Periods</p>
                   </div>
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-2 transform -rotate-45 origin-left">
-                  {new Date(point.timestamp).toLocaleDateString()}
+                  <span className="text-[10px] sm:text-xs bg-yellow-500/10 px-2 py-1 rounded-full text-yellow-400 font-semibold uppercase tracking-widest border border-yellow-500/30">Active</span>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Bonus Tiers */}
+            <div className="space-y-3 text-sm sm:text-base leading-relaxed text-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/20">
+                <div className="flex items-center gap-2 text-yellow-400 font-bold uppercase tracking-widest text-[11px] sm:text-xs">
+                  <Zap size={14} /> First 30 Days
+                </div>
+                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">2x rewards multiplier</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/5">
+                <div className="flex items-center gap-2 text-doge font-bold uppercase tracking-widest text-[11px] sm:text-xs">
+                  <Award size={14} /> Days 31-90
+                </div>
+                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">1.5x rewards multiplier</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/5">
+                <div className="flex items-center gap-2 text-gray-300 font-bold uppercase tracking-widest text-[11px] sm:text-xs">
+                  <TrendingUp size={14} /> After 90 Days
+                </div>
+                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">Normal 1x rewards</span>
+              </div>
+            </div>
+
+            {/* Note */}
+            <p className="text-[10px] text-gray-500 leading-relaxed">
+              Bonus multiplier is locked at the time of staking and applies to all future rewards for that stake. Stake early to maximize your rewards!
+            </p>
           </div>
         </div>
-      )}
 
-      {/* Bonus Period Info */}
-      <div className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900 rounded-2xl p-6 shadow-lg">
-        <div className="flex items-start gap-4">
-          <Clock className="w-6 h-6 text-yellow-800 dark:text-yellow-200 flex-shrink-0 mt-1" />
-          <div>
-            <h3 className="text-lg font-bold text-yellow-900 dark:text-yellow-100 mb-2">
-              Early Adopter Bonus Period
-            </h3>
-            <div className="space-y-2 text-sm text-yellow-800 dark:text-yellow-200">
-              <p>
-                <strong>First 30 Days:</strong> 2x rewards multiplier for stakes made during launch period
-              </p>
-              <p>
-                <strong>Days 31-90:</strong> 1.5x rewards multiplier
-              </p>
-              <p>
-                <strong>After 90 Days:</strong> Normal 1x rewards
-              </p>
-              <p className="mt-3 text-xs opacity-75">
-                Bonus multiplier is locked at the time of staking and applies to all future rewards for that stake.
-              </p>
+        {/* Stats Tile */}
+        {apyHistory.length > 0 && (
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0B0B0F] via-[#0B0B0F]/90 to-black shadow-2xl">
+            {/* Decorative elements */}
+            <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-blue-500/10 blur-3xl"></div>
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-blue-500/10 to-transparent"></div>
+
+            <div className="relative px-5 py-6 sm:px-6 sm:py-7 md:px-8 md:py-9 flex flex-col gap-5">
+              {/* Header */}
+              <div className="flex items-center gap-4 sm:gap-5">
+                <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-blue-500/30 text-blue-400 shadow-lg">
+                  <TrendingUp size={28} className="fill-blue-400/30" />
+                </div>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-blue-400/80 font-semibold">Analytics</p>
+                      <p className="text-lg sm:text-xl font-black text-white leading-tight">APY History</p>
+                    </div>
+                    <span className="text-[10px] sm:text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 font-semibold uppercase tracking-widest">30 Days</span>
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    Track APY trends over time
+                  </p>
+                </div>
+              </div>
+
+              {/* Chart */}
+              <div className="h-48 flex items-end justify-between gap-1">
+                {apyHistory.map((point, index) => {
+                  const maxAPY = Math.max(...apyHistory.map(p => p.apy));
+                  const height = maxAPY > 0 ? (point.apy / maxAPY) * 100 : 0;
+                  const isTrendingUp = index > 0 && point.apy > apyHistory[index - 1].apy;
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex-1 flex flex-col items-center group"
+                    >
+                      <div
+                        className={`w-full hover:opacity-80 transition-opacity rounded-t relative ${
+                          isTrendingUp ? 'bg-green-500' : 'bg-blue-500'
+                        }`}
+                        style={{ height: `${Math.max(height, 5)}%` }}
+                      >
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#0A0A0A] border border-white/10 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                          {point.apy.toFixed(2)}%
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-gray-600 mt-2 transform -rotate-45 origin-left">
+                        {new Date(point.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Stats Summary */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                  <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Current</div>
+                  <div className="text-sm font-mono font-bold text-white">{currentAPY}</div>
+                </div>
+                <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                  <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Avg (30d)</div>
+                  <div className="text-sm font-mono font-bold text-white">
+                    {(apyHistory.reduce((sum, p) => sum + p.apy, 0) / apyHistory.length).toFixed(1)}%
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                  <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Trend</div>
+                  <div className={`text-sm font-mono font-bold ${apyTrend > 0 ? 'text-green-400' : apyTrend < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                    {apyTrend > 0 ? '+' : ''}{apyTrend.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
