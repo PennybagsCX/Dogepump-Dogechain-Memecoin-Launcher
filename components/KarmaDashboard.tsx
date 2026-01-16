@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../contexts/StoreContext';
-import { TrendingUp, TrendingDown, Lock, Unlock, Gift, Clock, Award, DollarSign, Droplets, ArrowRight, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, Lock, Unlock, Gift, Clock, Award, DollarSign, Droplets, ArrowRight, Zap, Crown } from 'lucide-react';
 import { KarmaHeroTile } from './KarmaHeroTile';
 import { Breadcrumb } from './Breadcrumb';
 
@@ -525,47 +525,57 @@ const KarmaDashboard: React.FC = () => {
           <div className="relative px-5 py-6 sm:px-6 sm:py-7 md:px-8 md:py-9 flex flex-col gap-5">
             {/* Header */}
             <div className="flex items-center gap-4 sm:gap-5">
-              <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-yellow-500/30 text-yellow-400 shadow-lg">
-                <Clock size={28} className="fill-yellow-400/30" />
+              <div className="shrink-0 p-4 rounded-2xl bg-[#0F0F12] border border-doge/30 text-doge shadow-lg">
+                <Clock size={28} className="fill-doge/30" />
               </div>
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-yellow-400/80 font-semibold">Limited Time</p>
-                    <p className="text-lg sm:text-xl font-black text-white leading-tight">Bonus Periods</p>
+                    <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-doge/80 font-semibold">Loyalty Rewards</p>
+                    <p className="text-lg sm:text-xl font-black text-white leading-tight">Longer Stake = Higher Multiplier</p>
                   </div>
-                  <span className="text-[10px] sm:text-xs bg-yellow-500/10 px-2 py-1 rounded-full text-yellow-400 font-semibold uppercase tracking-widest border border-yellow-500/30">Active</span>
+                  <span className="text-[10px] sm:text-xs bg-doge/10 px-2 py-1 rounded-full text-doge font-semibold uppercase tracking-widest border border-doge/30">Active</span>
                 </div>
+                <p className="text-sm text-gray-400">
+                  Earn bonus multipliers by staking for longer periods
+                </p>
               </div>
             </div>
 
             {/* Bonus Tiers */}
             <div className="space-y-3 text-sm sm:text-base leading-relaxed text-gray-200">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/20">
-                <div className="flex items-center gap-2 text-yellow-400 font-bold uppercase tracking-widest text-[11px] sm:text-xs">
-                  <Zap size={14} /> First 30 Days
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/5">
+                <div className="flex items-center gap-2 text-gray-300 font-bold uppercase tracking-widest text-[11px] sm:text-xs">
+                  <TrendingUp size={14} /> Base Rate
                 </div>
-                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">2x rewards multiplier</span>
+                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">Standard 1x rewards</span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/5">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-doge/5 border border-doge/20">
                 <div className="flex items-center gap-2 text-doge font-bold uppercase tracking-widest text-[11px] sm:text-xs">
-                  <Award size={14} /> Days 31-90
+                  <Award size={14} /> Stake 30+ Days
+                </div>
+                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">1.25x rewards multiplier</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-doge/5 border border-doge/20">
+                <div className="flex items-center gap-2 text-doge font-bold uppercase tracking-widest text-[11px] sm:text-xs">
+                  <Zap size={14} /> Stake 90+ Days
                 </div>
                 <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">1.5x rewards multiplier</span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/5">
-                <div className="flex items-center gap-2 text-gray-300 font-bold uppercase tracking-widest text-[11px] sm:text-xs">
-                  <TrendingUp size={14} /> After 90 Days
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/20">
+                <div className="flex items-center gap-2 text-yellow-400 font-bold uppercase tracking-widest text-[11px] sm:text-xs">
+                  <Crown size={14} /> Stake 180+ Days
                 </div>
-                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">Normal 1x rewards</span>
+                <span className="text-[11px] sm:text-xs text-gray-400 sm:ml-auto">2x rewards multiplier</span>
               </div>
             </div>
 
             {/* Note */}
             <p className="text-[10px] text-gray-500 leading-relaxed">
-              Bonus multiplier is locked at the time of staking and applies to all future rewards for that stake. Stake early to maximize your rewards!
+              Bonus multiplier increases based on how long you continuously stake. Longer stakes earn higher multipliers, rewarding loyalty and reducing gaming.
             </p>
           </div>
         </div>

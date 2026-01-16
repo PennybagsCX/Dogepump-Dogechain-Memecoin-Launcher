@@ -1,6 +1,6 @@
 
 import { ethers } from 'ethers';
-import { DOGECHAIN_HEX_ID, DOGECHAIN_ID, RPC_URL, EXPLORER_URL } from '../constants';
+import { DOGECHAIN_HEX_ID, DOGECHAIN_ID, RPC_URLS, EXPLORER_URL } from '../constants';
 
 // Define a type for the Ethereum provider to avoid conflicts
 interface EthereumRequest {
@@ -14,6 +14,35 @@ interface EthereumProvider {
   removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
   isMetaMask?: boolean;
 }
+
+// Read-only provider for data fetching when wallet not connected
+let readOnlyProvider: ethers.Provider | null = null;
+
+export const getReadOnlyProvider = (): ethers.Provider => {
+  if (readOnlyProvider) return readOnlyProvider;
+
+  const providers = RPC_URLS.map(url => new ethers.JsonRpcProvider(url, undefined, {
+    staticNetwork: ethers.Network.from({
+      chainId: DOGECHAIN_ID,
+      name: 'dogechain'
+    })
+  }));
+
+  if (providers.length === 1) {
+    readOnlyProvider = providers[0];
+  } else {
+    // FallbackProvider allows redundancy
+    // Using simple priority based on order in RPC_URLS
+    readOnlyProvider = new ethers.FallbackProvider(providers.map((p, index) => ({
+      provider: p,
+      priority: index + 1,
+      weight: 1,
+      stallTimeout: 2000 // 2 seconds
+    })));
+  }
+
+  return readOnlyProvider;
+};
 
 // Safely access the Ethereum provider without modifying window.ethereum
 const getEthereumProvider = (): EthereumProvider | null => {

@@ -5,6 +5,7 @@ import { useStore } from '../contexts/StoreContext';
 import { Report as ReportType, WarnedUser as WarnedUserType } from '../types';
 import * as moderationApi from '../services/moderationApi';
 import { useLocation, useNavigate } from 'react-router-dom';
+import FilterSelect, { FilterOption } from './FilterSelect';
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -95,6 +96,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [actionTaken, setActionTaken] = useState<ReportType['actionTaken']>('resolved');
   const [showActionModal, setShowActionModal] = useState(false);
   const [warningsVersion, setWarningsVersion] = useState(0); // Force re-renders of badges
+
+  const statusOptions: FilterOption[] = useMemo(() => ([
+    { value: 'all', label: 'All Status' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'reviewing', label: 'Reviewing' },
+    { value: 'resolved', label: 'Resolved' },
+    { value: 'dismissed', label: 'Dismissed' }
+  ]), []);
+
+  const reasonOptions: FilterOption[] = useMemo(() => ([
+    { value: 'all', label: 'All Reasons' },
+    { value: 'scam', label: 'Scam' },
+    { value: 'spam', label: 'Spam' },
+    { value: 'harassment', label: 'Harassment' },
+    { value: 'inappropriate', label: 'Inappropriate' },
+    { value: 'other', label: 'Other' }
+  ]), []);
+
+  const sortOptions: FilterOption[] = useMemo(() => ([
+    { value: 'timestamp', label: 'Sort by Time' },
+    { value: 'status', label: 'Sort by Status' }
+  ]), []);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -556,35 +579,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
               <span className="text-gray-400 text-sm">Total Reports</span>
               <Flag size={20} className="text-gray-500" />
             </div>
-            <div className="text-3xl font-bold text-white">{stats.total}</div>
+            <div className="text-3xl font-bold text-white text-center">{stats.total}</div>
           </div>
           <div className="bg-[#050505] border border-yellow-500/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400 text-sm">Pending</span>
               <Clock size={20} className="text-yellow-500" />
             </div>
-            <div className="text-3xl font-bold text-yellow-400">{stats.pending}</div>
+            <div className="text-3xl font-bold text-yellow-400 text-center">{stats.pending}</div>
           </div>
           <div className="bg-[#050505] border border-green-500/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400 text-sm">Resolved</span>
               <CheckCircle size={20} className="text-green-500" />
             </div>
-            <div className="text-3xl font-bold text-green-400">{stats.resolved}</div>
+            <div className="text-3xl font-bold text-green-400 text-center">{stats.resolved}</div>
           </div>
           <div className="bg-[#050505] border border-purple-500/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400 text-sm">Token Reports</span>
               <TrendingUp size={20} className="text-purple-500" />
             </div>
-            <div className="text-3xl font-bold text-purple-400">{stats.tokenReports}</div>
+            <div className="text-3xl font-bold text-purple-400 text-center">{stats.tokenReports}</div>
           </div>
           <div className="bg-[#050505] border border-doge/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400 text-sm">Comment Reports</span>
               <MessageSquare size={20} className="text-doge" />
             </div>
-            <div className="text-3xl font-bold text-doge">{stats.commentReports}</div>
+            <div className="text-3xl font-bold text-doge text-center">{stats.commentReports}</div>
           </div>
         </div>
 
@@ -688,43 +711,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-600 focus:border-white/20 outline-none text-sm"
               />
             </div>
-            <select
-              id="admin-filter-status"
-              name="filterStatus"
+            <FilterSelect
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-white/20 outline-none text-sm"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="reviewing">Reviewing</option>
-              <option value="resolved">Resolved</option>
-              <option value="dismissed">Dismissed</option>
-            </select>
-            <select
-              id="admin-filter-reason"
-              name="filterReason"
+              onChange={setFilterStatus}
+              options={statusOptions}
+              placeholder="All Status"
+              ariaLabel="Filter by status"
+            />
+            <FilterSelect
               value={filterReason}
-              onChange={(e) => setFilterReason(e.target.value)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-white/20 outline-none text-sm"
-            >
-              <option value="all">All Reasons</option>
-              <option value="scam">Scam</option>
-              <option value="spam">Spam</option>
-              <option value="harassment">Harassment</option>
-              <option value="inappropriate">Inappropriate</option>
-              <option value="other">Other</option>
-            </select>
-            <select
-              id="admin-sort-by"
-              name="sortBy"
+              onChange={setFilterReason}
+              options={reasonOptions}
+              placeholder="All Reasons"
+              ariaLabel="Filter by reason"
+            />
+            <FilterSelect
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-white/20 outline-none text-sm"
-            >
-              <option value="timestamp">Sort by Time</option>
-              <option value="status">Sort by Status</option>
-            </select>
+              onChange={(val) => setSortBy(val as 'timestamp' | 'status')}
+              options={sortOptions}
+              placeholder="Sort by Time"
+              ariaLabel="Sort reports"
+            />
             <button
               onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
               className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 whitespace-nowrap"

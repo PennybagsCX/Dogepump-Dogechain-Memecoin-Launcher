@@ -12,7 +12,7 @@ const DOGECHAIN_MAINNET_EXPLORER = "https://explorer.dogechain.dog";
 
 // Token addresses
 const DC_TOKEN = "0x7B4328c127B85369D9f82ca0503B000D09CF9180";
-const WDOGE_TOKEN = "0xB7ddC6414bf4F5515b52D8BdD69973A205ff101";
+const WDOGE_TOKEN = "0xB7ddC6414bf4F5515b52D8BdD69973Ae205ff101";
 
 module.exports = {
   solidity: {
@@ -28,6 +28,10 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 31337,
+      forking: {
+        url: DOGECHAIN_MAINNET_RPC,
+        enabled: true,
+      },
       accounts: {
         count: 20,
         accountsBalance: "100000000000000000000", // 100k DC

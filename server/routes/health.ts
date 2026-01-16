@@ -87,7 +87,7 @@ export default async function healthRoutes(fastify: FastifyInstance) {
         system: cpuUsage.system,
       },
       eventLoop: {
-        lag: process.hrtime.bigint(),
+        lag: process.hrtime.bigint().toString(),
       },
     });
   });

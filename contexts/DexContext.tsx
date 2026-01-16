@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { DUMMY_POOLS, DUMMY_TOKENS, DUMMY_LIQUIDITY_POSITIONS } from '../services/dex/dummyData';
+import ContractService from '../services/dex/ContractService';
+import { getReadOnlyProvider, Web3State, subscribeToWeb3 } from '../services/web3Service';
+import { TOKENS } from '../constants';
 
 // Types
 export interface Token {
@@ -125,21 +128,53 @@ export const DexProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [liquidityPositions, setLiquidityPositions] = useState<LiquidityPosition[]>([]);
+  const [contractService, setContractService] = useState<ContractService | null>(null);
+  const [web3State, setWeb3State] = useState<Web3State>({
+    address: null,
+    chainId: null,
+    isConnected: false,
+    provider: null,
+    signer: null
+  });
 
-  // Initialize with dummy data on mount
+  // Initialize ContractService
   useEffect(() => {
-    // Load dummy pools
-    setPools(DUMMY_POOLS);
+    const initService = async () => {
+      // Use wallet provider if connected, otherwise use read-only provider
+      const provider = web3State.isConnected && web3State.provider 
+        ? web3State.provider 
+        : getReadOnlyProvider();
+      
+      const service = new ContractService(provider, web3State.signer);
+      
+      // Initialize with contract addresses from constants/env
+      // Note: We need to make sure these addresses are available in constants
+      // For now using placeholders or values from TOKENS if available
+      // Ideally these should come from a config file
+      const FACTORY_ADDRESS = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with actual Factory address
+      const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"; // Replace with actual Router address
+      
+      await service.initialize(FACTORY_ADDRESS, ROUTER_ADDRESS);
+      setContractService(service);
+    };
     
-    // Set default tokens for swap
-    if (DUMMY_TOKENS.length >= 2) {
-      setSelectedTokenA(DUMMY_TOKENS[0]); // DC
-      setSelectedTokenB(DUMMY_TOKENS[1]); // wDOGE
-    }
-    
-    // Load dummy liquidity positions
-    setLiquidityPositions(DUMMY_LIQUIDITY_POSITIONS);
+    initService();
+  }, [web3State.isConnected, web3State.provider, web3State.signer]);
+
+  // Subscribe to Web3 state changes
+  useEffect(() => {
+    const unsubscribe = subscribeToWeb3((state) => {
+      setWeb3State(state);
+    });
+    return unsubscribe;
   }, []);
+
+  // Initialize with real data on mount (once service is ready)
+  useEffect(() => {
+    if (contractService) {
+      loadPools();
+    }
+  }, [contractService]);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -181,21 +216,36 @@ export const DexProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setIsLoading(true);
     setError(null);
     try {
-      // This would call the ContractService to load pools
-      // For now, load dummy pools for demonstration
-      setPools(DUMMY_POOLS);
-      
-      // Set default tokens for swap
-      if (DUMMY_TOKENS.length >= 2) {
-        setSelectedTokenA(DUMMY_TOKENS[0]); // DC
-        setSelectedTokenB(DUMMY_TOKENS[1]); // wDOGE
+      if (contractService) {
+        // Fetch pools from blockchain
+        const realPools = await contractService.getPools(0, 20); // Fetch first 20 pools
+        if (realPools.length > 0) {
+          setPools(realPools);
+          
+          // Set default tokens from the first pool if available
+          if (realPools[0]) {
+             // Logic to find DC/wDOGE pair or default to first pool
+             setSelectedTokenA(realPools[0].tokenA);
+             setSelectedTokenB(realPools[0].tokenB);
+          }
+        } else {
+          // Fallback to dummy if no pools found (fresh deployment)
+          console.warn("No pools found on blockchain, using dummy data for display");
+          setPools(DUMMY_POOLS);
+        }
+      } else {
+        // Fallback if service not ready
+        setPools(DUMMY_POOLS);
       }
     } catch (err) {
+      console.error("Failed to load pools from blockchain:", err);
       setError(err instanceof Error ? err.message : 'Failed to load pools');
+      // Fallback to dummy data on error so UI doesn't break
+      setPools(DUMMY_POOLS);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [contractService]);
 
   const loadPoolDetails = useCallback(async (poolAddress: string) => {
     setIsLoading(true);

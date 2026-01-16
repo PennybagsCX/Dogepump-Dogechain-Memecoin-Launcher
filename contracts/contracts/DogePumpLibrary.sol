@@ -81,7 +81,7 @@ library DogePumpLibrary {
                             hex'ff',
                             factory,
                             keccak256(abi.encodePacked(token0, token1)),
-                            hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
+                            hex'0b93fe485e4178069eb53f09db46fa0b1cbd70fde7b5b65c1d74f7bd09f417ae' // init code hash
                         )
                     )
                 )

@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "../interfaces/IDogePumpRouter.sol";
 import "../interfaces/IDogePumpFactory.sol";
 import "./DogePumpLibrary.sol";
@@ -11,17 +12,14 @@ import "./DogePumpLibrary.sol";
 /**
  * @title DogePumpRouter
  * @dev Router for facilitating swaps and liquidity operations
- * @notice Provides convenient interface for DEX operations
+ * @notice Provides convenient interface for DEX operations with circuit breakers
  */
-contract DogePumpRouter is IDogePumpRouter, Ownable {
+contract DogePumpRouter is IDogePumpRouter, Ownable, Pausable {
     /// @notice Factory contract address
     address public immutable override factory;
 
     /// @notice Wrapped native token address (WDC)
     address public immutable override WDC;
-
-    /// @notice Maximum gas limit to prevent gas griefing
-    uint public constant MAX_GAS_LIMIT = 500000;
 
     /// @notice Maximum slippage allowed (50%)
     uint public constant MAX_SLIPPAGE = 50;
@@ -49,9 +47,6 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
     /// @notice Custom error for insufficient B amount
     error InsufficientBAmount();
 
-    /// @notice Custom error for invalid swap path
-    error InvalidPath();
-
     /**
      * @dev Modifier to ensure transaction hasn't expired
      * @param deadline Transaction deadline timestamp
@@ -72,6 +67,30 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
         factory = _factory;
         WDC = _WDC;
     }
+
+    /**
+     * @notice Pauses the router (owner only)
+     * @dev Emergency pause for critical situations
+     */
+    function pause() external onlyOwner {
+        _pause();
+        emit RouterPaused(msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice Unpauses the router (owner only)
+     * @dev Resumes normal operations
+     */
+    function unpause() external onlyOwner {
+        _unpause();
+        emit RouterUnpaused(msg.sender, block.timestamp);
+    }
+
+    /// @notice Event emitted when router is paused
+    event RouterPaused(address indexed pausedBy, uint timestamp);
+
+    /// @notice Event emitted when router is unpaused
+    event RouterUnpaused(address indexed unpausedBy, uint timestamp);
 
     /**
      * @notice Adds liquidity to a pair
@@ -100,10 +119,10 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
     )
         external
         override
+        whenNotPaused
         ensure(deadline)
         returns (uint amountA, uint amountB, uint liquidity)
     {
-        require(gasleft() < MAX_GAS_LIMIT, "Gas limit too high");
         (amountA, amountB) = _addLiquidity(
             tokenA,
             tokenB,
@@ -144,6 +163,7 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
     )
         external
         override
+        whenNotPaused
         ensure(deadline)
         returns (uint amountA, uint amountB)
     {
@@ -180,6 +200,7 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
     )
         external
         override
+        whenNotPaused
         ensure(deadline)
         returns (uint[] memory amounts)
     {
@@ -216,6 +237,7 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
     )
         external
         override
+        whenNotPaused
         ensure(deadline)
         returns (uint[] memory amounts)
     {
@@ -250,10 +272,11 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
         external
         payable
         override
+        whenNotPaused
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-        if (path[0] != WDC) revert InvalidPath();
+        if (path[0] != WDC) revert DogePumpLibrary.InvalidPath();
         
         uint amountIn = msg.value;
         amounts = DogePumpLibrary.getAmountsOut(factory, amountIn, path);
@@ -292,10 +315,11 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
     )
         external
         override
+        whenNotPaused
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-        if (path[path.length - 1] != WDC) revert InvalidPath();
+        if (path[path.length - 1] != WDC) revert DogePumpLibrary.InvalidPath();
         
         amounts = DogePumpLibrary.getAmountsIn(factory, amountOut, path);
         
@@ -332,10 +356,11 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
     )
         external
         override
+        whenNotPaused
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-        if (path[path.length - 1] != WDC) revert InvalidPath();
+        if (path[path.length - 1] != WDC) revert DogePumpLibrary.InvalidPath();
         
         amounts = DogePumpLibrary.getAmountsOut(factory, amountIn, path);
         
@@ -422,6 +447,11 @@ contract DogePumpRouter is IDogePumpRouter, Ownable {
         uint amountAMin,
         uint amountBMin
     ) private returns (uint amountA, uint amountB) {
+        // Create the pair if it doesn't exist yet
+        if (IDogePumpFactory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IDogePumpFactory(factory).createPair(tokenA, tokenB);
+        }
+
         (uint reserveA, uint reserveB) = DogePumpLibrary.getReserves(
             factory,
             tokenA,

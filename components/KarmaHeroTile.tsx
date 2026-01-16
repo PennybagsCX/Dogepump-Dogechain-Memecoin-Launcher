@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, TrendingUp, DollarSign, Activity, Shield, Zap, Users } from 'lucide-react';
+import { Award, TrendingUp, DollarSign, Activity, Zap, Users } from 'lucide-react';
 import { formatNumber } from '../services/web3Service';
 
 interface KarmaHeroTileProps {
@@ -113,14 +113,6 @@ export const KarmaHeroTile: React.FC<KarmaHeroTileProps> = ({
               <span>Last Update: <span className="text-gray-400 font-mono">{new Date(lastUpdateTime).toLocaleDateString()}</span></span>
             </li>
           </ul>
-        </div>
-
-        {/* Security badge */}
-        <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-doge/5 border border-doge/20">
-          <Shield size={16} className="text-doge" />
-          <span className="text-xs text-gray-300">
-            <span className="text-doge font-semibold">Audited & Secure</span> - Smart contracts verified
-          </span>
         </div>
       </div>
     </div>

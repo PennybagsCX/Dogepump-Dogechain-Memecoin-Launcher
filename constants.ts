@@ -2,7 +2,17 @@
 export const DOGECHAIN_ID = 2000;
 export const DOGECHAIN_HEX_ID = '0x7d0';
 
-export const RPC_URL = 'https://rpc.dogechain.dog';
+// Feature Flags
+export const COPY_TRADING_ENABLED = false; // Set to true to re-enable copy trading UI
+
+export const RPC_URLS = [
+  'https://rpc.dogechain.dog', // Primary Dogechain mainnet RPC
+  'https://rpc.ankr.com/dogechain', // Ankr backup (mainnet only)
+  'https://dogechain.ankr.com', // Alternative Ankr endpoint
+  // CRITICAL: Only add mainnet RPCs here. Testnet RPC will cause transaction failures.
+  // For additional public RPCs, see: https://docs.dogechain.dog/tools/network-rpc
+];
+export const RPC_URL = RPC_URLS[0]; // Keep for backward compatibility
 export const EXPLORER_URL = 'https://explorer.dogechain.dog';
 
 export const TOKENS = {

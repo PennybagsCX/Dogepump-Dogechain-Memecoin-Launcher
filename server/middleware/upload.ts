@@ -156,7 +156,7 @@ export async function handleSingleFileUpload(
     }
 
     // Step 3: Validate file size
-    const maxSize = opts.maxFileSize || config.SECURITY.FILE_SIZE_LIMITS[file.mimetype] || config.SECURITY.MAX_FILE_SIZE;
+    const maxSize = opts.maxFileSize || (config.SECURITY.FILE_SIZE_LIMITS as any)[file.mimetype] || config.SECURITY.MAX_FILE_SIZE;
     if (buffer.length > maxSize) {
       const error: APIError = {
         statusCode: 400,
@@ -511,7 +511,7 @@ export async function handleMultipleFileUploads(
       }
 
       // Step 3: Validate file size
-      const maxSize = opts.maxFileSize || config.SECURITY.FILE_SIZE_LIMITS[file.mimetype] || config.SECURITY.MAX_FILE_SIZE;
+      const maxSize = opts.maxFileSize || (config.SECURITY.FILE_SIZE_LIMITS as any)[file.mimetype] || config.SECURITY.MAX_FILE_SIZE;
       if (buffer.length > maxSize) {
         const error: APIError = {
           statusCode: 400,

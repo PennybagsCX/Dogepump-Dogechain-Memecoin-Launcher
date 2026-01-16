@@ -28,7 +28,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       logger.info({
-        userId: request.userId,
+        userId: request.userId!,
         ip: request.ip,
         userAgent: request.headers['user-agent'],
       }, 'Image upload request received');
@@ -38,7 +38,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         'IMAGE_UPLOAD_ATTEMPT',
         'info',
         {
-          userId: request.userId,
+          userId: request.userId!,
           ip: request.ip,
           userAgent: request.headers['user-agent'],
         }
@@ -53,7 +53,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           'IMAGE_UPLOAD_FAILED',
           'warn',
           {
-            userId: request.userId,
+            userId: request.userId!,
             ip: request.ip,
             reason: 'File validation failed',
           }
@@ -146,7 +146,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         );
 
         logger.error({
-          userId: request.userId,
+          userId: request.userId!,
           error: error instanceof Error ? error.message : 'Unknown error',
           stack: error instanceof Error ? error.stack : undefined,
         }, 'Image upload error');
@@ -155,7 +155,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           'IMAGE_UPLOAD_ERROR',
           'error',
           {
-            userId: request.userId,
+            userId: request.userId!,
             error: error instanceof Error ? error.message : 'Unknown error',
           }
         );
@@ -277,7 +277,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
       const { imageId } = request.params as { imageId: string };
 
       logger.info({
-        userId: request.userId,
+        userId: request.userId!,
         imageId,
       }, 'Image deletion request');
 
@@ -309,7 +309,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         await imageService.deleteImage(imageId, request.userId!);
         
         logger.info({
-          userId: request.userId,
+          userId: request.userId!,
           imageId,
         }, 'Image deletion successful');
         
@@ -326,7 +326,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         );
 
         logger.error({
-          userId: request.userId,
+          userId: request.userId!,
           imageId,
           error: error instanceof Error ? error.message : 'Unknown error',
         }, 'Image deletion error');
@@ -335,7 +335,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           'IMAGE_DELETION_ERROR',
           'error',
           {
-            userId: request.userId,
+            userId: request.userId!,
             imageId,
             error: error instanceof Error ? error.message : 'Unknown error',
           }
@@ -363,7 +363,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
       };
 
       logger.info({
-        userId: request.userId,
+        userId: request.userId!,
         query,
       }, 'Image list request');
 
@@ -379,7 +379,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           details: { page: query.page },
         };
         logger.warn({
-          userId: request.userId,
+          userId: request.userId!,
           page: query.page,
         }, 'Invalid page parameter');
         return reply.status(400).send(error);
@@ -393,7 +393,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           details: { limit: query.limit },
         };
         logger.warn({
-          userId: request.userId,
+          userId: request.userId!,
           limit: query.limit,
         }, 'Invalid limit parameter');
         return reply.status(400).send(error);
@@ -414,7 +414,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           },
         };
         logger.warn({
-          userId: request.userId,
+          userId: request.userId!,
           sortBy: query.sortBy,
         }, 'Invalid sort field');
         return reply.status(400).send(error);
@@ -431,7 +431,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           },
         };
         logger.warn({
-          userId: request.userId,
+          userId: request.userId!,
           sortOrder: query.sortOrder,
         }, 'Invalid sort order');
         return reply.status(400).send(error);
@@ -440,7 +440,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
       try {
         // List images using image service
         const images = await imageService.listImages({
-          userId: request.userId,
+          userId: request.userId!,
           page,
           limit,
           sortBy: query.sortBy as any,
@@ -466,7 +466,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         );
 
         logger.error({
-          userId: request.userId,
+          userId: request.userId!,
           query,
           error: error instanceof Error ? error.message : 'Unknown error',
         }, 'Image listing error');
@@ -475,7 +475,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           'IMAGE_LISTING_ERROR',
           'error',
           {
-            userId: request.userId,
+            userId: request.userId!,
             query,
             error: error instanceof Error ? error.message : 'Unknown error',
           }
@@ -496,7 +496,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       logger.info({
-        userId: request.userId,
+        userId: request.userId!,
       }, 'Image validation request');
 
       const uploadedFile = await handleSingleFileUpload(request, reply);
@@ -514,7 +514,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         );
 
         logger.info({
-          userId: request.userId,
+          userId: request.userId!,
           filename: uploadedFile.filename,
           valid: validationResult.valid,
           errors: validationResult.errors,
@@ -525,7 +525,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           'IMAGE_VALIDATION_COMPLETED',
           'info',
           {
-            userId: request.userId,
+            userId: request.userId!,
             filename: uploadedFile.filename,
             valid: validationResult.valid,
             errors: validationResult.errors,
@@ -549,7 +549,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         );
 
         logger.error({
-          userId: request.userId,
+          userId: request.userId!,
           filename: uploadedFile.filename,
           error: error instanceof Error ? error.message : 'Unknown error',
         }, 'Image validation error');
@@ -558,7 +558,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           'IMAGE_VALIDATION_ERROR',
           'error',
           {
-            userId: request.userId,
+            userId: request.userId!,
             filename: uploadedFile.filename,
             error: error instanceof Error ? error.message : 'Unknown error',
           }
@@ -581,7 +581,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
       const { imageId } = request.params as { imageId: string };
 
       logger.info({
-        userId: request.userId,
+        userId: request.userId!,
         imageId,
       }, 'Image metadata request');
 
@@ -594,7 +594,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
           message: 'Invalid image ID format',
         };
         logger.warn({
-          userId: request.userId,
+          userId: request.userId!,
           imageId,
         }, 'Invalid image ID');
         return reply.status(400).send(error);
@@ -626,7 +626,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
         );
 
         logger.error({
-          userId: request.userId,
+          userId: request.userId!,
           imageId,
           error: error instanceof Error ? error.message : 'Unknown error',
         }, 'Image metadata error');

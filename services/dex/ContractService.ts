@@ -122,6 +122,42 @@ export class ContractService {
   }
 
   /**
+   * Get total number of pairs created by factory
+   */
+  async getPoolsCount(): Promise<number> {
+    if (!this.factory) {
+      throw new Error('Factory not initialized');
+    }
+    const count = await this.factory.allPairsLength();
+    return Number(count);
+  }
+
+  /**
+   * Get a paginated list of pools
+   */
+  async getPools(start: number, limit: number): Promise<Pool[]> {
+    if (!this.factory) {
+      throw new Error('Factory not initialized');
+    }
+
+    const count = await this.getPoolsCount();
+    const end = Math.min(start + limit, count);
+    const pools: Pool[] = [];
+
+    for (let i = start; i < end; i++) {
+      try {
+        const pairAddress = await this.factory.allPairs(i);
+        const poolInfo = await this.getPoolInfo(pairAddress);
+        pools.push(poolInfo);
+      } catch (error) {
+        console.error(`Failed to load pool at index ${i}:`, error);
+      }
+    }
+
+    return pools;
+  }
+
+  /**
    * Get token information
    */
   async getTokenInfo(tokenAddress: string): Promise<Token> {

@@ -11,6 +11,11 @@ import {
   getIpAddress
 } from '../middleware/auth.js';
 import {
+  createCSRFToken,
+  refreshCSRFToken as refreshCSRFTokenUtil,
+  addCSRFTokenToHeaders
+} from '../middleware/csrf.js';
+import {
   APIError,
   LoginRequest,
   RegisterRequest,
@@ -483,6 +488,90 @@ export default async function authRoutes(fastify: FastifyInstance) {
         500,
         'Permissions Error',
         'Failed to get permissions',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+      return reply.status(500).send(apiError);
+    }
+  });
+
+  // ==================== CSRF TOKEN ENDPOINTS ====================
+
+  /**
+   * GET /auth/csrf-token
+   * Get a new CSRF token for the authenticated user
+   */
+  fastify.get('/csrf-token', {
+    preHandler: authMiddleware,
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      if (!request.userId) {
+        const error: APIError = {
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'User ID not found',
+        };
+        return reply.status(401).send(error);
+      }
+
+      // Generate new CSRF token
+      const token = await createCSRFToken(request.userId);
+
+      // Add token to response headers
+      reply.header('x-csrf-token', token);
+      reply.header('Access-Control-Expose-Headers', 'x-csrf-token');
+
+      logger.info(`CSRF token generated for user: ${request.userId}`);
+      return reply.status(200).send({
+        success: true,
+        message: 'CSRF token generated successfully',
+        token,
+      });
+    } catch (error) {
+      const apiError = handleError(
+        500,
+        'CSRF Token Error',
+        'Failed to generate CSRF token',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+      return reply.status(500).send(apiError);
+    }
+  });
+
+  /**
+   * POST /auth/csrf-token/refresh
+   * Refresh the current CSRF token (invalidate old, create new)
+   */
+  fastify.post('/csrf-token/refresh', {
+    preHandler: authMiddleware,
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      if (!request.userId) {
+        const error: APIError = {
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'User ID not found',
+        };
+        return reply.status(401).send(error);
+      }
+
+      // Refresh CSRF token
+      const newToken = await refreshCSRFTokenUtil(request.userId);
+
+      // Add token to response headers
+      reply.header('x-csrf-token', newToken);
+      reply.header('Access-Control-Expose-Headers', 'x-csrf-token');
+
+      logger.info(`CSRF token refreshed for user: ${request.userId}`);
+      return reply.status(200).send({
+        success: true,
+        message: 'CSRF token refreshed successfully',
+        token: newToken,
+      });
+    } catch (error) {
+      const apiError = handleError(
+        500,
+        'CSRF Token Error',
+        'Failed to refresh CSRF token',
         error instanceof Error ? error.message : 'Unknown error'
       );
       return reply.status(500).send(apiError);

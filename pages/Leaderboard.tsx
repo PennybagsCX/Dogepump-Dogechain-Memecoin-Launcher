@@ -1,13 +1,21 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Trophy, TrendingUp, Medal, User, Crown, Flame, Search, ChevronDown } from 'lucide-react';
-import { formatAddress, formatCurrency, formatNumber } from '../services/web3Service';
+import { formatAddress, formatNumber } from '../services/web3Service';
 import { Link } from 'react-router-dom';
 import { useStore } from '../contexts/StoreContext';
 import { Button } from '../components/Button';
 import { playSound } from '../services/audio';
 import { LEADERBOARD_PAGE_SIZE, TraderStats, BurnerStats, CreatorStats, LeaderboardEntry } from '../types';
 import { Breadcrumb } from '../components/Breadcrumb';
+
+const formatCurrencyCompact = (val: number) =>
+  new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 2,
+    style: 'currency',
+    currency: 'USD'
+  }).format(val);
 
 /**
  * Leaderboard Component
@@ -156,7 +164,7 @@ const Leaderboard: React.FC = () => {
         rank: i + 1,
         ...item,
         username: sanitizeUsername(safeResolveUsername(item.address)),
-        metric: formatCurrency(item.marketCapGen),
+        metric: formatCurrencyCompact(item.marketCapGen),
         subMetric: item.launched + ' Launched',
         avatar: normalizeAddress(item.address) === currentUserAddr ? userProfile?.avatarUrl : undefined
       }));
@@ -207,6 +215,10 @@ const Leaderboard: React.FC = () => {
   const topThree = filteredData.slice(0, 3);
   const rest = filteredData.slice(3, visibleCount + 3);
   const hasMore = (visibleCount + 3) < filteredData.length;
+  const hasData = filteredData.length > 0;
+
+  const metricLabel = activeTab === 'traders' ? 'Volume' : activeTab === 'creators' ? 'Market Cap' : 'Burned';
+  const subMetricLabel = activeTab === 'traders' ? 'Trades' : activeTab === 'creators' ? 'Launched' : 'Burns';
 
   // Handle tab change with state reset
   const handleTabChange = useCallback((tab: 'traders' | 'creators' | 'burners') => {
@@ -319,7 +331,7 @@ const Leaderboard: React.FC = () => {
         />
 
        {/* Hero */}
-      <div className="text-center relative py-8 mt-12">
+      <div className={`text-center relative ${hasData ? 'py-8 mt-12 md:py-10' : 'py-6 mt-4 mb-1 md:py-8'}`}>
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-doge/10 blur-[80px] rounded-full pointer-events-none"></div>
          <div className="inline-flex items-center justify-center w-20 h-20 bg-[#0A0A0A] border border-doge/20 rounded-3xl mb-6 shadow-[0_0_40px_rgba(212,175,55,0.2)] relative z-10 animate-float">
             <Trophy size={40} className="text-doge drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
@@ -333,7 +345,7 @@ const Leaderboard: React.FC = () => {
       </div>
 
      {/* Tabs & Search */}
-     <div className="flex flex-col items-center gap-8 mb-48 w-full mt-12">
+     <div className={`flex flex-col items-center gap-8 w-full ${hasData ? 'mt-8 mb-16 md:mb-32' : 'mt-4 mb-8 md:mb-14'}`}>
          <div className="flex p-1.5 rounded-2xl justify-center w-full flex-wrap">
             <button
               onClick={() => handleTabChange('traders')}
@@ -369,8 +381,8 @@ const Leaderboard: React.FC = () => {
          </div>
       </div>
 
-      {/* Podium (Hidden if searching) */}
-     {!search && (
+      {/* Podium (Hidden if searching or no data) */}
+     {!search && filteredData.length > 0 && (
         <div className="flex flex-col md:flex-row justify-center items-center md:items-end gap-6 md:gap-12 min-h-[300px] md:min-h-[400px] mt-8 mb-32 px-4 w-full text-center md:text-left">
             {/* 2nd Place */}
             {topThree[1] && (
@@ -493,7 +505,7 @@ const Leaderboard: React.FC = () => {
          </div>
           <div className="divide-y divide-white/5">
              {(search ? filteredData : rest).length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-16 text-center">
+                <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center">
                   <Trophy size={64} className="text-white/10 mb-4" />
                   <h3 className="text-xl font-bold text-white mb-2">
                     {search ? 'No results found' : 'No rankings yet'}
@@ -509,16 +521,14 @@ const Leaderboard: React.FC = () => {
                 (search ? filteredData : rest).map((item) => (
                     <div key={item.rank} className={`group ${item.address === currentUserAddr ? 'bg-doge/5' : ''} hover:bg-white/[0.02] transition-colors`}>
                        {/* Mobile Layout */}
-                       <div className="md:hidden flex items-center gap-3 px-4 py-3 w-full">
-                          <div className="flex-shrink-0 w-8 text-center font-mono font-bold text-zinc-500 text-sm">
-                             #{item.rank}
-                          </div>
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                       <div className="md:hidden w-full px-4 py-3 flex flex-col gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                             <div className="flex-shrink-0 w-8 text-center font-mono font-bold text-zinc-500 text-sm">#{item.rank}</div>
                              {item.avatar ? (
-                                <img src={item.avatar} loading="lazy" decoding="async" className="w-8 h-8 rounded-full object-cover flex-shrink-0" alt={`${item.username} avatar`} />
+                                <img src={item.avatar} loading="lazy" decoding="async" className="w-9 h-9 rounded-full object-cover flex-shrink-0" alt={`${item.username} avatar`} />
                              ) : (
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getAvatarColor(item.address)} flex-shrink-0`}>
-                                   <User size={14} className="text-white" />
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center ${getAvatarColor(item.address)} flex-shrink-0`}>
+                                   <User size={15} className="text-white" />
                                 </div>
                              )}
                              <div className="min-w-0 flex-1">
@@ -528,8 +538,13 @@ const Leaderboard: React.FC = () => {
                                 <div className="text-[10px] text-zinc-500 font-mono mt-0.5 truncate">{formatAddress(item.address)}</div>
                              </div>
                           </div>
-                          <div className="flex-shrink-0 ml-auto text-right">
-                             <div className="font-mono text-gray-300 text-sm">{item.metric}</div>
+                          <div className="flex items-start justify-between text-xs text-gray-400 gap-3">
+                             <span className="uppercase tracking-wide">{metricLabel}</span>
+                             <span className="font-mono text-sm text-white truncate max-w-[60%] text-right">{item.metric}</span>
+                          </div>
+                          <div className="flex items-start justify-between text-[11px] text-gray-500 gap-3">
+                             <span className="uppercase tracking-wide">{subMetricLabel}</span>
+                             <span className="text-gray-300 truncate max-w-[60%] text-right">{item.subMetric}</span>
                           </div>
                        </div>
 

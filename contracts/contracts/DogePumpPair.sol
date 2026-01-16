@@ -4,15 +4,17 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./DogePumpLPToken.sol";
 import "../interfaces/IDogePumpPair.sol";
 
 /**
  * @title DogePumpPair
  * @dev AMM pair implementing constant product formula (x * y = k)
- * @notice Includes reentrancy protection and 0.3% swap fee
+ * @notice Includes reentrancy protection, circuit breakers, and 0.3% swap fee
  */
-contract DogePumpPair is ERC20, IDogePumpPair {
+contract DogePumpPair is ERC20, IDogePumpPair, Pausable, Ownable {
     /// @notice Minimum liquidity to prevent dust attacks
     uint public constant override MINIMUM_LIQUIDITY = 10**3;
 
@@ -22,9 +24,42 @@ contract DogePumpPair is ERC20, IDogePumpPair {
     /// @notice Minimum time elapsed between swaps for TWAP (1 block)
     uint32 public constant MIN_TIME_ELAPSED = 1;
 
+    /// @notice Maximum price change per swap (50% - prevents extreme manipulation)
+    uint public constant MAX_PRICE_CHANGE = 50;
+
+    /// @notice Maximum trading volume per block (prevents excessive trading)
+    uint public constant MAX_VOLUME_PER_BLOCK = 1000 * 1e18;
+
+    /// @notice Trading volume tracker for current block
+    uint public volumeInCurrentBlock;
+
+    /// @notice Last block when volume was tracked
+    uint public lastVolumeTrackedBlock;
+
+    /// @notice Circuit breaker triggered flag
+    bool public circuitBreakerTriggered;
+
+    /// @notice Circuit breaker trigger time
+    uint public circuitBreakerTriggeredAt;
+
+    /// @notice Circuit breaker cooldown period (1 hour)
+    uint public constant CIRCUIT_BREAKER_COOLDOWN = 1 hours;
+
     /// @notice Transfer function selector for safe transfers
     bytes4 private constant SELECTOR =
         bytes4(keccak256(bytes("transfer(address,uint256)")));
+
+    /// @notice Custom error for circuit breaker triggered
+    error CircuitBreakerTriggered();
+
+    /// @notice Custom error for excessive price change
+    error ExcessivePriceChange();
+
+    /// @notice Custom error for volume limit exceeded
+    error VolumeLimitExceeded();
+
+    /// @notice Custom error for contract paused
+    error ContractPaused();
 
     /// @notice Factory contract address
     address public factory;
@@ -103,7 +138,7 @@ contract DogePumpPair is ERC20, IDogePumpPair {
      * @dev Initializes pair (called by factory)
      * @notice Can only be called once by factory
      */
-    constructor() ERC20("DogePump LP Token", "DPLP") {
+    constructor() ERC20("DogePump LP Token", "DPLP") Ownable(msg.sender) {
         factory = msg.sender;
     }
 
@@ -144,6 +179,117 @@ contract DogePumpPair is ERC20, IDogePumpPair {
     }
 
     /**
+     * @notice Checks price change circuit breaker
+     * @dev Reverts if price change exceeds maximum allowed
+     * @param newReserve0 New reserve0 after swap
+     * @param newReserve1 New reserve1 after swap
+     * @param oldReserve0 Old reserve0 before swap
+     * @param oldReserve1 Old reserve1 before swap
+     */
+    function _checkPriceChange(
+        uint newReserve0,
+        uint newReserve1,
+        uint oldReserve0,
+        uint oldReserve1
+    ) private pure {
+        if (oldReserve0 == 0 || oldReserve1 == 0) return;
+
+        // Calculate price before swap (reserve1 / reserve0)
+        uint oldPrice = (oldReserve1 * 1e18) / oldReserve0;
+
+        // Calculate price after swap
+        uint newPrice = (newReserve1 * 1e18) / newReserve0;
+
+        // Calculate percentage change
+        uint priceChange;
+        if (newPrice > oldPrice) {
+            priceChange = ((newPrice - oldPrice) * 100) / oldPrice;
+        } else {
+            priceChange = ((oldPrice - newPrice) * 100) / oldPrice;
+        }
+
+        if (priceChange > MAX_PRICE_CHANGE) revert ExcessivePriceChange();
+    }
+
+    /**
+     * @notice Checks and updates volume limits per block
+     * @dev Resets volume counter on new block
+     * @param volume Trading volume for current transaction
+     */
+    function _checkAndUpdateVolume(uint volume) private {
+        if (block.number != lastVolumeTrackedBlock) {
+            volumeInCurrentBlock = 0;
+            lastVolumeTrackedBlock = block.number;
+        }
+
+        if (volumeInCurrentBlock + volume > MAX_VOLUME_PER_BLOCK) {
+            revert VolumeLimitExceeded();
+        }
+
+        volumeInCurrentBlock += volume;
+    }
+
+    /**
+     * @notice Triggers circuit breaker (owner only)
+     * @dev Pauses contract and records trigger time
+     */
+    function triggerCircuitBreaker() external onlyOwner {
+        circuitBreakerTriggered = true;
+        circuitBreakerTriggeredAt = block.timestamp;
+        _pause();
+
+        emit CircuitBreakerTripped(msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice Resets circuit breaker after cooldown (owner only)
+     * @dev Can only be called after cooldown period has elapsed
+     */
+    function resetCircuitBreaker() external onlyOwner {
+        if (!circuitBreakerTriggered) revert("NOT_TRIGGERED");
+
+        if (block.timestamp < circuitBreakerTriggeredAt + CIRCUIT_BREAKER_COOLDOWN) {
+            revert("COOLDOWN_ACTIVE");
+        }
+
+        circuitBreakerTriggered = false;
+        circuitBreakerTriggeredAt = 0;
+        _unpause();
+
+        emit CircuitBreakerReset(msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice Pauses the contract (owner only)
+     * @dev Emergency pause for critical situations
+     */
+    function pause() external onlyOwner {
+        _pause();
+        emit ContractPausedEvent(msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice Unpauses the contract (owner only)
+     * @dev Resumes normal operations
+     */
+    function unpause() external onlyOwner {
+        _unpause();
+        emit ContractUnpaused(msg.sender, block.timestamp);
+    }
+
+    /// @notice Event emitted when circuit breaker is triggered
+    event CircuitBreakerTripped(address indexed triggeredBy, uint timestamp);
+
+    /// @notice Event emitted when circuit breaker is reset
+    event CircuitBreakerReset(address indexed resetBy, uint timestamp);
+
+    /// @notice Event emitted when contract is paused
+    event ContractPausedEvent(address indexed pausedBy, uint timestamp);
+
+    /// @notice Event emitted when contract is unpaused
+    event ContractUnpaused(address indexed unpausedBy, uint timestamp);
+
+    /**
      * @notice Updates reserves with new balances
      * @dev Calculates cumulative prices and emits Sync event
      * @param balance0 New balance of token0
@@ -159,7 +305,7 @@ contract DogePumpPair is ERC20, IDogePumpPair {
     ) private {
         if (balance0 > type(uint112).max || balance1 > type(uint112).max)
             revert Overflow();
-        
+
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast;
 
@@ -183,7 +329,7 @@ contract DogePumpPair is ERC20, IDogePumpPair {
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
         blockTimestampLast = blockTimestamp;
-        
+
         emit Sync(reserve0, reserve1);
     }
 
@@ -193,21 +339,21 @@ contract DogePumpPair is ERC20, IDogePumpPair {
      * @param to Address to receive LP tokens
      * @return liquidity Amount of LP tokens minted
      */
-    function mint(address to) external lock override returns (uint liquidity) {
+    function mint(address to) external lock whenNotPaused override returns (uint liquidity) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
-        
+
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));
-        
+
         uint amount0 = balance0 - _reserve0;
         uint amount1 = balance1 - _reserve1;
 
         uint _totalSupply = totalSupply();
-        
+
         if (_totalSupply == 0) {
             // First liquidity provision
             liquidity = Math.sqrt(amount0 * amount1) - MINIMUM_LIQUIDITY;
-            _mint(address(0), MINIMUM_LIQUIDITY); // Lock minimum liquidity
+            _mint(address(0xdEaD), MINIMUM_LIQUIDITY); // Lock minimum liquidity
         } else {
             // Subsequent liquidity provision
             liquidity = Math.min(
@@ -221,7 +367,7 @@ contract DogePumpPair is ERC20, IDogePumpPair {
 
         _mint(to, liquidity);
         _update(balance0, balance1, _reserve0, _reserve1);
-        
+
         emit Mint(msg.sender, amount0, amount1);
     }
 
@@ -232,17 +378,17 @@ contract DogePumpPair is ERC20, IDogePumpPair {
      * @return amount0 Amount of token0 returned
      * @return amount1 Amount of token1 returned
      */
-    function burn(address to) external lock override returns (uint amount0, uint amount1) {
+    function burn(address to) external lock whenNotPaused override returns (uint amount0, uint amount1) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
-        
+
         address _token0 = token0;
         address _token1 = token1;
-        
+
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
-        
+
         uint liquidity = balanceOf(address(this));
-        
+
         uint _totalSupply = totalSupply();
         amount0 = (liquidity * balance0) / _totalSupply;
         amount1 = (liquidity * balance1) / _totalSupply;
@@ -257,7 +403,7 @@ contract DogePumpPair is ERC20, IDogePumpPair {
         balance1 = IERC20(_token1).balanceOf(address(this));
 
         _update(balance0, balance1, _reserve0, _reserve1);
-        
+
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
@@ -274,12 +420,12 @@ contract DogePumpPair is ERC20, IDogePumpPair {
         uint amount1Out,
         address to,
         bytes calldata data
-    ) external lock override {
+    ) external lock whenNotPaused override {
         if (amount0Out == 0 && amount1Out == 0)
             revert InsufficientOutputAmount();
-        
+
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
-        
+
         if (amount0Out >= _reserve0 || amount1Out >= _reserve1)
             revert InsufficientLiquidity();
 
@@ -288,7 +434,7 @@ contract DogePumpPair is ERC20, IDogePumpPair {
         {
             address _token0 = token0;
             address _token1 = token1;
-            
+
             if (to == _token0 || to == _token1) revert InvalidTo();
 
             if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out);
@@ -297,20 +443,20 @@ contract DogePumpPair is ERC20, IDogePumpPair {
             if (data.length > 0) {
                 // Flash loan callback with 0.3% fee to discourage manipulation
                 uint flashLoanFee = (amount0Out + amount1Out) * 3 / 1000;
-                
+
                 // Require fee payment before callback
                 require(
                     IERC20(token0).transferFrom(to, address(this), flashLoanFee),
                     "Flash loan fee required"
                 );
-                
+
                 IDogePumpCallee(to).dogePumpCall(
                     msg.sender,
                     amount0Out,
                     amount1Out,
                     data
                 );
-                
+
                 // Return fee after callback
                 IERC20(token0).transfer(to, flashLoanFee);
             }
@@ -329,6 +475,12 @@ contract DogePumpPair is ERC20, IDogePumpPair {
         if (amount0In == 0 && amount1In == 0)
             revert InsufficientInputAmount();
 
+        // Check volume limits
+        _checkAndUpdateVolume(amount0In + amount1In);
+
+        // Check price change circuit breaker
+        _checkPriceChange(balance0, balance1, _reserve0, _reserve1);
+
         {
             // Calculate adjusted balances with 0.3% fee
             uint balance0Adjusted = balance0 * 1000 - amount0In * 3;
@@ -342,7 +494,7 @@ contract DogePumpPair is ERC20, IDogePumpPair {
         }
 
         _update(balance0, balance1, _reserve0, _reserve1);
-        
+
         emit Swap(
             msg.sender,
             amount0In,

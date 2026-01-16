@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { config } from '../config.js';
 import { JWTPayload, APIError, Permission, UserRole } from '../types/index.js';
 import { authService } from '../services/authService.js';
-import { verifyAccessToken, isTokenBlacklisted } from '../utils/jwt.js';
+import { verifyAccessToken, isTokenBlacklisted, verifyTokenIP, extractClientIP } from '../utils/jwt.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -38,12 +38,32 @@ export async function authMiddleware(
 
     // Verify token
     const decoded = verifyAccessToken(token);
-    
+
+    // Verify IP address if token has IP binding
+    const clientIP = extractClientIP(request);
+    const ipValid = await verifyTokenIP(token, clientIP);
+
+    if (!ipValid) {
+      logger.warn(
+        {
+          userId: decoded.userId,
+          clientIP,
+        },
+        'Authentication failed: IP address mismatch'
+      );
+      const error: APIError = {
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Session invalid. Please login again.',
+      };
+      return reply.status(401).send(error);
+    }
+
     // Set user context
     request.user = decoded;
     request.userId = decoded.userId;
-    
-    logger.debug(`User authenticated: ${decoded.userId}`);
+
+    logger.debug(`User authenticated: ${decoded.userId} from ${clientIP}`);
   } catch (error) {
     const apiError: APIError = {
       statusCode: 401,

@@ -19,7 +19,7 @@ interface MobileTradingSheetProps {
   token: Token;
   isOpen: boolean;
   onClose: () => void;
-  initialTradeType?: 'buy' | 'sell' | 'burn' | 'karma';
+  initialTradeType?: 'buy' | 'sell' | 'burn' | 'reputation';
   initialAmount?: string;
   onSuccess?: () => void;
 }
@@ -36,7 +36,7 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
     buyToken,
     sellToken,
     burnToken,
-    lockForKarma,
+    lockForReputation,
     placeOrder,
     userBalanceDC,
     myHoldings,
@@ -46,7 +46,7 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
   } = useStore();
   const { addToast } = useToast();
 
-  const [tradeType, setTradeType] = useState<'buy' | 'sell' | 'burn' | 'karma'>(initialTradeType);
+  const [tradeType, setTradeType] = useState<'buy' | 'sell' | 'burn' | 'reputation'>(initialTradeType);
   const [orderMode, setOrderMode] = useState<'market' | 'limit' | 'stop'>('market');
   const [amount, setAmount] = useState('');
   const [limitPrice, setLimitPrice] = useState('');
@@ -73,7 +73,7 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
 
   // Reset logic when trade type changes
   useEffect(() => {
-    if (tradeType === 'burn' || tradeType === 'karma') {
+    if (tradeType === 'burn' || tradeType === 'reputation') {
       setOrderMode('market');
     }
     setErrors({});
@@ -128,7 +128,7 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
       newErrors.amount = 'Insufficient $DC';
       isValid = false;
     }
-    if ((tradeType === 'sell' || tradeType === 'burn' || tradeType === 'karma') &&
+    if ((tradeType === 'sell' || tradeType === 'burn' || tradeType === 'reputation') &&
         Number(amount) > userTokenBalance) {
       newErrors.amount = `Insufficient ${token.ticker}`;
       isValid = false;
@@ -172,15 +172,15 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
         } else if (tradeType === 'burn') {
           burnToken(token.id, tradeAmount);
           if (settings.audioEnabled) playSound('launch');
-        } else if (tradeType === 'karma') {
-          lockForKarma(token.id, tradeAmount);
+        } else if (tradeType === 'reputation') {
+          lockForReputation(token.id, tradeAmount);
         }
 
-        const actionLabel = tradeType === 'buy' ? 'Buy' : tradeType === 'sell' ? 'Sell' : tradeType === 'karma' ? 'Lock' : 'Burn';
+        const actionLabel = tradeType === 'buy' ? 'Buy' : tradeType === 'sell' ? 'Sell' : tradeType === 'reputation' ? 'Lock' : 'Burn';
         addToast('success', `${actionLabel} executed successfully!`, 'Trade Confirmed');
       } else {
         // Execute Limit/Stop Order logic via Store
-        placeOrder(token.id, tradeType === 'burn' ? 'sell' : tradeType === 'karma' ? 'sell' : tradeType, orderMode, tradeAmount, price);
+        placeOrder(token.id, tradeType === 'burn' ? 'sell' : tradeType === 'reputation' ? 'sell' : tradeType, orderMode, tradeAmount, price);
         if (settings.audioEnabled) playSound('success');
         addToast('success', 'Order placed successfully!', 'Order Confirmed');
       }
@@ -228,13 +228,13 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
 
   const isBuy = tradeType === 'buy';
   const isBurn = tradeType === 'burn';
-  const isKarma = tradeType === 'karma';
+  const isReputation = tradeType === 'reputation';
 
   const bgColor = isBuy
     ? 'bg-green-500'
     : isBurn
       ? 'bg-orange-500'
-      : isKarma
+      : isReputation
         ? 'bg-purple-600'
         : 'bg-red-500';
 
@@ -316,7 +316,7 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
                   onClose={() => setDismissedInfo({ ...dismissedInfo, burn: true })}
                 />
               )}
-              {tradeType === 'karma' && !dismissedInfo.karma && (
+              {tradeType === 'reputation' && !dismissedInfo.karma && (
                 <InfoBanner
                   type="karma"
                   onClose={() => setDismissedInfo({ ...dismissedInfo, karma: true })}
@@ -325,7 +325,7 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
             </div>
 
             {/* Limit/Trigger Input */}
-            {(orderMode === 'limit' || orderMode === 'stop') && tradeType !== 'burn' && tradeType !== 'karma' && (
+            {(orderMode === 'limit' || orderMode === 'stop') && tradeType !== 'burn' && tradeType !== 'reputation' && (
               <div className="relative z-10">
                 <LimitPriceInput
                   value={limitPrice}
@@ -386,12 +386,12 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
                 className={`w-full h-14 text-base uppercase tracking-widest font-bold shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl border-0 relative overflow-hidden min-h-[56px] ${
                   tradeType === 'buy' ? 'shadow-[0_0_25px_rgba(0,224,84,0.2)]' :
                   tradeType === 'burn' ? 'shadow-[0_0_25px_rgba(234,88,12,0.2)]' :
-                  tradeType === 'karma' ? 'shadow-[0_0_25px_rgba(147,51,234,0.2)]' :
+                  tradeType === 'reputation' ? 'shadow-[0_0_25px_rgba(147,51,234,0.2)]' :
                   'shadow-[0_0_25px_rgba(255,59,48,0.2)]'
                 }`}
                 style={{
-                  backgroundColor: isBuy ? '#00E054' : isBurn ? '#ea580c' : isKarma ? '#9333ea' : '#FF3B30',
-                  color: isBurn || isKarma ? 'white' : isBuy ? 'black' : 'white',
+                  backgroundColor: isBuy ? '#00E054' : isBurn ? '#ea580c' : isReputation ? '#9333ea' : '#FF3B30',
+                  color: isBurn || isReputation ? 'white' : isBuy ? 'black' : 'white',
                 }}
                 aria-label={isProcessing ? 'Processing trade' : 'Execute trade'}
               >
@@ -404,7 +404,7 @@ export const MobileTradingSheet: React.FC<MobileTradingSheetProps> = ({
                 ) : (
                   <>
                     {tradeType === 'burn' ? 'Burn Tokens' :
-                      tradeType === 'karma' ? 'Lock for Karma' :
+                      tradeType === 'reputation' ? 'Lock for Reputation' :
                       orderMode === 'stop' && tradeType === 'buy' ? `Trigger Buy @ $${limitPrice}` :
                       orderMode !== 'market' ? `Place ${orderMode}` :
                       (tradeType === 'buy' ? 'Buy' : 'Sell')}

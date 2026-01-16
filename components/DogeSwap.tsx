@@ -23,11 +23,11 @@ interface DogeSwapProps {
 }
 
 export const DogeSwap: React.FC<DogeSwapProps> = ({ token: initialToken }) => {
-  const { buyToken, sellToken, burnToken, lockForKarma, userBalanceDC, myHoldings, tokens, farmPositions, stakeToken, unstakeToken, harvestRewards } = useStore();
+  const { buyToken, sellToken, burnToken, lockForReputation, userBalanceDC, myHoldings, tokens, farmPositions, stakeToken, unstakeToken, harvestRewards } = useStore();
   const { addToast } = useToast();
   
   // Tab State - Extended to include DEX features
-  const [activeTab, setActiveTab] = useState<'swap' | 'swap-dex' | 'burn' | 'karma' | 'farm' | 'liquidity' | 'pool-detail'>('swap');
+  const [activeTab, setActiveTab] = useState<'swap' | 'swap-dex' | 'burn' | 'reputation' | 'farm' | 'liquidity' | 'pool-detail'>('swap');
   const [selectedPoolAddress, setSelectedPoolAddress] = useState<string | null>(null);
 
   // DEX state
@@ -116,7 +116,7 @@ export const DogeSwap: React.FC<DogeSwapProps> = ({ token: initialToken }) => {
         checkBalance = initialTokenBalance;
         ticker = initialToken.ticker;
     } else {
-        // Burn/Karma always use the current token context (initialToken)
+        // Burn/Reputation always use the current token context (initialToken)
         checkBalance = initialTokenBalance;
         ticker = initialToken.ticker;
     }
@@ -144,9 +144,9 @@ export const DogeSwap: React.FC<DogeSwapProps> = ({ token: initialToken }) => {
           burnToken(initialToken.id, amount);
           addToast('success', `Burned ${amount} ${initialToken.ticker}`, 'Burn Complete');
           playSound('launch');
-      } else if (activeTab === 'karma') {
-          lockForKarma(initialToken.id, amount);
-          addToast('success', `Locked ${amount} ${initialToken.ticker}`, 'Karma Earned');
+      } else if (activeTab === 'reputation') {
+          lockForReputation(initialToken.id, amount);
+          addToast('success', `Locked ${amount} ${initialToken.ticker}`, 'Reputation Earned');
           playSound('success');
       } else if (activeTab === 'farm') {
           stakeToken(initialToken.id, amount);
@@ -265,7 +265,7 @@ export const DogeSwap: React.FC<DogeSwapProps> = ({ token: initialToken }) => {
        <div className="grid grid-cols-3 gap-1 p-1 bg-white/5 rounded-xl mb-3 relative z-10">
           <button onClick={() => setActiveTab('swap')} className={`py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'swap' ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}>Swap</button>
           <button onClick={() => setActiveTab('burn')} className={`py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'burn' ? 'bg-orange-500/20 text-orange-500' : 'text-gray-500 hover:text-orange-400'}`}>Burn</button>
-          <button onClick={() => setActiveTab('karma')} className={`py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'karma' ? 'bg-purple-500/20 text-purple-500' : 'text-gray-500 hover:text-purple-400'}`}>Karma</button>
+          <button onClick={() => setActiveTab('reputation')} className={`py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'reputation' ? 'bg-purple-500/20 text-purple-500' : 'text-gray-500 hover:text-purple-400'}`}>Reputation</button>
        </div>
 
        {/* Primary Tabs - DEX Features */}
@@ -418,12 +418,12 @@ export const DogeSwap: React.FC<DogeSwapProps> = ({ token: initialToken }) => {
           </div>
        )}
 
-       {/* Context Header for Burn/Karma */}
+       {/* Context Header for Burn/Reputation */}
        {activeTab !== 'swap' && (
           <div className={`flex items-center gap-3 p-3 rounded-xl border my-6 ${activeTab === 'burn' ? 'bg-orange-500/10 border-orange-500/20' : 'bg-purple-500/10 border-purple-500/20'}`}>
              {activeTab === 'burn' ? <Flame size={20} className="text-orange-500"/> : <Sparkles size={20} className="text-purple-500"/>}
              <div className="text-xs text-gray-300">
-                <span className="font-bold block text-white">{activeTab === 'burn' ? 'Burn Tokens' : 'Lock for Karma'}</span>
+                <span className="font-bold block text-white">{activeTab === 'burn' ? 'Burn Tokens' : 'Lock for Reputation'}</span>
                 {activeTab === 'burn' ? 'Permanently destroy tokens to reduce supply.' : 'Lock tokens to increase airdrop allocation.'}
              </div>
           </div>

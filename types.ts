@@ -60,7 +60,7 @@ export interface UserProfile {
   bio: string;
   avatarUrl: string;
   badges: Badge[];
-  karma: number; // New Karma Points
+  reputation_points: number; // Renamed from karma (2026-01-16)
 }
 
 export interface AppSettings {

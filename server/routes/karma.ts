@@ -90,7 +90,7 @@ function getProvider(): ethers.providers.JsonRpcProvider {
 }
 
 // Get contract signer (for transactions that require signature)
-async function getSigner(request: FastifyRequest): Promise ethers.Signer {
+async function getSigner(request: FastifyRequest): Promise<ethers.Signer> {
   const walletAddress = getUserWalletAddress(request);
 
   // In production, this would use the user's signature to create a signer

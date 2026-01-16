@@ -533,8 +533,8 @@ const Home: React.FC = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+              <div className="flex flex-col items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-doge/20 flex items-center justify-center">
                   <Droplets size={20} className="text-doge" />
                 </div>
@@ -545,8 +545,8 @@ const Home: React.FC = () => {
               </div>
               <p className="text-sm text-gray-400">Active liquidity pools</p>
             </div>
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+              <div className="flex flex-col items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                   <TrendingUp size={20} className="text-green-400" />
                 </div>

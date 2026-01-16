@@ -14,6 +14,7 @@ import { PortfolioChart } from '../components/PortfolioChart';
 import { CreatorAdmin } from '../components/CreatorAdmin';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { Breadcrumb } from '../components/Breadcrumb';
+import { COPY_TRADING_ENABLED } from '../constants';
 
 const Profile: React.FC = () => {
   const { address } = useParams();
@@ -460,46 +461,48 @@ const Profile: React.FC = () => {
                     </div>
 
                     {/* Copy Trade Manager */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-                            <Zap size={18} className="text-blue-400" /> Copy Trading
-                        </h3>
-                        {copyTargets.length === 0 ? (
-                            <div className="p-8 text-center bg-white/[0.02] rounded-2xl border border-white/5 text-gray-500">
-                                Not following anyone. Copy users from the Explorer.
-                            </div>
-                        ) : (
-                            <div className="grid gap-3">
-                                {copyTargets.map((target: any) => (
-                                    <div key={target.address} className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-blue-500/30 transition-colors relative overflow-hidden">
-                                        {target.active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
-                                        <div className="flex items-center gap-4 pl-2">
-                                            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
-                                                <Users size={20} />
+                    {COPY_TRADING_ENABLED && (
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
+                                <Zap size={18} className="text-blue-400" /> Copy Trading
+                            </h3>
+                            {copyTargets.length === 0 ? (
+                                <div className="p-8 text-center bg-white/[0.02] rounded-2xl border border-white/5 text-gray-500">
+                                    Not following anyone. Copy users from the Explorer.
+                                </div>
+                            ) : (
+                                <div className="grid gap-3">
+                                    {copyTargets.map((target: any) => (
+                                        <div key={target.address} className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-blue-500/30 transition-colors relative overflow-hidden">
+                                            {target.active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
+                                            <div className="flex items-center gap-4 pl-2">
+                                                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                                    <Users size={20} />
+                                                </div>
+                                                <div>
+                                                    <div className="font-mono font-bold text-white text-sm">{resolveUsername(target.address)}</div>
+                                                    <div className="text-[10px] text-gray-500">Max: {target.maxAmountDC} DC/trade</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="font-mono font-bold text-white text-sm">{resolveUsername(target.address)}</div>
-                                                <div className="text-[10px] text-gray-500">Max: {target.maxAmountDC} DC/trade</div>
+                                            <div className="text-right flex items-center gap-4">
+                                                <div>
+                                                    <div className="text-[10px] text-gray-500 uppercase">Copied Vol</div>
+                                                    <div className="text-sm font-mono text-white">{formatNumber(target.totalCopiedVolume)}</div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => unfollowUser(target.address)} 
+                                                    className="p-2 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-500 transition-colors"
+                                                    title="Stop Copying"
+                                                >
+                                                    <StopCircle size={18} />
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="text-right flex items-center gap-4">
-                                            <div>
-                                                <div className="text-[10px] text-gray-500 uppercase">Copied Vol</div>
-                                                <div className="text-sm font-mono text-white">{formatNumber(target.totalCopiedVolume)}</div>
-                                            </div>
-                                            <button 
-                                                onClick={() => unfollowUser(target.address)} 
-                                                className="p-2 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-500 transition-colors"
-                                                title="Stop Copying"
-                                            >
-                                                <StopCircle size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                  </div>
              )
            )}

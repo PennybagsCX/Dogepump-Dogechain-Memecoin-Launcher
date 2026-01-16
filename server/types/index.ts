@@ -34,6 +34,7 @@ export interface JWTPayload {
   username: string;
   role: UserRole;
   walletAddress?: string;
+  ipAddress?: string; // IP address binding for token security
   iat?: number;
   exp?: number;
 }

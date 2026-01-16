@@ -6,12 +6,21 @@ import { useStore } from '../contexts/StoreContext';
 import { timeAgo } from '../utils';
 import { formatNumber } from '../services/web3Service';
 
-const MOCK_ACTIVITIES = [
-  { user: '0x3a...9f2', action: 'bought', amount: '5,000', token: 'Doge CEO', time: '1s ago' },
-  { user: '0x7b...1c4', action: 'launched', token: 'SuperShiba', time: '5s ago' },
-  { user: '0x1d...2e3', action: 'bought', amount: '250k', token: 'ElonWifHat', time: '12s ago' },
-  { user: '0x99...888', action: 'sold', amount: '1,000', token: 'Moon Rocket', time: '40s ago' },
-  { user: '0x4f...5a1', action: 'bought', amount: '10,000', token: 'Doge CEO', time: '1m ago' },
+interface Activity {
+  user: string;
+  action: string;
+  amount?: string;
+  token: string;
+  tokenId?: string;
+  time: string;
+}
+
+const MOCK_ACTIVITIES: Activity[] = [
+  { user: '0x3a...9f2', action: 'bought', amount: '5,000', token: 'Doge CEO', time: '1s ago', tokenId: 'mock-1' },
+  { user: '0x7b...1c4', action: 'launched', token: 'SuperShiba', time: '5s ago', tokenId: 'mock-2' },
+  { user: '0x1d...2e3', action: 'bought', amount: '250k', token: 'ElonWifHat', time: '12s ago', tokenId: 'mock-3' },
+  { user: '0x99...888', action: 'sold', amount: '1,000', token: 'Moon Rocket', time: '40s ago', tokenId: 'mock-4' },
+  { user: '0x4f...5a1', action: 'bought', amount: '10,000', token: 'Doge CEO', time: '1m ago', tokenId: 'mock-5' },
 ];
 
 interface TickerProps {

@@ -100,10 +100,24 @@ export const config = {
   },
 
   // JWT
-  JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+  JWT_SECRET: (() => {
+    const secret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && (secret === 'your-secret-key-change-in-production' || !secret || secret.length < 32)) {
+      throw new Error('JWT_SECRET must be set to a secure random value (at least 32 characters) in production!');
+    }
+    return secret;
+  })(),
   JWT_ACCESS_TOKEN_EXPIRY: process.env.JWT_ACCESS_TOKEN_EXPIRY || '15m',
   JWT_REFRESH_TOKEN_EXPIRY: process.env.JWT_REFRESH_TOKEN_EXPIRY || '7d',
-  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production',
+  JWT_REFRESH_SECRET: (() => {
+    const secret = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production';
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && (secret === 'your-refresh-secret-key-change-in-production' || !secret || secret.length < 32)) {
+      throw new Error('JWT_REFRESH_SECRET must be set to a secure random value (at least 32 characters) in production!');
+    }
+    return secret;
+  })(),
   
   // Authentication
   AUTH: {

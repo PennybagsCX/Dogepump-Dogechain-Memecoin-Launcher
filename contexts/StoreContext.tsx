@@ -324,18 +324,23 @@ export interface StoreContextType {
   bannedUsers: BannedUser[];
   warnedUsers: WarnedUser[];
   banNoticeModal: { isOpen: boolean; reason?: string };
-  warningNoticeModal: { isOpen: boolean; reason?: string; notes?: string };
+  warningNoticeModal: { isOpen: boolean; reason?: string; notes?: string; warningCount?: number; maxWarnings?: number; warningAddress?: string; warningTokenId?: string };
   // DEX State
   dexPools: any[];
   dexLpPositions: any[];
   dexSettings: { slippage: number; deadline: number; expertMode: boolean };
   dexTransactionQueue: any[];
+  setDexPools: React.Dispatch<React.SetStateAction<any[]>>;
+  setDexLpPositions: React.Dispatch<React.SetStateAction<any[]>>;
+  setDexSettings: React.Dispatch<React.SetStateAction<{ slippage: number; deadline: number; expertMode: boolean }>>;
+  setDexTransactionQueue: React.Dispatch<React.SetStateAction<any[]>>;
   launchToken: (name: string, ticker: string, description: string, image: string, persona: string, socials?: { twitter?: string, telegram?: string, website?: string, discord?: string }, initialBuyAmount?: number) => string;
   buyToken: (tokenId: string, amountDC: number, options?: { isLimitOrder?: boolean, isCopyTrade?: boolean }) => void;
   sellToken: (tokenId: string, amountToken: number, options?: { isLimitOrder?: boolean, isCopyTrade?: boolean }) => void;
   burnToken: (tokenId: string, amountToken: number) => void;
-  lockForKarma: (tokenId: string, amountToken: number) => void;
-  unlockKarma: (tokenId: string) => void;
+  lockForReputation: (tokenId: string, amountToken: number) => Promise<void>;
+  unlockForReputation: (lockedAssetId: string) => Promise<void>;
+  reputationPoints: number;
   boostToken: (tokenId: string, amountDC: number) => void;
   airdropToken: (tokenId: string, type: 'random' | 'holders', amountPerUser: number, count: number) => void;
   placeOrder: (tokenId: string, type: 'buy' | 'sell', mode: 'limit' | 'stop', amount: number, price: number) => void;
@@ -361,8 +366,6 @@ export interface StoreContextType {
   getFarmStats: (farmId: string) => FarmStats | undefined;
   addComment: (tokenId: string, text: string, imageUrl?: string, tradeAction?: { type: 'buy' | 'sell'; amount: number }) => void;
   likeComment: (commentId: string) => void;
-  getTradesForToken: (tokenId: string) => Trade[];
-  getCommentsForToken: (tokenId: string) => Comment[];
   toggleWatchlist: (tokenId: string) => void;
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
@@ -389,11 +392,24 @@ export interface StoreContextType {
   closeBanNoticeModal: () => void;
   closeWarningNoticeModal: () => void;
   showWarningModal: (reason: string, notes: string, warningCount?: number, maxWarnings?: number, warningAddress?: string, warningTokenId?: string) => void;
+  showBanNoticeModal: (reason: string) => void;
   warnUser: (address: string, reason: string, notes: string, tokenId?: string) => void;
   addAdditionalWarning: (address: string, reason: string, notes: string, tokenId?: string) => void;
   clearWarning: (address: string) => void;
+  resolveReport: (reportId: string, resolution: string, status: 'resolved' | 'dismissed', adminNotes?: string, actionTaken?: Report['actionTaken']) => void;
+  delistToken: (tokenId: string, reason: string, notes: string) => Promise<void>;
+  relistToken: (tokenId: string, notes: string) => Promise<void>;
+  banUser: (address: string, reason: string, notes: string, permanent: boolean) => Promise<void>;
+  unbanUser: (address: string, notes: string) => Promise<void>;
+  isUserBanned: (address: string) => boolean;
+  getTradesForToken: (tokenId: string) => Trade[];
+  getCommentsForToken: (tokenId: string) => Comment[];
+  addReport: (type: 'comment' | 'token' | 'trollbox', targetId: string, reportedUser: string, reason: Report['reason'], description: string) => Promise<string>;
+  reportToken: (tokenId: string, reason: string, description: string) => Promise<void>;
+  reportComment: (commentId: string, tokenId: string, reason: string, description: string) => Promise<void>;
+  addNotification: (type: AppNotification["type"], title: string, message: string, link?: string) => void;
+  bridgeAssets: (amount: number) => void;
 }
-
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const useStore = () => {
@@ -574,6 +590,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [reputationPoints, setReputationPoints] = useState<number>(0);
+
   const [activeOrders, setActiveOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('dogepump_orders');
     return saved ? JSON.parse(saved) : [];
@@ -702,7 +720,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (backendUser && backendUser.avatarUrl) {
             setUserProfile(prev => ({
               ...prev,
-              avatarUrl: backendUser.avatarUrl
+              avatarUrl: backendUser.avatarUrl || ''
             }));
           }
         } catch (error) {
@@ -716,6 +734,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Initialize Price Oracle
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     const initializePriceOracle = async () => {
       try {
         // Initial price fetch
@@ -723,22 +743,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.log('[PriceOracle] Initialized successfully');
 
         // Set up periodic updates every 30 seconds
-        const intervalId = setInterval(async () => {
+        intervalId = setInterval(async () => {
           try {
             await priceOracleService.refreshPrice();
           } catch (error) {
             console.error('[PriceOracle] Failed to refresh price:', error);
           }
         }, PRICE_UPDATE_INTERVAL);
-
-        // Cleanup on unmount
-        return () => clearInterval(intervalId);
       } catch (error) {
         console.error('[PriceOracle] Initialization failed:', error);
       }
     };
 
     initializePriceOracle();
+
+    // Cleanup on unmount
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
   // Initialize farm service and set global tokens on mount
@@ -1486,15 +1508,96 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
   };
 
-  const lockForKarma = (tokenId: string, amountToken: number) => {
-     // ... existing implementation
+  const lockForReputation = async (tokenId: string, amountToken: number) => {
+     const token = tokens.find(t => t.id === tokenId);
+     if (!token) return;
+
+     // Calculate reputation points: 1 point per $1 USD of locked token value
+     const pointsEarned = Math.floor(amountToken * token.price);
+
+     // Update local state
      setMyHoldings(prev => prev.map(h => h.tokenId === tokenId ? { ...h, balance: Math.max(0, h.balance - amountToken) } : h));
      setLockedAssets(prev => [...prev, { id: Date.now().toString(), tokenId, amount: amountToken, lockedAt: Date.now() }]);
+
+     // Update reputation points
+     setReputationPoints(prev => prev + pointsEarned);
+
      if (settings.audioEnabled) playSound('success');
-     addNotification('karma', 'Assets Locked', 'Earning Karma for upcoming airdrop!');
+     addNotification('reputation', 'Assets Locked', `Earning ${pointsEarned} Reputation points for upcoming airdrops!`);
+
+     // Call backend API to award points
+     try {
+       const response = await fetch('/api/reputation/award', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${localStorage.getItem('token')}`,
+         },
+         body: JSON.stringify({
+           points: pointsEarned,
+           reason: 'token_lock',
+           token_id: tokenId,
+           token_amount: amountToken,
+         }),
+       });
+
+       if (!response.ok) {
+         console.error('Failed to award reputation points:', await response.text());
+       }
+     } catch (error) {
+       console.error('Error awarding reputation points:', error);
+     }
   };
 
-  const unlockKarma = (tokenId: string) => {};
+  const unlockForReputation = async (lockedAssetId: string) => {
+     const lockedAsset = lockedAssets.find(la => la.id === lockedAssetId);
+     if (!lockedAsset) return;
+
+     const token = tokens.find(t => t.id === lockedAsset.tokenId);
+     if (!token) return;
+
+     // Calculate points to deduct
+     const pointsToDeduct = Math.floor(lockedAsset.amount * token.price);
+
+     // Check if user has enough points
+     if (reputationPoints < pointsToDeduct) {
+       addNotification('error', 'Insufficient Points', `Cannot unlock: need ${pointsToDeduct} reputation points.`);
+       return;
+     }
+
+     // Update local state
+     setMyHoldings(prev => prev.map(h => h.tokenId === lockedAsset.tokenId ? { ...h, balance: h.balance + lockedAsset.amount } : h));
+     setLockedAssets(prev => prev.filter(la => la.id !== lockedAssetId));
+
+     // Update reputation points
+     setReputationPoints(prev => prev - pointsToDeduct);
+
+     if (settings.audioEnabled) playSound('success');
+     addNotification('reputation', 'Assets Unlocked', `${pointsToDeduct} reputation points deducted. Tokens returned to wallet.`);
+
+     // Call backend API to deduct points
+     try {
+       const response = await fetch('/api/reputation/deduct', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${localStorage.getItem('token')}`,
+         },
+         body: JSON.stringify({
+           points: pointsToDeduct,
+           reason: 'token_unlock',
+           token_id: lockedAsset.tokenId,
+           token_amount: lockedAsset.amount,
+         }),
+       });
+
+       if (!response.ok) {
+         console.error('Failed to deduct reputation points:', await response.text());
+       }
+     } catch (error) {
+       console.error('Error deducting reputation points:', error);
+     }
+  };
 
   const boostToken = (tokenId: string, amountDC: number) => {
      // ... existing implementation
@@ -1503,20 +1606,133 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
      if (settings.audioEnabled) playSound('launch');
   };
 
-  const airdropToken = (tokenId: string, type: 'random' | 'holders', amountPerUser: number, count: number) => {
-     // ... existing implementation
+  const airdropToken = async (tokenId: string, type: 'random' | 'holders', amountPerUser: number, count: number) => {
      const token = tokens.find(t => t.id === tokenId);
      if (!token) return;
+
      const totalAmount = amountPerUser * count;
+
      setMyHoldings(prev => {
         const exists = prev.find(h => h.tokenId === tokenId);
         if (exists && exists.balance >= totalAmount) return prev.map(h => h.tokenId === tokenId ? { ...h, balance: h.balance - totalAmount } : h);
         return prev;
      });
+
      const newTrades: Trade[] = [];
-     for(let i = 0; i < count; i++) {
-        newTrades.push({ id: Date.now().toString()+i, type: 'buy', amountDC: 0, amountToken: amountPerUser, price: token.price, user: `0x${Math.random().toString(16).slice(2,8)}`, timestamp: Date.now() - i, txHash: '0x'+Math.random().toString(16), tokenId: token.id, blockNumber: networkStats.blockHeight, gasUsed: 21000 });
+
+     if (type === 'random') {
+       // Random airdrop to users
+       for(let i = 0; i < count; i++) {
+         newTrades.push({
+           id: Date.now().toString()+i,
+           type: 'buy',
+           amountDC: 0,
+           amountToken: amountPerUser,
+           price: token.price,
+           user: `0x${Math.random().toString(16).slice(2,8)}`,
+           timestamp: Date.now() - i,
+           txHash: '0x'+Math.random().toString(16),
+           tokenId: token.id,
+           blockNumber: networkStats.blockHeight,
+           gasUsed: 21000
+         });
+       }
+     } else if (type === 'holders') {
+       // Weighted airdrop to reputation point holders
+       try {
+         const response = await fetch('/api/reputation/leaderboard?limit=100');
+         if (response.ok) {
+           const data = await response.json();
+           const topHolders = data.leaderboard || [];
+
+           if (topHolders.length === 0) {
+             addNotification('error', 'No Holders', 'No users with reputation points found. Airdropping randomly instead.');
+             // Fallback to random
+             for(let i = 0; i < count; i++) {
+               newTrades.push({
+                 id: Date.now().toString()+i,
+                 type: 'buy',
+                 amountDC: 0,
+                 amountToken: amountPerUser,
+                 price: token.price,
+                 user: `0x${Math.random().toString(16).slice(2,8)}`,
+                 timestamp: Date.now() - i,
+                 txHash: '0x'+Math.random().toString(16),
+                 tokenId: token.id,
+                 blockNumber: networkStats.blockHeight,
+                 gasUsed: 21000
+               });
+             }
+           } else {
+             // Calculate total reputation points
+             const totalReputation = topHolders.reduce((sum: number, user: any) => sum + user.reputation_points, 0);
+
+             // Distribute based on reputation share
+             let distributedCount = 0;
+             for (const holder of topHolders) {
+               if (distributedCount >= count) break;
+
+               const userShare = holder.reputation_points / totalReputation;
+               const userCount = Math.max(1, Math.floor(count * userShare));
+
+               for (let i = 0; i < Math.min(userCount, count - distributedCount); i++) {
+                 newTrades.push({
+                   id: Date.now().toString()+Date.now()+i,
+                   type: 'buy',
+                   amountDC: 0,
+                   amountToken: amountPerUser,
+                   price: token.price,
+                   user: holder.username || `0x${Math.random().toString(16).slice(2,8)}`,
+                   timestamp: Date.now() - i,
+                   txHash: '0x'+Math.random().toString(16),
+                   tokenId: token.id,
+                   blockNumber: networkStats.blockHeight,
+                   gasUsed: 21000
+                 });
+               }
+               distributedCount += userCount;
+             }
+           }
+         } else {
+           console.error('Failed to fetch reputation leaderboard');
+           // Fallback to random
+           for(let i = 0; i < count; i++) {
+             newTrades.push({
+               id: Date.now().toString()+i,
+               type: 'buy',
+               amountDC: 0,
+               amountToken: amountPerUser,
+               price: token.price,
+               user: `0x${Math.random().toString(16).slice(2,8)}`,
+               timestamp: Date.now() - i,
+               txHash: '0x'+Math.random().toString(16),
+               tokenId: token.id,
+               blockNumber: networkStats.blockHeight,
+               gasUsed: 21000
+             });
+           }
+         }
+       } catch (error) {
+         console.error('Error executing reputation-weighted airdrop:', error);
+         // Fallback to random
+         for(let i = 0; i < count; i++) {
+           newTrades.push({
+             id: Date.now().toString()+i,
+             type: 'buy',
+             amountDC: 0,
+             amountToken: amountPerUser,
+             price: token.price,
+             user: `0x${Math.random().toString(16).slice(2,8)}`,
+             timestamp: Date.now() - i,
+             txHash: '0x'+Math.random().toString(16),
+             tokenId: token.id,
+             blockNumber: networkStats.blockHeight,
+             gasUsed: 21000
+           });
+         }
+       }
      }
+
      setTrades(prev => [...newTrades, ...prev].slice(0, 500));
   };
 
@@ -2102,7 +2318,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (result.warning) {
         const formattedWarning: WarnedUser = {
           address: result.warning.wallet_address,
-          tokenId: result.warning.token_id,
+          tokenId: result.warning.token_id || undefined,
           warnedAt: new Date(result.warning.created_at).getTime(),
           warnedBy: result.warning.warned_by || 'Admin',
           reason: result.warning.warning_reason,
@@ -2282,7 +2498,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setReactionStats(prev => ({ ...prev, [message.tokenId]: newStats }));
       } else if (message.type === 'update_stats' && message.stats) {
         // Update stats when received from another tab
-        setReactionStats(prev => ({ ...prev, [message.tokenId]: message.stats }));
+        const stats = message.stats;
+        setReactionStats(prev => ({ ...prev, [message.tokenId]: stats }));
       } else if (message.type === 'sentiment_vote' && message.sentimentVote) {
         // Update sentiment counts when another tab votes
         const { voteType } = message.sentimentVote;
@@ -2427,6 +2644,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return farmService.getUserFarmPositions(farmId);
   };
 
+  const bridgeAssets = (amount: number) => {
+    setUserBalanceDC(prev => prev + amount);
+  };
+
   const getFarmStats = (farmId: string): FarmStats | undefined => {
     return farmService.getFarmStats(farmId);
   };
@@ -2436,7 +2657,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       tokens, trades, comments, myHoldings, activeOrders, priceAlerts, farmPositions, tokenOwnerFarms, tokenOwnerFarmPositions, userBalanceDC, priceHistory, watchlist, notifications, unreadCount, lightboxImage, userProfile, setNotifications, settings, marketEvent, recentlyUnlockedBadge, networkStats, lockedAssets, copyTargets, reports, userAddress, reactionStats, userReactions, adminActions, bannedUsers, warnedUsers, banNoticeModal, warningNoticeModal,
       dexPools, dexLpPositions, dexSettings, dexTransactionQueue,
       setDexPools, setDexLpPositions, setDexSettings, setDexTransactionQueue,
-      launchToken, buyToken, sellToken, burnToken, lockForKarma, unlockKarma, boostToken, airdropToken, placeOrder, cancelOrder, addPriceAlert, removePriceAlert, stakeToken, unstakeToken, harvestRewards, addComment, likeComment, reportComment, reportToken, addReport, resolveReport, delistToken, relistToken, banUser, unbanUser, warnUser, clearWarning, showWarningModal, showBanNoticeModal, isUserBanned, getTradesForToken, getCommentsForToken, toggleWatchlist, markAllNotificationsRead, clearNotifications, addNotification, openLightbox, closeLightbox, resetStore, updateSecurity, updateTokenSocials, updateProfile, updateSettings, faucet, voteSentiment, setMarketEvent, clearAchievement, toggleLiveStream, followUser, unfollowUser, resolveUsername, addEmojiReaction, removeEmojiReaction, getEmojiReactionStats, getUserReaction, initializeEmojiSystem, closeBanNoticeModal: () => setBanNoticeModal({ isOpen: false }), closeWarningNoticeModal,
+      launchToken, buyToken, sellToken, burnToken, lockForReputation, unlockForReputation, reputationPoints, boostToken, airdropToken, placeOrder, cancelOrder, addPriceAlert, removePriceAlert, stakeToken, unstakeToken, harvestRewards, addComment, likeComment, reportComment, reportToken, addReport, resolveReport, delistToken, relistToken, banUser, unbanUser, warnUser, addAdditionalWarning: warnUser, clearWarning, showWarningModal, showBanNoticeModal, isUserBanned, getTradesForToken, getCommentsForToken, toggleWatchlist, markAllNotificationsRead, clearNotifications, addNotification, openLightbox, closeLightbox, resetStore, updateSecurity, updateTokenSocials, updateProfile, updateSettings, faucet, bridgeAssets, voteSentiment, setMarketEvent, clearAchievement, toggleLiveStream, followUser, unfollowUser, resolveUsername, addEmojiReaction, removeEmojiReaction, getEmojiReactionStats, getUserReaction, initializeEmojiSystem, closeBanNoticeModal: () => setBanNoticeModal({ isOpen: false }), closeWarningNoticeModal,
       createFarm, depositRewards, updateFarmConfig, pauseFarm, resumeFarm, closeFarm, stakeInFarm, unstakeFromFarm, harvestFarmRewards, getFarm, getMyFarms, getFarmPositions, getFarmStats
     }}>
       {children}

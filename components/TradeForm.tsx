@@ -17,10 +17,10 @@ interface TradeFormProps {
 }
 
 const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initialAmount }) => {
-  const { buyToken, sellToken, burnToken, lockForKarma, placeOrder, userBalanceDC, myHoldings, settings, networkStats } = useStore();
+  const { buyToken, sellToken, burnToken, lockForReputation, placeOrder, userBalanceDC, myHoldings, settings, networkStats } = useStore();
   const { addToast } = useToast();
   
-  const [tradeType, setTradeType] = useState<'buy' | 'sell' | 'burn' | 'karma'>('buy');
+  const [tradeType, setTradeType] = useState<'buy' | 'sell' | 'burn' | 'reputation'>('buy');
   const [orderMode, setOrderMode] = useState<'market' | 'limit' | 'stop'>('market');
   const [amount, setAmount] = useState('');
   const [limitPrice, setLimitPrice] = useState('');
@@ -70,7 +70,7 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
 
   // Reset logic
   useEffect(() => {
-    if (tradeType === 'burn' || tradeType === 'karma') {
+    if (tradeType === 'burn' || tradeType === 'reputation') {
         setOrderMode('market');
     }
     setErrors({});
@@ -101,7 +101,7 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
         newErrors.amount = 'Insufficient $DC';
         isValid = false;
     }
-    if ((tradeType === 'sell' || tradeType === 'burn' || tradeType === 'karma') && Number(amount) > userTokenBalance) {
+    if ((tradeType === 'sell' || tradeType === 'burn' || tradeType === 'reputation') && Number(amount) > userTokenBalance) {
         newErrors.amount = `Insufficient ${token.ticker}`;
         isValid = false;
     }
@@ -144,15 +144,15 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
         } else if (tradeType === 'burn') {
             burnToken(token.id, tradeAmount);
             if (settings.audioEnabled) playSound('launch'); 
-        } else if (tradeType === 'karma') {
-            lockForKarma(token.id, tradeAmount);
+        } else if (tradeType === 'reputation') {
+            lockForReputation(token.id, tradeAmount);
         }
         
-        const actionLabel = tradeType === 'buy' ? 'Buy' : tradeType === 'sell' ? 'Sell' : tradeType === 'karma' ? 'Lock' : 'Burn';
+        const actionLabel = tradeType === 'buy' ? 'Buy' : tradeType === 'sell' ? 'Sell' : tradeType === 'reputation' ? 'Lock' : 'Burn';
         addToast('success', `${actionLabel} executed successfully!`, 'Trade Confirmed');
       } else {
         // Execute Limit/Stop Order logic via Store
-        placeOrder(token.id, tradeType === 'burn' ? 'sell' : tradeType === 'karma' ? 'sell' : tradeType, orderMode, tradeAmount, price);
+        placeOrder(token.id, tradeType === 'burn' ? 'sell' : tradeType === 'reputation' ? 'sell' : tradeType, orderMode, tradeAmount, price);
       }
       
       setAmount('');
@@ -187,13 +187,13 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
 
   const isBuy = tradeType === 'buy';
   const isBurn = tradeType === 'burn';
-  const isKarma = tradeType === 'karma';
+  const isReputation = tradeType === 'reputation';
   
   const accentBorder = isBuy 
     ? 'focus-within:border-doge-success/50' 
     : isBurn 
         ? 'focus-within:border-orange-500/50'
-        : isKarma
+        : isReputation
             ? 'focus-within:border-purple-500/50'
             : 'focus-within:border-doge-error/50';
 
@@ -201,7 +201,7 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
     ? 'bg-green-500' 
     : isBurn 
         ? 'bg-orange-500' 
-        : isKarma
+        : isReputation
             ? 'bg-purple-600'
             : 'bg-red-500';
 
@@ -265,14 +265,14 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
           </button>
           <button 
             type="button"
-            onClick={() => { setTradeType('karma'); if (settings.audioEnabled) playSound('click'); }}
+            onClick={() => { setTradeType('reputation'); if (settings.audioEnabled) playSound('click'); }}
             className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 relative overflow-hidden ${
-              tradeType === 'karma' 
+              tradeType === 'reputation' 
                 ? 'text-white bg-purple-600 shadow-[0_0_15px_rgba(147,51,234,0.4)]' 
                 : 'text-gray-500 hover:bg-white/5'
             }`}
           >
-             Karma
+             Reputation
           </button>
       </div>
 
@@ -281,7 +281,7 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
           <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-full blur-[100px] opacity-10 pointer-events-none transition-colors duration-500 ${bgColor}`}></div>
 
           {/* Order Type Selector */}
-          {tradeType !== 'burn' && tradeType !== 'karma' && (
+          {tradeType !== 'burn' && tradeType !== 'reputation' && (
              <div className="flex p-1 rounded-xl bg-white/[0.03] border border-white/10 relative z-10">
                {['market', 'limit', 'stop'].map((mode) => (
                    <button
@@ -312,17 +312,17 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
                  </div>
               )}
 
-              {tradeType === 'karma' && (
+              {tradeType === 'reputation' && (
                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3 flex items-center gap-3 mb-8">
                      <Sparkles className="text-purple-500 shrink-0" size={20} />
                      <div className="text-xs text-purple-200">
-                        <span className="font-bold block">Lock for Karma</span>
-                        Lock tokens to earn Karma points for future airdrops.
+                        <span className="font-bold block">Lock for Reputation</span>
+                        Lock tokens to earn Reputation points for future airdrops.
                      </div>
                  </div>
               )}
               {/* Limit/Trigger Input */}
-              {(orderMode === 'limit' || orderMode === 'stop') && tradeType !== 'burn' && tradeType !== 'karma' && (
+              {(orderMode === 'limit' || orderMode === 'stop') && tradeType !== 'burn' && tradeType !== 'reputation' && (
                 <div className="animate-slide-up">
                   <div className="flex justify-between text-xs font-bold uppercase text-gray-500 px-1 mb-1.5">
                       <span className={orderMode === 'stop' ? 'text-blue-400' : ''}>
@@ -372,7 +372,7 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
                     step="0.000001"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                      {(tradeType === 'buy' || tradeType === 'sell' || tradeType === 'burn' || tradeType === 'karma') && (
+                      {(tradeType === 'buy' || tradeType === 'sell' || tradeType === 'burn' || tradeType === 'reputation') && (
                         <button
                           type="button"
                           onClick={handleMax}
@@ -409,7 +409,7 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
               </div>
 
               {/* Transaction Summary */}
-              {tradeType !== 'burn' && tradeType !== 'karma' && (
+              {tradeType !== 'burn' && tradeType !== 'reputation' && (
                 <div className="bg-black/40 rounded-xl p-4 space-y-2 border border-white/10 text-xs relative overflow-hidden group">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 font-medium">Receive (Est.)</span>
@@ -466,16 +466,16 @@ const TradeFormComponent: React.FC<TradeFormProps> = ({ token, onSuccess, initia
                 className={`w-full py-4 text-lg font-bold shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl border-0 relative overflow-hidden ${
                    tradeType === 'buy' ? 'shadow-[0_0_25px_rgba(0,224,84,0.2)]' :
                    tradeType === 'burn' ? 'shadow-[0_0_25px_rgba(234,88,12,0.2)]' :
-                   tradeType === 'karma' ? 'shadow-[0_0_25px_rgba(147,51,234,0.2)]' :
+                   tradeType === 'reputation' ? 'shadow-[0_0_25px_rgba(147,51,234,0.2)]' :
                    'shadow-[0_0_25px_rgba(255,59,48,0.2)]'}`}
                 variant={tradeType === 'buy' ? 'primary' : 'danger'}
                 isLoading={isProcessing}
-                style={{ backgroundColor: isBuy ? '#00E054' : isBurn ? '#ea580c' : isKarma ? '#9333ea' : '#FF3B30', color: isBurn || isKarma ? 'white' : isBuy ? 'black' : 'white' }}
+                style={{ backgroundColor: isBuy ? '#00E054' : isBurn ? '#ea580c' : isReputation ? '#9333ea' : '#FF3B30', color: isBurn || isReputation ? 'white' : isBuy ? 'black' : 'white' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
                 {
                     tradeType === 'burn' ? 'Burn Tokens' : 
-                    tradeType === 'karma' ? 'Lock for Karma' :
+                    tradeType === 'reputation' ? 'Lock for Reputation' :
                     orderMode === 'stop' && tradeType === 'buy' ? `Trigger Buy @ $${limitPrice}` :
                     orderMode !== 'market' ? `Place ${orderMode}` : 
                     (tradeType === 'buy' ? 'Buy' : 'Sell')
