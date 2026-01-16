@@ -9,6 +9,9 @@
     "test:coverage": "hardhat coverage",
     "deploy:testnet": "hardhat run scripts/deploy-testnet.js --network dogechain-testnet",
     "deploy:mainnet": "hardhat run scripts/deploy-mainnet.js --network dogechain",
+    "deploy:karma:mainnet": "hardhat run scripts/deploy-karma-mainnet.js --network dogechain",
+    "karma:execute-timelock": "hardhat run scripts/execute-timelocked-calls.js --network dogechain",
+    "karma:status": "hardhat run scripts/check-karma-status.js --network dogechain",
     "verify:testnet": "hardhat verify --network dogechain-testnet",
     "verify:mainnet": "hardhat verify --network dogechain",
     "typechain": "hardhat typechain",
@@ -27,6 +30,7 @@
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@typechain/ethers-v6": "^0.5.0",
     "@typechain/hardhat": "^9.0.0",
+    "dotenv": "^17.2.3",
     "hardhat": "^2.28.2",
     "typescript": "^5.3.0"
   },

@@ -513,6 +513,7 @@ const Navbar: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const secondaryNavLinks = [
     { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+    { name: '$KARMA', path: '/karma', icon: Award },
     { name: 'TV', path: '/tv', icon: Tv },
   ];
 

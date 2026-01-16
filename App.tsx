@@ -26,6 +26,7 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
 const DogeTV = React.lazy(() => import('./pages/DogeTV'));
 const Earn = React.lazy(() => import('./pages/Earn'));
+const Karma = React.lazy(() => import('./pages/Karma'));
 const Admin = React.lazy(() => import('./pages/Admin'));
 const DexSwap = React.lazy(() => import('./pages/DexSwap'));
 const DexPools = React.lazy(() => import('./pages/DexPools'));
@@ -100,6 +101,7 @@ const AppContent: React.FC = () => {
               <Route path="/launch" element={<Launch />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/earn" element={<Earn />} />
+              <Route path="/karma" element={<Karma />} />
               <Route path="/token/:id" element={<TokenDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/:address" element={<Profile />} />
