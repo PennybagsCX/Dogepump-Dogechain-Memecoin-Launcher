@@ -15,6 +15,8 @@ if (savedVersion !== DATA_VERSION) {
 }
 
 // Initialize Sentry error tracking (production only)
+// TEMPORARILY DISABLED FOR DEBUGGING
+/*
 try {
   if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
     import('@sentry/react').then(Sentry => {
@@ -48,6 +50,7 @@ try {
 } catch (error) {
   console.warn('[Sentry] Initialization skipped (package not installed or no DSN configured)');
 }
+*/
 
 // Validate environment variables at startup
 import { validateEnvVars } from './config/envValidation';

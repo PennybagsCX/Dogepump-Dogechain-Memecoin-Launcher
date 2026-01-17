@@ -283,6 +283,9 @@ export class SentryErrorBoundary extends React.Component<SentryErrorBoundaryProp
 }
 
 // Initialize Sentry on load
+// TEMPORARILY DISABLED FOR DEBUGGING
+/*
 if (typeof window !== 'undefined') {
   initSentry();
 }
+*/
