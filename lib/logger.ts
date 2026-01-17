@@ -8,13 +8,8 @@
  * Errors in production are automatically sent to Sentry for tracking.
  */
 
-// Sentry temporarily disabled for debugging
-let Sentry: any = null;
-try {
-  Sentry = require('@sentry/react');
-} catch (e) {
-  // Sentry not available
-}
+// Sentry completely disabled to prevent module loading issues
+const Sentry: any = null;
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
