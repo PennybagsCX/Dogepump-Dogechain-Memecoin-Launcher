@@ -5,7 +5,9 @@
  * This service is optional - if Sentry is not configured, errors will be logged to console.
  */
 
-import * as Sentry from '@sentry/browser';
+// Sentry completely disabled to prevent module loading issues
+const Sentry: any = null;
+
 import React from 'react';
 
 // Check if Sentry is configured
