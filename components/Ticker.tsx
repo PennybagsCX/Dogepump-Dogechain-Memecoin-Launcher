@@ -6,7 +6,7 @@ import { useStore } from '../contexts/StoreContext';
 import { timeAgo } from '../utils';
 import { formatNumber } from '../services/web3Service';
 
-interface Activity {
+interface TradeActivity {
   user: string;
   action: string;
   amount?: string;
@@ -15,7 +15,7 @@ interface Activity {
   time: string;
 }
 
-const MOCK_ACTIVITIES: Activity[] = [
+const MOCK_ACTIVITIES: TradeActivity[] = [
   { user: '0x3a...9f2', action: 'bought', amount: '5,000', token: 'Doge CEO', time: '1s ago', tokenId: 'mock-1' },
   { user: '0x7b...1c4', action: 'launched', token: 'SuperShiba', time: '5s ago', tokenId: 'mock-2' },
   { user: '0x1d...2e3', action: 'bought', amount: '250k', token: 'ElonWifHat', time: '12s ago', tokenId: 'mock-3' },
