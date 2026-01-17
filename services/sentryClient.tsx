@@ -9,7 +9,7 @@ import * as Sentry from '@sentry/browser';
 import React from 'react';
 
 // Check if Sentry is configured
-const SENTRY_DSN = process.env.SENTRY_DSN || '';
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || '';
 const SENTRY_ENABLED = !!SENTRY_DSN && SENTRY_DSN !== '';
 
 /**
@@ -23,12 +23,12 @@ export function initSentry() {
 
   Sentry.init({
     dsn: SENTRY_DSN,
-    environment: process.env.NODE_ENV || 'development',
-    release: process.env.npm_package_version || '1.0.0',
+    environment: import.meta.env.MODE || 'development',
+    release: import.meta.env.VITE_APP_VERSION || '1.0.0',
 
     // Tracing options
-    tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
-    profilesSampleRate: parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE || '0.1'),
+    tracesSampleRate: parseFloat(import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE || '0.1'),
+    profilesSampleRate: parseFloat(import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE || '0.1'),
 
     // Before send callback to filter sensitive data
     beforeSend(event, hint) {
@@ -67,7 +67,7 @@ export function initSentry() {
     },
 
     // Debug mode in development
-    debug: process.env.NODE_ENV === 'development',
+    debug: import.meta.env.DEV,
   });
 
   console.log('Sentry initialized for frontend');
@@ -80,7 +80,7 @@ export function captureException(error: Error | unknown, context?: Record<string
   if (SENTRY_ENABLED) {
     Sentry.captureException(error, {
       tags: {
-        environment: process.env.NODE_ENV || 'development',
+        environment: import.meta.env.MODE || 'development',
         ...context,
       },
       extra: context,
@@ -107,7 +107,7 @@ export function captureMessage(
     Sentry.captureMessage(message, {
       level,
       tags: {
-        environment: process.env.NODE_ENV || 'development',
+        environment: import.meta.env.MODE || 'development',
         ...context,
       },
       extra: context,

@@ -33,3 +33,4 @@ uploads/permanent/*
 # Drawbridge - Visual annotation tool
 .moat/
 .claude/
+.vercel
