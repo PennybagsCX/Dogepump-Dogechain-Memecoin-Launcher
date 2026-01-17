@@ -8,7 +8,13 @@
  * Errors in production are automatically sent to Sentry for tracking.
  */
 
-import * as Sentry from '@sentry/react';
+// Sentry temporarily disabled for debugging
+let Sentry: any = null;
+try {
+  Sentry = require('@sentry/react');
+} catch (e) {
+  // Sentry not available
+}
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -93,10 +99,10 @@ function shouldLog(level: LogLevel): boolean {
 function addBreadcrumb(
   category: string,
   message: string,
-  level: Sentry.SeverityLevel = 'info',
+  level: any = 'info',
   data?: Record<string, any>
 ) {
-  if (import.meta.env.PROD) {
+  if (import.meta.env.PROD && Sentry) {
     Sentry.addBreadcrumb({
       category,
       message,
@@ -113,7 +119,7 @@ function addBreadcrumb(
 /**
  * Enrich Sentry scope with comprehensive context
  */
-function enrichScope(scope: Sentry.Scope, context: string, extra?: Record<string, any>) {
+function enrichScope(scope: any, context: string, extra?: Record<string, any>) {
   // Basic context tag
   scope.setTag('logger_context', context);
   scope.setTag('environment', import.meta.env.MODE);
@@ -243,9 +249,9 @@ export const logger = {
       addBreadcrumb('error', message, 'error', error);
 
       // Send to Sentry in production
-      if (import.meta.env.PROD) {
+      if (import.meta.env.PROD && Sentry) {
         if (error instanceof Error) {
-          Sentry.withScope((scope) => {
+          Sentry.withScope((scope: any) => {
             enrichScope(scope, context, { message });
             scope.setLevel('error');
 

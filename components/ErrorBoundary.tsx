@@ -11,18 +11,13 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, ChevronDown } from 'lucide-react';
 import { Button } from './Button';
-import { createLogger } from '../lib/logger';
 
-const logger = createLogger('ERROR_BOUNDARY');
-
-// Lazy load Sentry to avoid import errors if not installed
-let Sentry: any;
-try {
-  // @ts-ignore - Sentry is optional
-  Sentry = require('@sentry/react');
-} catch {
-  // Sentry not installed, that's ok
-}
+// Sentry temporarily disabled for debugging
+const logger = {
+  error: (context: string, message: string, error?: any) => {
+    console.error(`[${context}]`, message, error);
+  }
+};
 
 interface Props {
   children?: ReactNode;
@@ -132,25 +127,12 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log to console in development
-    if (import.meta.env.DEV) {
-      console.error('Uncaught error:', error, errorInfo);
-      logger.error('React Error Caught', error.message, {
-        error,
-        componentStack: errorInfo.componentStack,
-      });
-    }
-
-    // Log to Sentry in production (if available)
-    if (import.meta.env.PROD && Sentry) {
-      Sentry.withScope((scope: any) => {
-        scope.setTag('error_boundary', 'true');
-        scope.setContext('react', {
-          componentStack: errorInfo.componentStack,
-        });
-        Sentry.captureException(error);
-      });
-    }
+    // Log to console
+    console.error('Uncaught error:', error, errorInfo);
+    logger.error('React Error Caught', error.message, {
+      error,
+      componentStack: errorInfo.componentStack,
+    });
 
     // Call custom error handler if provided
     if (this.props.onError) {

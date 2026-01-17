@@ -104,7 +104,7 @@ export const LiveCallOverlay: React.FC<LiveCallOverlayProps> = ({ isOpen, onClos
        return;
     }
 
-    clientRef.current = new DogeLiveClient(process.env.API_KEY || '');
+    clientRef.current = new DogeLiveClient(import.meta.env.VITE_GEMINI_API_KEY || '');
 
     await clientRef.current.connect({
       model: 'gemini-2.5-flash-native-audio-preview-09-2025',
