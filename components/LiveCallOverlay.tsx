@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Mic, MicOff, PhoneOff, Video, VideoOff, Camera, Activity, Loader2, MessageSquare, Send } from 'lucide-react';
+import { X, Mic, MicOff, PhoneOff, Video, VideoOff, Camera, Loader2, MessageSquare, Send } from 'lucide-react';
 import { Token } from '../types';
 import { DogeLiveClient } from '../services/liveService';
 import { useToast } from './Toast';
