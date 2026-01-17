@@ -147,7 +147,7 @@ export class FarmErrorBoundary extends Component<
               </p>
 
               {/* Error Details (Development Only) */}
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="mb-6 text-left">
                   <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-400 mb-2">
                     Error Details (Development)

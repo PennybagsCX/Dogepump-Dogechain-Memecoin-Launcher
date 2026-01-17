@@ -278,7 +278,7 @@ export const CreatorAdminMinimal: React.FC<{ token: any; onBack?: () => void }> 
       </div>
 
       {/* Debug Info */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <div className="mt-4 p-3 bg-gray-900/50 rounded-lg text-xs text-gray-400 font-mono">
           <div>Status: {isLive ? 'LIVE' : 'STOPPED'}</div>
           <div>Loading: {isLoading ? 'YES' : 'NO'}</div>
